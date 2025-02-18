@@ -1,3 +1,4 @@
+import 'package:code_bolanon/db/supabase.dart';
 import 'package:flutter/material.dart';
 import 'package:code_bolanon/app/app.bottomsheets.dart';
 import 'package:code_bolanon/app/app.dialogs.dart';
@@ -7,7 +8,11 @@ import 'package:stacked_services/stacked_services.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await setupLocator();
+  await {
+    initializeSupabase(),
+    setupLocator(),
+  };
+
   setupDialogUi();
   setupBottomSheetUi();
   runApp(const MainApp());
@@ -19,7 +24,8 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: Routes.startupView,
+      debugShowCheckedModeBanner: false,
+      initialRoute: Routes.onboardingView,
       onGenerateRoute: StackedRouter().onGenerateRoute,
       navigatorKey: StackedService.navigatorKey,
       navigatorObservers: [StackedService.routeObserver],
