@@ -9,7 +9,8 @@ class SignupViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final _snackbarService = locator<SnackbarService>();
 
-  final nameController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
@@ -71,7 +72,8 @@ class SignupViewModel extends BaseViewModel {
 
     try {
       await _authService.signUpWithEmail(
-        name: nameController.text.trim(),
+        name:
+            '${firstNameController.text.trim()} ${lastNameController.text.trim()}',
         email: emailController.text.trim(),
         password: passwordController.text,
         role: _selectedRole,
@@ -129,7 +131,8 @@ class SignupViewModel extends BaseViewModel {
       return false;
     }
 
-    if (nameController.text.isEmpty ||
+    if (firstNameController.text.isEmpty ||
+        lastNameController.text.isEmpty ||
         emailController.text.isEmpty ||
         passwordController.text.isEmpty ||
         confirmPasswordController.text.isEmpty) {
@@ -165,7 +168,8 @@ class SignupViewModel extends BaseViewModel {
 
   @override
   void dispose() {
-    nameController.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();

@@ -34,10 +34,26 @@ class SignupView extends StackedView<SignupViewModel> {
   Widget _buildCommonFields(SignupViewModel viewModel, BuildContext context) {
     return Column(
       children: [
-        CustomTextField(
-          controller: viewModel.nameController,
-          labelText: 'Your name',
-          prefixIcon: Icons.person,
+        Row(
+          children: [
+            Expanded(
+              child: CustomTextField(
+                controller: viewModel
+                    .firstNameController, // You'll need to add this controller
+                labelText: 'First name',
+                prefixIcon: Icons.person,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: CustomTextField(
+                controller: viewModel
+                    .lastNameController, // You'll need to add this controller
+                labelText: 'Last name',
+                prefixIcon: Icons.person,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         CustomTextField(
