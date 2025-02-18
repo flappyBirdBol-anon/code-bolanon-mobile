@@ -1,4 +1,3 @@
-// lib/ui/views/auth/signup/signup_view.dart
 import 'package:code_bolanon/ui/common/widgets/custom_text_field.dart';
 import 'package:code_bolanon/ui/common/widgets/password_validation_list.dart';
 import 'package:flutter/gestures.dart';
@@ -224,7 +223,7 @@ class SignupView extends StackedView<SignupViewModel> {
         else ...[
           _Divider(),
           const SizedBox(height: 16),
-          viewModel.termsAccepted == true
+          viewModel.termsAccepted == true && viewModel.isPasswordValid == true
               ? ElevatedButton(
                   onPressed: viewModel.signupWithEmail,
                   style: ElevatedButton.styleFrom(
