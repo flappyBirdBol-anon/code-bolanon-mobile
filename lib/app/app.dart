@@ -5,6 +5,9 @@ import 'package:code_bolanon/ui/views/startup/startup_view.dart';
 import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:code_bolanon/ui/views/onboarding/onboarding_view.dart';
+import 'package:code_bolanon/ui/views/auth/auth_view.dart';
+import 'package:code_bolanon/services/auth_service.dart';
+import 'package:code_bolanon/services/theme_service.dart';
 // @stacked-import
 
 @StackedApp(
@@ -12,13 +15,17 @@ import 'package:code_bolanon/ui/views/onboarding/onboarding_view.dart';
     MaterialRoute(page: HomeView),
     MaterialRoute(page: StartupView),
     MaterialRoute(page: OnboardingView),
+    MaterialRoute(page: AuthView),
 // @stacked-route
   ],
   dependencies: [
     LazySingleton(classType: BottomSheetService),
     LazySingleton(classType: DialogService),
     LazySingleton(classType: NavigationService),
-    // @stacked-service
+    LazySingleton(classType: AuthService),
+    LazySingleton(classType: ThemeService),
+    LazySingleton(classType: SnackbarService),
+// @stacked-service
   ],
   bottomsheets: [
     StackedBottomsheet(classType: NoticeSheet),
