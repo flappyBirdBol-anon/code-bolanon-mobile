@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
+
 import '../../../../app/app.locator.dart';
 import '../../../../services/auth_service.dart';
 
@@ -71,19 +72,19 @@ class SignupViewModel extends BaseViewModel {
     notifyListeners();
 
     try {
-      await _authService.signUpWithEmail(
-        name:
-            '${firstNameController.text.trim()} ${lastNameController.text.trim()}',
-        email: emailController.text.trim(),
-        password: passwordController.text,
-        role: _selectedRole,
-        metadata: _selectedRole == 'trainer'
-            ? {
-                'certification': certificationController.text,
-                'specialization': specializationController.text,
-              }
-            : null,
-      );
+      // await _authService.reg(
+      //   name:
+      //       '${firstNameController.text.trim()} ${lastNameController.text.trim()}',
+      //   email: emailController.text.trim(),
+      //   password: passwordController.text,
+      //   role: _selectedRole,
+      //   metadata: _selectedRole == 'trainer'
+      //       ? {
+      //           'certification': certificationController.text,
+      //           'specialization': specializationController.text,
+      //         }
+      //       : null,
+      // );
       _navigationService.replaceWith('/home');
     } catch (e) {
       _snackbarService.showSnackbar(
@@ -109,7 +110,7 @@ class SignupViewModel extends BaseViewModel {
     notifyListeners();
 
     try {
-      await _authService.signInWithGoogle();
+      //  await _authService.signInWithGoogle();
       _navigationService.replaceWith('/home');
     } catch (e) {
       _snackbarService.showSnackbar(

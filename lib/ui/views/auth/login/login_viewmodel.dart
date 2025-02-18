@@ -1,9 +1,10 @@
 import 'package:code_bolanon/app/app.router.dart';
-import 'package:stacked/stacked.dart';
 import 'package:flutter/material.dart';
+import 'package:stacked/stacked.dart';
+import 'package:stacked_services/stacked_services.dart';
+
 import '../../../../app/app.locator.dart';
 import '../../../../services/auth_service.dart';
-import 'package:stacked_services/stacked_services.dart';
 
 class LoginViewModel extends BaseViewModel {
   final _authService = locator<AuthService>();
@@ -22,6 +23,26 @@ class LoginViewModel extends BaseViewModel {
   void togglePasswordVisibility() {
     _isPasswordVisible = !_isPasswordVisible;
     notifyListeners();
+  }
+
+  Future<void> login() async {
+    setBusy(true);
+    try {
+      print(emailController.text + passwordController.text);
+      final success = await _authService.login(
+          emailController.text, passwordController.text);
+      if (success) {
+        await _navigationService.replaceWith(Routes.mainBodyView);
+      } else {
+        // Show error message (consider using a dialog service)
+        print('Login failed. Please check your credentials.');
+      }
+    } catch (e) {
+      // Handle any errors (consider using a dialog service)
+      print('An error occurred during login: $e');
+    } finally {
+      setBusy(false);
+    }
   }
 
   Future<void> loginWithEmail() async {
@@ -53,7 +74,7 @@ class LoginViewModel extends BaseViewModel {
     notifyListeners();
 
     try {
-      await _authService.signInWithGoogle();
+      //  await _authService.signInWithGoogle();
       _navigationService.replaceWith('/home');
     } catch (e) {
       _snackbarService.showSnackbar(

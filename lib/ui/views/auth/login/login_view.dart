@@ -1,11 +1,11 @@
 import 'package:code_bolanon/ui/common/widgets/custom_text_field.dart';
 import 'package:code_bolanon/ui/views/auth/widgets/social_button_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:stacked/stacked.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'login_viewmodel.dart';
+import 'package:stacked/stacked.dart';
 
 import '../widgets/divider_widget.dart';
+import 'login_viewmodel.dart';
 
 class LoginView extends StackedView<LoginViewModel> {
   const LoginView({Key? key}) : super(key: key);
@@ -51,7 +51,7 @@ class LoginView extends StackedView<LoginViewModel> {
               const Center(child: CircularProgressIndicator())
             else ...[
               ElevatedButton(
-                onPressed: viewModel.loginWithEmail,
+                onPressed: viewModel.login,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),

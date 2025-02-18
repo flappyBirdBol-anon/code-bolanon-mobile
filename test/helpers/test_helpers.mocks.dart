@@ -6,9 +6,10 @@
 import 'dart:async' as _i6;
 import 'dart:ui' as _i7;
 
-import 'package:code_bolanon/models/user_model.dart' as _i2;
+import 'package:code_bolanon/services/api_service.dart' as _i10;
 import 'package:code_bolanon/services/auth_service.dart' as _i8;
 import 'package:code_bolanon/services/theme_service.dart' as _i9;
+import 'package:dio/dio.dart' as _i2;
 import 'package:flutter/material.dart' as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i4;
@@ -28,8 +29,8 @@ import 'package:stacked_services/stacked_services.dart' as _i3;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
-class _FakeUserModel_0 extends _i1.SmartFake implements _i2.UserModel {
-  _FakeUserModel_0(
+class _FakeResponse_0<T> extends _i1.SmartFake implements _i2.Response<T> {
+  _FakeResponse_0(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -702,127 +703,74 @@ class MockDialogService extends _i1.Mock implements _i3.DialogService {
 /// See the documentation for Mockito's code generation for more information.
 class MockAuthService extends _i1.Mock implements _i8.AuthService {
   @override
-  _i6.Future<_i2.UserModel> signUpWithEmail({
-    required String? name,
-    required String? email,
-    required String? password,
-    required String? role,
-    Map<String, dynamic>? metadata,
-  }) =>
+  _i6.Future<bool> login(
+    String? email,
+    String? password,
+  ) =>
       (super.noSuchMethod(
         Invocation.method(
-          #signUpWithEmail,
-          [],
-          {
-            #name: name,
-            #email: email,
-            #password: password,
-            #role: role,
-            #metadata: metadata,
-          },
+          #login,
+          [
+            email,
+            password,
+          ],
         ),
-        returnValue: _i6.Future<_i2.UserModel>.value(_FakeUserModel_0(
-          this,
-          Invocation.method(
-            #signUpWithEmail,
-            [],
-            {
-              #name: name,
-              #email: email,
-              #password: password,
-              #role: role,
-              #metadata: metadata,
-            },
-          ),
-        )),
-        returnValueForMissingStub:
-            _i6.Future<_i2.UserModel>.value(_FakeUserModel_0(
-          this,
-          Invocation.method(
-            #signUpWithEmail,
-            [],
-            {
-              #name: name,
-              #email: email,
-              #password: password,
-              #role: role,
-              #metadata: metadata,
-            },
-          ),
-        )),
-      ) as _i6.Future<_i2.UserModel>);
+        returnValue: _i6.Future<bool>.value(false),
+        returnValueForMissingStub: _i6.Future<bool>.value(false),
+      ) as _i6.Future<bool>);
 
   @override
-  _i6.Future<_i2.UserModel> signInWithEmail({
-    required String? email,
-    required String? password,
-  }) =>
+  _i6.Future<bool> register(
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? password,
+    String? role,
+  ) =>
       (super.noSuchMethod(
         Invocation.method(
-          #signInWithEmail,
-          [],
-          {
-            #email: email,
-            #password: password,
-          },
+          #register,
+          [
+            firstName,
+            lastName,
+            email,
+            password,
+            role,
+          ],
         ),
-        returnValue: _i6.Future<_i2.UserModel>.value(_FakeUserModel_0(
-          this,
-          Invocation.method(
-            #signInWithEmail,
-            [],
-            {
-              #email: email,
-              #password: password,
-            },
-          ),
-        )),
-        returnValueForMissingStub:
-            _i6.Future<_i2.UserModel>.value(_FakeUserModel_0(
-          this,
-          Invocation.method(
-            #signInWithEmail,
-            [],
-            {
-              #email: email,
-              #password: password,
-            },
-          ),
-        )),
-      ) as _i6.Future<_i2.UserModel>);
+        returnValue: _i6.Future<bool>.value(false),
+        returnValueForMissingStub: _i6.Future<bool>.value(false),
+      ) as _i6.Future<bool>);
 
   @override
-  _i6.Future<_i2.UserModel> signInWithGoogle() => (super.noSuchMethod(
+  _i6.Future<bool> logout() => (super.noSuchMethod(
         Invocation.method(
-          #signInWithGoogle,
+          #logout,
           [],
         ),
-        returnValue: _i6.Future<_i2.UserModel>.value(_FakeUserModel_0(
-          this,
-          Invocation.method(
-            #signInWithGoogle,
-            [],
-          ),
-        )),
-        returnValueForMissingStub:
-            _i6.Future<_i2.UserModel>.value(_FakeUserModel_0(
-          this,
-          Invocation.method(
-            #signInWithGoogle,
-            [],
-          ),
-        )),
-      ) as _i6.Future<_i2.UserModel>);
+        returnValue: _i6.Future<bool>.value(false),
+        returnValueForMissingStub: _i6.Future<bool>.value(false),
+      ) as _i6.Future<bool>);
 
   @override
-  _i6.Future<void> signOut() => (super.noSuchMethod(
+  _i6.Future<Map<String, dynamic>?> getProfile() => (super.noSuchMethod(
         Invocation.method(
-          #signOut,
+          #getProfile,
           [],
         ),
-        returnValue: _i6.Future<void>.value(),
-        returnValueForMissingStub: _i6.Future<void>.value(),
-      ) as _i6.Future<void>);
+        returnValue: _i6.Future<Map<String, dynamic>?>.value(),
+        returnValueForMissingStub: _i6.Future<Map<String, dynamic>?>.value(),
+      ) as _i6.Future<Map<String, dynamic>?>);
+
+  @override
+  _i6.Future<bool> isLoggedIn() => (super.noSuchMethod(
+        Invocation.method(
+          #isLoggedIn,
+          [],
+        ),
+        returnValue: _i6.Future<bool>.value(false),
+        returnValueForMissingStub: _i6.Future<bool>.value(false),
+      ) as _i6.Future<bool>);
 }
 
 /// A class which mocks [ThemeService].
@@ -855,4 +803,107 @@ class MockThemeService extends _i1.Mock implements _i9.ThemeService {
         returnValue: _i6.Future<void>.value(),
         returnValueForMissingStub: _i6.Future<void>.value(),
       ) as _i6.Future<void>);
+}
+
+/// A class which mocks [ApiService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockApiService extends _i1.Mock implements _i10.ApiService {
+  @override
+  String get baseUrl => (super.noSuchMethod(
+        Invocation.getter(#baseUrl),
+        returnValue: _i4.dummyValue<String>(
+          this,
+          Invocation.getter(#baseUrl),
+        ),
+        returnValueForMissingStub: _i4.dummyValue<String>(
+          this,
+          Invocation.getter(#baseUrl),
+        ),
+      ) as String);
+
+  @override
+  _i6.Future<_i2.Response<dynamic>> get(String? path) => (super.noSuchMethod(
+        Invocation.method(
+          #get,
+          [path],
+        ),
+        returnValue:
+            _i6.Future<_i2.Response<dynamic>>.value(_FakeResponse_0<dynamic>(
+          this,
+          Invocation.method(
+            #get,
+            [path],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i6.Future<_i2.Response<dynamic>>.value(_FakeResponse_0<dynamic>(
+          this,
+          Invocation.method(
+            #get,
+            [path],
+          ),
+        )),
+      ) as _i6.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i6.Future<_i2.Response<dynamic>> post(
+    String? path, {
+    dynamic data,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #post,
+          [path],
+          {#data: data},
+        ),
+        returnValue:
+            _i6.Future<_i2.Response<dynamic>>.value(_FakeResponse_0<dynamic>(
+          this,
+          Invocation.method(
+            #post,
+            [path],
+            {#data: data},
+          ),
+        )),
+        returnValueForMissingStub:
+            _i6.Future<_i2.Response<dynamic>>.value(_FakeResponse_0<dynamic>(
+          this,
+          Invocation.method(
+            #post,
+            [path],
+            {#data: data},
+          ),
+        )),
+      ) as _i6.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i6.Future<void> setAuthToken(String? token) => (super.noSuchMethod(
+        Invocation.method(
+          #setAuthToken,
+          [token],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> clearAuthToken() => (super.noSuchMethod(
+        Invocation.method(
+          #clearAuthToken,
+          [],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
+
+  @override
+  _i6.Future<String?> getAuthToken() => (super.noSuchMethod(
+        Invocation.method(
+          #getAuthToken,
+          [],
+        ),
+        returnValue: _i6.Future<String?>.value(),
+        returnValueForMissingStub: _i6.Future<String?>.value(),
+      ) as _i6.Future<String?>);
 }

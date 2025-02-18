@@ -4,6 +4,7 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/theme_service.dart';
+import 'package:code_bolanon/services/api_service.dart';
 // @stacked-import
 
 import 'test_helpers.mocks.dart';
@@ -16,6 +17,7 @@ import 'test_helpers.mocks.dart';
     MockSpec<DialogService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<AuthService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<ThemeService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<ApiService>(onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
   ],
 )
@@ -25,6 +27,7 @@ void registerServices() {
   getAndRegisterDialogService();
   getAndRegisterAuthService();
   getAndRegisterThemeService();
+  getAndRegisterApiService();
 // @stacked-mock-register
 }
 
@@ -93,6 +96,13 @@ MockThemeService getAndRegisterThemeService() {
   _removeRegistrationIfExists<ThemeService>();
   final service = MockThemeService();
   locator.registerSingleton<ThemeService>(service);
+  return service;
+}
+
+MockApiService getAndRegisterApiService() {
+  _removeRegistrationIfExists<ApiService>();
+  final service = MockApiService();
+  locator.registerSingleton<ApiService>(service);
   return service;
 }
 // @stacked-mock-create

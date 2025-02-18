@@ -8,6 +8,9 @@ import 'package:code_bolanon/ui/views/onboarding/onboarding_view.dart';
 import 'package:code_bolanon/ui/views/auth/auth_view.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/theme_service.dart';
+import 'package:code_bolanon/services/api_service.dart';
+import 'package:code_bolanon/ui/views/main_body/main_body_view.dart';
+import 'package:code_bolanon/ui/views/profile/profile_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -16,6 +19,8 @@ import 'package:code_bolanon/services/theme_service.dart';
     MaterialRoute(page: StartupView),
     MaterialRoute(page: OnboardingView),
     MaterialRoute(page: AuthView),
+    MaterialRoute(page: MainBodyView),
+    MaterialRoute(page: ProfileView),
 // @stacked-route
   ],
   dependencies: [
@@ -25,6 +30,7 @@ import 'package:code_bolanon/services/theme_service.dart';
     LazySingleton(classType: AuthService),
     LazySingleton(classType: ThemeService),
     LazySingleton(classType: SnackbarService),
+    LazySingleton(classType: ApiService),
 // @stacked-service
   ],
   bottomsheets: [
