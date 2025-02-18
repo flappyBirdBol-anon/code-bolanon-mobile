@@ -1,4 +1,5 @@
 import 'package:code_bolanon/ui/views/auth/signup/singup_view.dart';
+import 'package:code_bolanon/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'auth_viewmodel.dart';
@@ -17,14 +18,19 @@ class AuthView extends StackedView<AuthViewModel> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // App Logo/Name
-              Padding(
+              const Padding(
                 padding: const EdgeInsets.only(top: 16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Your App Name',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      Constants.appName,
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: "Poppins",
+                        color: Color.fromARGB(255, 5, 102, 182),
+                      ),
                     ),
                   ],
                 ),
@@ -66,13 +72,6 @@ class AuthView extends StackedView<AuthViewModel> {
                 ),
               ),
               // Theme Toggle
-              Align(
-                alignment: Alignment.bottomRight,
-                child: Switch(
-                  value: viewModel.isDarkTheme,
-                  onChanged: (_) => viewModel.toggleTheme(),
-                ),
-              ),
             ],
           ),
         ),

@@ -4,9 +4,7 @@ import 'package:code_bolanon/ui/common/widgets/password_validation_list.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
-
 import 'signup_viewmodel.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SignupView extends StackedView<SignupViewModel> {
   const SignupView({Key? key}) : super(key: key);
@@ -20,57 +18,21 @@ class SignupView extends StackedView<SignupViewModel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildRoleSelection(viewModel),
             const SizedBox(height: 24),
-            _buildCommonFields(viewModel),
+            _buildCommonFields(viewModel, context),
             const SizedBox(height: 16),
             if (viewModel.selectedRole == 'trainer')
-              _buildTrainerFields(viewModel),
+              _buildTrainerFields(viewModel, context),
             _buildTermsAndConditions(context, viewModel),
             const SizedBox(height: 24),
-            _buildButtons(viewModel),
+            _buildButtons(viewModel, context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRoleSelection(SignupViewModel viewModel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Create an account as:',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _RoleSelectionButton(
-                title: 'Trainee',
-                isSelected: viewModel.selectedRole == 'trainee',
-                onTap: () => viewModel.setRole('trainee'),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _RoleSelectionButton(
-                title: 'Trainer',
-                isSelected: viewModel.selectedRole == 'trainer',
-                onTap: () => viewModel.setRole('trainer'),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCommonFields(SignupViewModel viewModel) {
+  Widget _buildCommonFields(SignupViewModel viewModel, BuildContext context) {
     return Column(
       children: [
         CustomTextField(
@@ -91,6 +53,7 @@ class SignupView extends StackedView<SignupViewModel> {
           prefixIcon: Icons.lock,
           isPassword: true,
           obscureText: !viewModel.isPasswordVisible,
+          onChanged: (p0) => viewModel.notifyListeners(),
           onToggleVisibility: viewModel.togglePasswordVisibility,
         ),
         const SizedBox(height: 16),
@@ -99,6 +62,7 @@ class SignupView extends StackedView<SignupViewModel> {
           labelText: 'Confirm your password',
           prefixIcon: Icons.lock,
           isPassword: true,
+          onChanged: (p0) => viewModel.notifyListeners(),
           obscureText: !viewModel.isConfirmPasswordVisible,
           onToggleVisibility: viewModel.toggleConfirmPasswordVisibility,
         ),
@@ -111,12 +75,17 @@ class SignupView extends StackedView<SignupViewModel> {
               viewModel.passwordController.text.contains(RegExp(r'[A-Z]')),
           hasLowerCase:
               viewModel.passwordController.text.contains(RegExp(r'[a-z]')),
+          isMatch: viewModel.passwordController.text ==
+                  viewModel.confirmPasswordController.text &&
+              viewModel.passwordController.text.isNotEmpty,
         ),
+        const SizedBox(height: 16),
+        _buildRoleSelect(context, viewModel),
       ],
     );
   }
 
-  Widget _buildTrainerFields(SignupViewModel viewModel) {
+  Widget _buildTrainerFields(SignupViewModel viewModel, BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -180,39 +149,99 @@ class SignupView extends StackedView<SignupViewModel> {
     );
   }
 
-  Widget _buildButtons(SignupViewModel viewModel) {
+  Widget _buildRoleSelect(BuildContext context, SignupViewModel viewModel) {
+    if (viewModel.selectedRole == 'trainer') {
+      return Row(
+        children: [
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: Theme.of(context).textTheme.bodyMedium,
+                children: [
+                  const TextSpan(
+                      text: 'Are you a Trainee? Sign up ',
+                      style: TextStyle(color: Colors.grey)),
+                  TextSpan(
+                    text: 'Here',
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        viewModel.setRole('trainee');
+                      },
+                  ),
+                  const TextSpan(
+                    text: ' instead',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: Theme.of(context).textTheme.bodyMedium,
+              children: [
+                const TextSpan(
+                    text: 'Are you a Trainer? Sign up ',
+                    style: TextStyle(color: Colors.grey)),
+                TextSpan(
+                  text: 'Here',
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      viewModel.setRole('trainer');
+                    },
+                ),
+                const TextSpan(
+                  text: ' instead',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildButtons(SignupViewModel viewModel, BuildContext context) {
     return Column(
       children: [
         if (viewModel.isLoading)
           const Center(child: CircularProgressIndicator())
         else ...[
-          ElevatedButton(
-            onPressed: viewModel.signupWithEmail,
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-            ),
-            child: const Text('Sign Up'),
-          ),
+          _Divider(),
           const SizedBox(height: 16),
-          const _DividerWithText(text: 'or signup with'),
+          viewModel.termsAccepted == true
+              ? ElevatedButton(
+                  onPressed: viewModel.signupWithEmail,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child: const Text('Sign Up',
+                      style: TextStyle(color: Color.fromARGB(255, 0, 0, 0))),
+                )
+              : ElevatedButton(
+                  onPressed: null,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child: const Text('Sign Up',
+                      style: TextStyle(color: Colors.grey)),
+                ),
           const SizedBox(height: 16),
-          _SocialSignupButton(
-            onPressed: viewModel.signupWithGoogle,
-            icon: ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [
-                  Colors.blue,
-                  Colors.red,
-                  Colors.yellow,
-                  Colors.green,
-                ],
-              ).createShader(bounds),
-              child: const FaIcon(
-                FontAwesomeIcons.google,
-                color: Colors.white,
-              ),
-            ),
-          ),
         ],
       ],
     );
@@ -222,90 +251,13 @@ class SignupView extends StackedView<SignupViewModel> {
   SignupViewModel viewModelBuilder(BuildContext context) => SignupViewModel();
 }
 
-class _RoleSelectionButton extends StatelessWidget {
-  final String title;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _RoleSelectionButton({
-    required this.title,
-    required this.isSelected,
-    required this.onTap,
-  });
-
+class _Divider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color:
-                isSelected ? Theme.of(context).primaryColor : Colors.grey[300]!,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color:
-                isSelected ? Theme.of(context).primaryColor : Colors.grey[600],
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-}
-
-class _DividerWithText extends StatelessWidget {
-  final String text;
-
-  const _DividerWithText({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
-        const Expanded(child: Divider()),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text(text),
-        ),
-        const Expanded(child: Divider()),
+        Expanded(child: Divider()),
       ],
-    );
-  }
-}
-
-class _SocialSignupButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  final Widget icon;
-
-  const _SocialSignupButton({
-    required this.onPressed,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.black,
-        minimumSize: const Size(double.infinity, 50),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          icon,
-          const SizedBox(width: 8),
-          const Text('Sign up with Google'),
-        ],
-      ),
     );
   }
 }

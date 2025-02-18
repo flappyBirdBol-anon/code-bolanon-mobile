@@ -55,7 +55,10 @@ class SignupViewModel extends BaseViewModel {
       passwordController.text.length >= 8 &&
       passwordController.text.contains(RegExp(r'[0-9]')) &&
       passwordController.text.contains(RegExp(r'[A-Z]')) &&
-      passwordController.text.contains(RegExp(r'[a-z]'));
+      passwordController.text.contains(RegExp(r'[a-z]')) &&
+      passwordController.text == confirmPasswordController.text &&
+      !passwordController.text.contains(' ') &&
+      passwordController.text.isNotEmpty;
 
   bool get isConfirmPasswordValid =>
       confirmPasswordController.text == passwordController.text;
@@ -154,6 +157,10 @@ class SignupViewModel extends BaseViewModel {
     }
 
     return true;
+  }
+
+  void notifyPasswordInput() {
+    notifyListeners();
   }
 
   @override
