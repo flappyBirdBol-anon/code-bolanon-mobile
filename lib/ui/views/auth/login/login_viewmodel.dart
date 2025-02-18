@@ -32,7 +32,7 @@ class LoginViewModel extends BaseViewModel {
       final success = await _authService.login(
           emailController.text, passwordController.text);
       if (success) {
-        await _navigationService.replaceWith(Routes.mainBodyView);
+        await _navigationService.clearStackAndShow(Routes.mainBodyView);
       } else {
         // Show error message (consider using a dialog service)
         print('Login failed. Please check your credentials.');
