@@ -1,3 +1,4 @@
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:stacked/stacked.dart';
 import 'package:flutter/material.dart';
 import '../../../../app/app.locator.dart';
@@ -24,26 +25,27 @@ class LoginViewModel extends BaseViewModel {
   }
 
   Future<void> loginWithEmail() async {
-    if (!_validateInputs()) return;
+    // if (!_validateInputs()) return;
 
-    _isLoading = true;
-    notifyListeners();
+    // _isLoading = true;
+    // notifyListeners();
 
-    try {
-      await _authService.signInWithEmail(
-        email: emailController.text.trim(),
-        password: passwordController.text,
-      );
-      _navigationService.replaceWith('/home');
-    } catch (e) {
-      _snackbarService.showSnackbar(
-        message: 'Login failed: ${e.toString()}',
-        duration: const Duration(seconds: 3),
-      );
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    // try {
+    //   await _authService.signInWithEmail(
+    //     email: emailController.text.trim(),
+    //     password: passwordController.text,
+    //   );
+    //   _navigationService.replaceWith('/home');
+    // } catch (e) {
+    //   _snackbarService.showSnackbar(
+    //     message: 'Login failed: ${e.toString()}',
+    //     duration: const Duration(seconds: 3),
+    //   );
+    // } finally {
+    //   _isLoading = false;
+    //   notifyListeners();
+    // }
+    _navigationService.replaceWith(Routes.homeView);
   }
 
   Future<void> loginWithGoogle() async {

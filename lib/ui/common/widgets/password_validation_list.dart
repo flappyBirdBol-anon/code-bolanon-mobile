@@ -5,6 +5,7 @@ class PasswordValidationList extends StatelessWidget {
   final bool hasNumber;
   final bool hasUpperCase;
   final bool hasLowerCase;
+  final bool isMatch;
 
   const PasswordValidationList({
     Key? key,
@@ -12,6 +13,7 @@ class PasswordValidationList extends StatelessWidget {
     required this.hasNumber,
     required this.hasUpperCase,
     required this.hasLowerCase,
+    required this.isMatch,
   }) : super(key: key);
 
   @override
@@ -34,6 +36,10 @@ class PasswordValidationList extends StatelessWidget {
         _ValidationItem(
           isValid: hasLowerCase,
           text: 'Contains lowercase letter',
+        ),
+        _ValidationItem(
+          isValid: isMatch,
+          text: 'Passwords match',
         ),
       ],
     );

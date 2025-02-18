@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppTheme {
   static const Color primaryColor = Color.fromARGB(255, 0, 0, 0); // Light Green
   static const Color accentColor = Color(0xFF607D8B); // Blue Grey
-  static const Color backgroundColorLight = Colors.white;
+  static const Color backgroundColorLight = Color.fromARGB(255, 120, 119, 119);
   static const Color textColorLight = Colors.black87;
   static const Color secondaryTextColorLight = Colors.grey;
 
@@ -15,8 +15,8 @@ class AppTheme {
     brightness: Brightness.light,
     primaryColor: primaryColor,
     hintColor: accentColor,
-    scaffoldBackgroundColor: backgroundColorLight,
-    textTheme: TextTheme(
+    scaffoldBackgroundColor: const Color.fromARGB(255, 132, 132, 132),
+    textTheme: const TextTheme(
       displayLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
@@ -35,8 +35,8 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
-        textStyle: TextStyle(fontFamily: 'Poppins', fontSize: 18),
-        padding: EdgeInsets.symmetric(vertical: 15),
+        textStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 18),
+        padding: const EdgeInsets.symmetric(vertical: 15),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -49,7 +49,7 @@ class AppTheme {
       ),
       filled: true,
       fillColor: Colors.grey[200],
-      hintStyle: TextStyle(color: secondaryTextColorLight),
+      hintStyle: const TextStyle(color: secondaryTextColorLight),
     ),
   );
 
@@ -58,7 +58,7 @@ class AppTheme {
     primaryColor: const Color.fromARGB(255, 174, 102, 25),
     hintColor: accentColor,
     scaffoldBackgroundColor: backgroundColorDark,
-    textTheme: TextTheme(
+    textTheme: const TextTheme(
       displayLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
@@ -77,8 +77,8 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
-        textStyle: TextStyle(fontFamily: 'Poppins', fontSize: 18),
-        padding: EdgeInsets.symmetric(vertical: 15),
+        textStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 18),
+        padding: const EdgeInsets.symmetric(vertical: 15),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -91,7 +91,7 @@ class AppTheme {
       ),
       filled: true,
       fillColor: Colors.grey[800],
-      hintStyle: TextStyle(color: secondaryTextColorDark),
+      hintStyle: const TextStyle(color: secondaryTextColorDark),
     ),
   );
 }
