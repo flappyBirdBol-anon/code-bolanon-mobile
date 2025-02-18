@@ -1,5 +1,5 @@
 import 'package:code_bolanon/app/app.locator.dart';
-import 'package:code_bolanon/app/app.router.dart';
+import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 
@@ -9,23 +9,19 @@ class MainBodyViewModel extends BaseViewModel {
 
   int get currentIndex => _currentIndex;
 
-  void onTabTapped(int index) {
-    _currentIndex = index;
-    notifyListeners();
+  final List<GlobalKey<NavigatorState>> navigatorKeys = [
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+  ];
 
-    switch (index) {
-      case 0:
-        _navigationService.replaceWithMainBodyView();
-        break;
-      case 1:
-        null;
-        break;
-      case 2:
-        null;
-        break;
-      case 3:
-        _navigationService.navigateTo(Routes.mainBodyView);
-        break;
+  void onTabTapped(int index) {
+    if (_currentIndex == index) {
+      navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+    } else {
+      _currentIndex = index;
+      notifyListeners();
     }
   }
 }

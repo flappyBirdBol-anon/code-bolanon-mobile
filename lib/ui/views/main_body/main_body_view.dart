@@ -19,41 +19,83 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
         canvasColor:
             const Color(0xFF448EE4), // This will force the background color
       ),
-      child: Scaffold(
-        body: IndexedStack(
-          index: viewModel.currentIndex,
-          children: const [
-            HomeView(),
-            SizedBox.shrink(),
-            SizedBox.shrink(),
-            ProfileView(),
-          ],
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.book),
-              label: 'Courses',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_month),
-              label: 'Consultations',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
-          currentIndex: viewModel.currentIndex,
-          onTap: viewModel.onTabTapped,
-          backgroundColor: const Color(0xFF448EE4),
-          selectedItemColor: Colors.white,
-          unselectedItemColor: Colors.black54,
-          type: BottomNavigationBarType.fixed, // Added this line
+      child: WillPopScope(
+        onWillPop: () async {
+          final isFirstRouteInCurrentTab = !await viewModel
+              .navigatorKeys[viewModel.currentIndex].currentState!
+              .maybePop();
+          if (isFirstRouteInCurrentTab) {
+            if (viewModel.currentIndex != 0) {
+              viewModel.onTabTapped(0);
+              return false;
+            }
+          }
+          return isFirstRouteInCurrentTab;
+        },
+        child: Scaffold(
+          body: IndexedStack(
+            index: viewModel.currentIndex,
+            children: [
+              Navigator(
+                key: viewModel.navigatorKeys[0],
+                onGenerateRoute: (routeSettings) {
+                  return MaterialPageRoute(
+                    builder: (context) => const HomeView(),
+                  );
+                },
+              ),
+              Navigator(
+                key: viewModel.navigatorKeys[1],
+                onGenerateRoute: (routeSettings) {
+                  return MaterialPageRoute(
+                    builder: (context) => const SizedBox.shrink(),
+                  );
+                },
+              ),
+              Navigator(
+                key: viewModel.navigatorKeys[2],
+                onGenerateRoute: (routeSettings) {
+                  return MaterialPageRoute(
+                    builder: (context) => const SizedBox.shrink(),
+                  );
+                },
+              ),
+              Navigator(
+                key: viewModel.navigatorKeys[3],
+                onGenerateRoute: (routeSettings) {
+                  return MaterialPageRoute(
+                    builder: (context) => const ProfileView(),
+                  );
+                },
+              ),
+            ],
+          ),
+          bottomNavigationBar: BottomNavigationBar(
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.book),
+                label: 'Courses',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.calendar_month),
+                label: 'Consultations',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
+            currentIndex: viewModel.currentIndex,
+            onTap: viewModel.onTabTapped,
+            backgroundColor: const Color(0xFF448EE4),
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.black54,
+            type: BottomNavigationBarType.fixed, // Added this line
+          ),
         ),
       ),
     );
