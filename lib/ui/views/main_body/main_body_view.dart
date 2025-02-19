@@ -1,6 +1,7 @@
 import 'package:code_bolanon/ui/views/home/home_view.dart';
 import 'package:code_bolanon/ui/views/profile/profile_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:stacked/stacked.dart';
 
 import 'main_body_viewmodel.dart';
@@ -19,18 +20,23 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
         canvasColor:
             const Color(0xFF448EE4), // This will force the background color
       ),
-      child: WillPopScope(
-        onWillPop: () async {
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) {
+            return;
+          }
           final isFirstRouteInCurrentTab = !await viewModel
               .navigatorKeys[viewModel.currentIndex].currentState!
               .maybePop();
           if (isFirstRouteInCurrentTab) {
             if (viewModel.currentIndex != 0) {
               viewModel.onTabTapped(0);
-              return false;
+            } else {
+              // Allow the app to close when back button is pressed on the homepage
+              return SystemNavigator.pop();
             }
           }
-          return isFirstRouteInCurrentTab;
         },
         child: Scaffold(
           body: IndexedStack(
