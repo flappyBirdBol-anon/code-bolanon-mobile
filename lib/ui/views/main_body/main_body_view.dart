@@ -7,7 +7,8 @@ import 'package:stacked/stacked.dart';
 import 'main_body_viewmodel.dart';
 
 class MainBodyView extends StackedView<MainBodyViewModel> {
-  const MainBodyView({Key? key}) : super(key: key);
+  final String? role;
+  const MainBodyView({Key? key, this.role}) : super(key: key);
 
   @override
   Widget builder(

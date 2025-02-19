@@ -114,7 +114,7 @@ class SignupView extends StackedView<SignupViewModel> {
         const SizedBox(height: 8),
         CustomTextField(
           controller: viewModel.certificationController,
-          labelText: 'Certification',
+          labelText: 'Organization',
           prefixIcon: Icons.school,
         ),
         const SizedBox(height: 16),

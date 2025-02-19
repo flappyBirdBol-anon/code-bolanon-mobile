@@ -199,14 +199,17 @@ extension NavigatorStateExtension on _i11.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> navigateToMainBodyView([
+  Future<dynamic> navigateToMainBodyView({
+    _i9.Key? key,
+    String? role,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return navigateTo<dynamic>(Routes.mainBodyView,
+        arguments: MainBodyViewArguments(key: key, role: role),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -311,14 +314,17 @@ extension NavigatorStateExtension on _i11.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> replaceWithMainBodyView([
+  Future<dynamic> replaceWithMainBodyView({
+    _i9.Key? key,
+    String? role,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return replaceWith<dynamic>(Routes.mainBodyView,
+        arguments: MainBodyViewArguments(key: key, role: role),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
