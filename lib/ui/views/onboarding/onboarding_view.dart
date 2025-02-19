@@ -1,3 +1,4 @@
+import 'package:code_bolanon/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:lottie/lottie.dart';
@@ -15,14 +16,14 @@ class OnboardingView extends StackedView<OnboardingViewModel> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
+              const Padding(
+                padding: EdgeInsets.only(top: 16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      viewModel.appName,
-                      style: const TextStyle(
+                      Constants.appName,
+                      style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
