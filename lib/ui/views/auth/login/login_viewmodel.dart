@@ -1,9 +1,10 @@
 import 'package:code_bolanon/app/app.router.dart';
-import 'package:stacked/stacked.dart';
 import 'package:flutter/material.dart';
+import 'package:stacked/stacked.dart';
+import 'package:stacked_services/stacked_services.dart';
+
 import '../../../../app/app.locator.dart';
 import '../../../../services/auth_service.dart';
-import 'package:stacked_services/stacked_services.dart';
 
 class LoginViewModel extends BaseViewModel {
   final _authService = locator<AuthService>();
@@ -31,15 +32,15 @@ class LoginViewModel extends BaseViewModel {
       return;
     }
     try {
-      // print(emailController.text + passwordController.text);
-      // final success = await _authService.login(
-      //     emailController.text, passwordController.text);
-      // if (success) {
-      //   await _navigationService.clearStackAndShow(Routes.mainBodyView);
-      // } else {
-      //   // Show error message (consider using a dialog service)
-      //   print('Login failed. Please check your credentials.');
-      // }
+      print(emailController.text + passwordController.text);
+      final success = await _authService.login(
+          emailController.text, passwordController.text);
+      if (success) {
+        await _navigationService.clearStackAndShow(Routes.mainBodyView);
+      } else {
+        // Show error message (consider using a dialog service)
+        print('Login failed. Please check your credentials.');
+      }
       _navigationService.navigateToMainBodyView(role: "trainer");
     } catch (e) {
       // Handle any errors (consider using a dialog service)
