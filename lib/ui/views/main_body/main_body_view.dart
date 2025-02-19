@@ -1,5 +1,6 @@
 import 'package:code_bolanon/ui/views/home/home_view.dart';
 import 'package:code_bolanon/ui/views/profile/profile_view.dart';
+import 'package:code_bolanon/ui/views/trainer_home/trainer_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:stacked/stacked.dart';
@@ -7,7 +8,8 @@ import 'package:stacked/stacked.dart';
 import 'main_body_viewmodel.dart';
 
 class MainBodyView extends StackedView<MainBodyViewModel> {
-  const MainBodyView({Key? key}) : super(key: key);
+  final String? role;
+  const MainBodyView({Key? key, this.role}) : super(key: key);
 
   @override
   Widget builder(
@@ -46,7 +48,7 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
                 key: viewModel.navigatorKeys[0],
                 onGenerateRoute: (routeSettings) {
                   return MaterialPageRoute(
-                    builder: (context) => const HomeView(),
+                    builder: (context) => TrainerHomeView(role: role),
                   );
                 },
               ),

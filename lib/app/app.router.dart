@@ -11,10 +11,12 @@ import 'package:code_bolanon/ui/views/main_body/main_body_view.dart' as _i6;
 import 'package:code_bolanon/ui/views/onboarding/onboarding_view.dart' as _i4;
 import 'package:code_bolanon/ui/views/profile/profile_view.dart' as _i7;
 import 'package:code_bolanon/ui/views/startup/startup_view.dart' as _i3;
-import 'package:flutter/material.dart' as _i8;
+import 'package:code_bolanon/ui/views/trainer_home/trainer_home_view.dart'
+    as _i8;
+import 'package:flutter/material.dart' as _i9;
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart' as _i1;
-import 'package:stacked_services/stacked_services.dart' as _i9;
+import 'package:stacked_services/stacked_services.dart' as _i10;
 
 class Routes {
   static const homeView = '/home-view';
@@ -29,6 +31,8 @@ class Routes {
 
   static const profileView = '/profile-view';
 
+  static const trainerHomeView = '/trainer-home-view';
+
   static const all = <String>{
     homeView,
     startupView,
@@ -36,6 +40,7 @@ class Routes {
     authView,
     mainBodyView,
     profileView,
+    trainerHomeView,
   };
 }
 
@@ -65,42 +70,55 @@ class StackedRouter extends _i1.RouterBase {
       Routes.profileView,
       page: _i7.ProfileView,
     ),
+    _i1.RouteDef(
+      Routes.trainerHomeView,
+      page: _i8.TrainerHomeView,
+    ),
   ];
 
   final _pagesMap = <Type, _i1.StackedRouteFactory>{
     _i2.HomeView: (data) {
-      return _i8.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i2.HomeView(),
         settings: data,
       );
     },
     _i3.StartupView: (data) {
-      return _i8.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i3.StartupView(),
         settings: data,
       );
     },
     _i4.OnboardingView: (data) {
-      return _i8.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i4.OnboardingView(),
         settings: data,
       );
     },
     _i5.AuthView: (data) {
-      return _i8.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i5.AuthView(),
         settings: data,
       );
     },
     _i6.MainBodyView: (data) {
-      return _i8.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i6.MainBodyView(),
+      final args = data.getArgs<MainBodyViewArguments>(
+        orElse: () => const MainBodyViewArguments(),
+      );
+      return _i9.MaterialPageRoute<dynamic>(
+        builder: (context) => _i6.MainBodyView(key: args.key, role: args.role),
         settings: data,
       );
     },
     _i7.ProfileView: (data) {
-      return _i8.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i7.ProfileView(),
+        settings: data,
+      );
+    },
+    _i8.TrainerHomeView: (data) {
+      return _i9.MaterialPageRoute<dynamic>(
+        builder: (context) => const _i8.TrainerHomeView(),
         settings: data,
       );
     },
@@ -113,7 +131,34 @@ class StackedRouter extends _i1.RouterBase {
   Map<Type, _i1.StackedRouteFactory> get pagesMap => _pagesMap;
 }
 
-extension NavigatorStateExtension on _i9.NavigationService {
+class MainBodyViewArguments {
+  const MainBodyViewArguments({
+    this.key,
+    this.role,
+  });
+
+  final _i9.Key? key;
+
+  final String? role;
+
+  @override
+  String toString() {
+    return '{"key": "$key", "role": "$role"}';
+  }
+
+  @override
+  bool operator ==(covariant MainBodyViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key && other.role == role;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode ^ role.hashCode;
+  }
+}
+
+extension NavigatorStateExtension on _i10.NavigationService {
   Future<dynamic> navigateToHomeView([
     int? routerId,
     bool preventDuplicates = true,
@@ -170,14 +215,17 @@ extension NavigatorStateExtension on _i9.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> navigateToMainBodyView([
+  Future<dynamic> navigateToMainBodyView({
+    _i9.Key? key,
+    String? role,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return navigateTo<dynamic>(Routes.mainBodyView,
+        arguments: MainBodyViewArguments(key: key, role: role),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -192,6 +240,20 @@ extension NavigatorStateExtension on _i9.NavigationService {
         transition,
   ]) async {
     return navigateTo<dynamic>(Routes.profileView,
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
+  Future<dynamic> navigateToTrainerHomeView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return navigateTo<dynamic>(Routes.trainerHomeView,
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -254,14 +316,17 @@ extension NavigatorStateExtension on _i9.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> replaceWithMainBodyView([
+  Future<dynamic> replaceWithMainBodyView({
+    _i9.Key? key,
+    String? role,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return replaceWith<dynamic>(Routes.mainBodyView,
+        arguments: MainBodyViewArguments(key: key, role: role),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -276,6 +341,20 @@ extension NavigatorStateExtension on _i9.NavigationService {
         transition,
   ]) async {
     return replaceWith<dynamic>(Routes.profileView,
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
+  Future<dynamic> replaceWithTrainerHomeView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return replaceWith<dynamic>(Routes.trainerHomeView,
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,

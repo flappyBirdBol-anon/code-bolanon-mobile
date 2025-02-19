@@ -1,10 +1,9 @@
 import 'package:code_bolanon/app/app.router.dart';
-import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
-import 'package:stacked_services/stacked_services.dart';
-
+import 'package:flutter/material.dart';
 import '../../../../app/app.locator.dart';
 import '../../../../services/auth_service.dart';
+import 'package:stacked_services/stacked_services.dart';
 
 class LoginViewModel extends BaseViewModel {
   final _authService = locator<AuthService>();
@@ -27,16 +26,21 @@ class LoginViewModel extends BaseViewModel {
 
   Future<void> login() async {
     setBusy(true);
+    if (!_validateInputs()) {
+      setBusy(false);
+      return;
+    }
     try {
-      print(emailController.text + passwordController.text);
-      final success = await _authService.login(
-          emailController.text, passwordController.text);
-      if (success) {
-        await _navigationService.clearStackAndShow(Routes.mainBodyView);
-      } else {
-        // Show error message (consider using a dialog service)
-        print('Login failed. Please check your credentials.');
-      }
+      // print(emailController.text + passwordController.text);
+      // final success = await _authService.login(
+      //     emailController.text, passwordController.text);
+      // if (success) {
+      //   await _navigationService.clearStackAndShow(Routes.mainBodyView);
+      // } else {
+      //   // Show error message (consider using a dialog service)
+      //   print('Login failed. Please check your credentials.');
+      // }
+      _navigationService.navigateToMainBodyView(role: "trainer");
     } catch (e) {
       // Handle any errors (consider using a dialog service)
       print('An error occurred during login: $e');
@@ -67,6 +71,7 @@ class LoginViewModel extends BaseViewModel {
     //   notifyListeners();
     // }
     _navigationService.replaceWith(Routes.homeView);
+    _navigationService.clearStackAndShow(Routes.homeView);
   }
 
   Future<void> loginWithGoogle() async {
@@ -74,7 +79,7 @@ class LoginViewModel extends BaseViewModel {
     notifyListeners();
 
     try {
-      //  await _authService.signInWithGoogle();
+      // await _authService.signInWithGoogle();
       _navigationService.replaceWith('/home');
     } catch (e) {
       _snackbarService.showSnackbar(

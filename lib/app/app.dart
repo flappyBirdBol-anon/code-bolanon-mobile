@@ -11,6 +11,7 @@ import 'package:code_bolanon/services/theme_service.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/ui/views/main_body/main_body_view.dart';
 import 'package:code_bolanon/ui/views/profile/profile_view.dart';
+import 'package:code_bolanon/ui/views/trainer_home/trainer_home_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -21,6 +22,7 @@ import 'package:code_bolanon/ui/views/profile/profile_view.dart';
     MaterialRoute(page: AuthView),
     MaterialRoute(page: MainBodyView),
     MaterialRoute(page: ProfileView),
+    MaterialRoute(page: TrainerHomeView),
 // @stacked-route
   ],
   dependencies: [
