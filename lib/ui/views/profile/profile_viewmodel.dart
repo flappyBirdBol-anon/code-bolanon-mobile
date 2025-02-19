@@ -20,14 +20,11 @@ class ProfileViewModel extends BaseViewModel {
         'React',
         'MongoDB'
       ];
-  String get specialization => 'Mobile Development';
-  String get organization => 'Tech Academy';
-
+  String get specialization =>
+      _authService.currentUser?.specialization ?? 'None';
+  String get organization => _authService.currentUser?.organization ?? 'None';
   bool get isTrainer => role.toLowerCase() == 'trainer';
 
-  int get totalCourses => 12;
-  int get totalAppointments => 12;
-  // Add methods to update profile, password, and tech stacks
   void updateProfile() {
     // Implement profile update logic
   }

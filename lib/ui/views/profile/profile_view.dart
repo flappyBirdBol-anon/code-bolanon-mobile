@@ -93,7 +93,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             _buildSectionTitle('Tech Stacks'),
             TextButton(
@@ -108,8 +108,8 @@ class ProfileView extends StackedView<ProfileViewModel> {
         const SizedBox(height: 8),
         _buildTechStacks(viewModel.techStacks),
         const SizedBox(height: 24),
-        if (viewModel.role == 'Trainer') ...[
-          _buildSectionTitle('Trainer Information'),
+        if (viewModel.role == 'trainer') ...[
+          _buildSectionTitle('Profession'),
           const SizedBox(height: 8),
           _buildInfoRow('Specialization', viewModel.specialization),
           const SizedBox(height: 8),
