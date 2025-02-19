@@ -1,5 +1,5 @@
-import 'package:code_bolanon/ui/views/home/home_view.dart';
 import 'package:code_bolanon/ui/views/menu/menu_view.dart';
+import 'package:code_bolanon/ui/views/trainer_home/trainer_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:stacked/stacked.dart';
@@ -19,94 +19,211 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
     return Theme(
       data: ThemeData(
         canvasColor:
-            const Color(0xFF448EE4), // Background color for the Scaffold
+            const Color(0xFF448EE4), // This will force the background color
       ),
       child: PopScope(
-        canPop: false, // Prevents the default back button behavior
+        canPop: false,
         onPopInvokedWithResult: (didPop, result) async {
           if (didPop) {
             return;
           }
-          // Check if the current tab can pop a route
           final isFirstRouteInCurrentTab = !await viewModel
               .navigatorKeys[viewModel.currentIndex].currentState!
               .maybePop();
           if (isFirstRouteInCurrentTab) {
             if (viewModel.currentIndex != 0) {
-              // Switch to the home tab if not already on it
               viewModel.onTabTapped(0);
             } else {
-              // Exit the app if already on the home tab
+              // Allow the app to close when back button is pressed on the homepage
               return SystemNavigator.pop();
             }
           }
         },
         child: Scaffold(
-          body: IndexedStack(
-            index: viewModel.currentIndex, // Display the currently selected tab
-            children: [
-              Navigator(
-                key: viewModel.navigatorKeys[0], // Navigator for the first tab
-                onGenerateRoute: (routeSettings) {
-                  return MaterialPageRoute(
-                    builder: (context) => const HomeView(),
-                  );
-                },
+            body: IndexedStack(
+              index: viewModel.currentIndex,
+              children: [
+                Navigator(
+                  key: viewModel.navigatorKeys[0],
+                  onGenerateRoute: (routeSettings) {
+                    return MaterialPageRoute(
+                      builder: (context) => const TrainerHomeView(),
+                    );
+                  },
+                ),
+                Navigator(
+                  key: viewModel.navigatorKeys[1],
+                  onGenerateRoute: (routeSettings) {
+                    return MaterialPageRoute(
+                      builder: (context) => const SizedBox.shrink(),
+                    );
+                  },
+                ),
+                Navigator(
+                  key: viewModel.navigatorKeys[2],
+                  onGenerateRoute: (routeSettings) {
+                    return MaterialPageRoute(
+                      builder: (context) => const SizedBox.shrink(),
+                    );
+                  },
+                ),
+                Navigator(
+                  key: viewModel.navigatorKeys[3],
+                  onGenerateRoute: (routeSettings) {
+                    return MaterialPageRoute(
+                      builder: (context) => const MenuView(),
+                    );
+                  },
+                ),
+              ],
+            ),
+            bottomNavigationBar: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
               ),
-              Navigator(
-                key: viewModel.navigatorKeys[1], // Navigator for the second tab
-                onGenerateRoute: (routeSettings) {
-                  return MaterialPageRoute(
-                    builder: (context) => const SizedBox.shrink(),
-                  );
-                },
+              child: SafeArea(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: BottomNavigationBar(
+                    items: [
+                      BottomNavigationBarItem(
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            gradient: viewModel.currentIndex == 0
+                                ? LinearGradient(
+                                    colors: [
+                                      const Color(0xFF448EE4),
+                                      const Color(0xFF448EE4).withOpacity(0.7),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : null,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.home_rounded,
+                            color: viewModel.currentIndex == 0
+                                ? Colors.white
+                                : Colors.grey[600],
+                            size: 24,
+                          ),
+                        ),
+                        label: 'Home',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            gradient: viewModel.currentIndex == 1
+                                ? LinearGradient(
+                                    colors: [
+                                      const Color(0xFF448EE4),
+                                      const Color(0xFF448EE4).withOpacity(0.7),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : null,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.inventory_2_rounded,
+                            color: viewModel.currentIndex == 1
+                                ? Colors.white
+                                : Colors.grey[600],
+                            size: 24,
+                          ),
+                        ),
+                        label: 'Courses',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            gradient: viewModel.currentIndex == 2
+                                ? LinearGradient(
+                                    colors: [
+                                      const Color(0xFF448EE4),
+                                      const Color(0xFF448EE4).withOpacity(0.7),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : null,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.calendar_today_rounded,
+                            color: viewModel.currentIndex == 2
+                                ? Colors.white
+                                : Colors.grey[600],
+                            size: 24,
+                          ),
+                        ),
+                        label: 'Consultations',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            gradient: viewModel.currentIndex == 3
+                                ? LinearGradient(
+                                    colors: [
+                                      const Color(0xFF448EE4),
+                                      const Color(0xFF448EE4).withOpacity(0.7),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : null,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.menu_rounded,
+                            color: viewModel.currentIndex == 3
+                                ? Colors.white
+                                : Colors.grey[600],
+                            size: 24,
+                          ),
+                        ),
+                        label: 'Menu',
+                      ),
+                    ],
+                    currentIndex: viewModel.currentIndex,
+                    onTap: viewModel.onTabTapped,
+                    backgroundColor: Colors.transparent,
+                    selectedItemColor: const Color(0xFF448EE4),
+                    unselectedItemColor: Colors.grey[600],
+                    selectedLabelStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    type: BottomNavigationBarType.fixed,
+                    elevation: 0,
+                    showSelectedLabels: true,
+                    showUnselectedLabels: true,
+                  ),
+                ),
               ),
-              Navigator(
-                key: viewModel.navigatorKeys[2], // Navigator for the third tab
-                onGenerateRoute: (routeSettings) {
-                  return MaterialPageRoute(
-                    builder: (context) => const SizedBox.shrink(),
-                  );
-                },
-              ),
-              Navigator(
-                key: viewModel.navigatorKeys[3], // Navigator for the fourth tab
-                onGenerateRoute: (routeSettings) {
-                  return MaterialPageRoute(
-                    builder: (context) => const MenuView(),
-                  );
-                },
-              ),
-            ],
-          ),
-          bottomNavigationBar: BottomNavigationBar(
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.book),
-                label: 'Courses',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.calendar_month),
-                label: 'Consultations',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.menu),
-                label: 'Menu',
-              ),
-            ],
-            currentIndex: viewModel.currentIndex, // Highlight the selected tab
-            onTap: viewModel.onTabTapped, // Handle tab taps
-            backgroundColor: const Color(0xFF448EE4),
-            selectedItemColor: Colors.white,
-            unselectedItemColor: Colors.black54,
-            type:
-                BottomNavigationBarType.fixed, // Ensure all items are displayed
-          ),
-        ),
+            )),
       ),
     );
   }

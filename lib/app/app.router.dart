@@ -110,8 +110,11 @@ class StackedRouter extends _i1.RouterBase {
       );
     },
     _i6.MainBodyView: (data) {
+      final args = data.getArgs<MainBodyViewArguments>(
+        orElse: () => const MainBodyViewArguments(),
+      );
       return _i10.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i6.MainBodyView(),
+        builder: (context) => _i6.MainBodyView(key: args.key, role: args.role),
         settings: data,
       );
     },
@@ -140,6 +143,33 @@ class StackedRouter extends _i1.RouterBase {
 
   @override
   Map<Type, _i1.StackedRouteFactory> get pagesMap => _pagesMap;
+}
+
+class MainBodyViewArguments {
+  const MainBodyViewArguments({
+    this.key,
+    this.role,
+  });
+
+  final _i10.Key? key;
+
+  final String? role;
+
+  @override
+  String toString() {
+    return '{"key": "$key", "role": "$role"}';
+  }
+
+  @override
+  bool operator ==(covariant MainBodyViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key && other.role == role;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode ^ role.hashCode;
+  }
 }
 
 extension NavigatorStateExtension on _i11.NavigationService {
@@ -200,7 +230,7 @@ extension NavigatorStateExtension on _i11.NavigationService {
   }
 
   Future<dynamic> navigateToMainBodyView({
-    _i9.Key? key,
+    _i10.Key? key,
     String? role,
     int? routerId,
     bool preventDuplicates = true,
@@ -315,7 +345,7 @@ extension NavigatorStateExtension on _i11.NavigationService {
   }
 
   Future<dynamic> replaceWithMainBodyView({
-    _i9.Key? key,
+    _i10.Key? key,
     String? role,
     int? routerId,
     bool preventDuplicates = true,
