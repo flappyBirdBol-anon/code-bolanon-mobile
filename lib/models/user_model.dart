@@ -1,35 +1,40 @@
 class UserModel {
-  final String id;
-  final String name;
+  final int? id;
+  final String firstName;
+  final String lastName;
   final String email;
   final String role;
-  final Map<String, dynamic>? trainerInfo;
+  final String? profileImage;
 
   UserModel({
-    required this.id,
-    required this.name,
+    this.id,
+    required this.firstName,
+    required this.lastName,
     required this.email,
     required this.role,
-    this.trainerInfo,
+    this.profileImage,
   });
+  String get fullName => '$firstName $lastName';
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      role: json['role'],
-      trainerInfo: json['trainer_info'],
+      firstName: json['first_name'] ?? '',
+      lastName: json['last_name'] ?? '',
+      email: json['email'] ?? '',
+      role: json['role'] ?? '',
+      profileImage: json['profile_image'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
+      'first_name': firstName,
+      'last_name': lastName,
       'email': email,
       'role': role,
-      'trainer_info': trainerInfo,
+      'profile_image': profileImage,
     };
   }
 }

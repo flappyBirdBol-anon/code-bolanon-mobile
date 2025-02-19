@@ -1,9 +1,17 @@
+import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
+import 'package:stacked/stacked.dart';
 
-class AuthService {
+class AuthService with ReactiveServiceMixin {
   final ApiService _apiService;
 
-  AuthService(this._apiService);
+  final ReactiveValue<UserModel?> _currentUser =
+      ReactiveValue<UserModel?>(null);
+  UserModel? get currentUser => _currentUser.value;
+
+  AuthService(this._apiService) {
+    listenToReactiveValues([_currentUser]);
+  }
 
   Future<bool> login(String email, String password) async {
     try {
@@ -16,6 +24,8 @@ class AuthService {
         final token = response.data['token'] ?? response.data['access_token'];
         if (token != null) {
           await _apiService.setAuthToken(token);
+          // Fetch user profile after successful login
+          await _fetchUserProfile();
           return true;
         }
       }
@@ -25,7 +35,7 @@ class AuthService {
       return false;
     } catch (e) {
       print('Login error: $e');
-      rethrow; // Rethrow to handle in UI
+      rethrow;
     }
   }
 
@@ -44,6 +54,8 @@ class AuthService {
         final token = response.data['token'] ?? response.data['access_token'];
         if (token != null) {
           await _apiService.setAuthToken(token);
+          // Fetch user profile after successful registration
+          await _fetchUserProfile();
           return true;
         }
       }
@@ -54,12 +66,24 @@ class AuthService {
     }
   }
 
+  Future<void> _fetchUserProfile() async {
+    try {
+      final profileData = await getProfile();
+      if (profileData != null) {
+        _currentUser.value = UserModel.fromJson(profileData);
+      }
+    } catch (e) {
+      print('Error fetching user profile: $e');
+    }
+  }
+
   Future<bool> logout() async {
     try {
       final response = await _apiService.post('/logout');
 
       if (response.statusCode == 200) {
         await _apiService.clearAuthToken();
+        _currentUser.value = null;
         return true;
       }
       return false;
@@ -85,6 +109,9 @@ class AuthService {
 
   Future<bool> isLoggedIn() async {
     final token = await _apiService.getAuthToken();
+    if (token != null && _currentUser.value == null) {
+      await _fetchUserProfile();
+    }
     return token != null;
   }
 }

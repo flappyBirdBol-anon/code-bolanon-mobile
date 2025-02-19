@@ -14,108 +14,24 @@ class ProfileView extends StackedView<ProfileViewModel> {
   ) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Profile', style: TextStyle(color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20),
-                // Profile Header
-                Column(
-                  children: [
-                    const CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Color(0xFFE0E0E0),
-                      child: Icon(
-                        Icons.person,
-                        size: 40,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Shatela',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'shatela1@gmail.com',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
-                ),
-
-                // Menu Items
-                _buildMenuItem(
-                  icon: Icons.person_outline,
-                  title: 'Profile setting',
-                  onTap: () {},
-                ),
-                _buildMenuItem(
-                  icon: Icons.calendar_today,
-                  title: 'My Schedule',
-                  onTap: () {},
-                ),
-                _buildMenuItem(
-                  icon: Icons.verified,
-                  title: 'Certifications',
-                  onTap: () {},
-                ),
-                _buildMenuItem(
-                  icon: Icons.download,
-                  title: 'Downloads',
-                  onTap: () {},
-                ),
-                _buildMenuItem(
-                  icon: Icons.settings,
-                  title: 'Settings',
-                  onTap: () {},
-                ),
-                _buildMenuItem(
-                  icon: Icons.info_outline,
-                  title: 'About',
-                  onTap: () {},
-                ),
-                _buildMenuItem(
-                  icon: Icons.help_outline,
-                  title: 'Help Center',
-                  onTap: () {},
-                ),
-                const SizedBox(height: 16),
-
-                // Logout Button
-                InkWell(
-                  onTap: () => viewModel.logout(),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.logout,
-                          color: Colors.red[700],
-                          size: 22,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Log out',
-                          style: TextStyle(
-                            color: Colors.red[700],
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                _buildProfileHeader(viewModel),
+                const SizedBox(height: 24),
+                _buildInfoCard(viewModel, context),
+                const SizedBox(height: 24),
+                _buildActionButtons(context),
               ],
             ),
           ),
@@ -124,44 +40,199 @@ class ProfileView extends StackedView<ProfileViewModel> {
     );
   }
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: Colors.black87,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const Spacer(),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 22,
-                  color: Colors.black54,
-                ),
-              ],
+  Widget _buildProfileHeader(ProfileViewModel viewModel) {
+    return Center(
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: Colors.grey[200],
+            backgroundImage: NetworkImage(viewModel.profilePictureUrl),
+            child: viewModel.profilePictureUrl.isEmpty
+                ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                : null,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '${viewModel.firstName} ${viewModel.lastName}',
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: 4),
+          Text(
+            viewModel.email,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              viewModel.role,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(ProfileViewModel viewModel, BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionTitle('Tech Stacks'),
+            TextButton(
+              onPressed: () => _showUpdateModal(context, 'Manage Tech Stack'),
+              child: const Icon(
+                Icons.edit,
+                color: Colors.black,
+              ),
+            ),
+          ],
         ),
-        const Divider(height: 1),
+        const SizedBox(height: 8),
+        _buildTechStacks(viewModel.techStacks),
+        const SizedBox(height: 24),
+        if (viewModel.role == 'Trainer') ...[
+          _buildSectionTitle('Trainer Information'),
+          const SizedBox(height: 8),
+          _buildInfoRow('Specialization', viewModel.specialization),
+          const SizedBox(height: 8),
+          _buildInfoRow('Organization', viewModel.organization),
+        ],
       ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTechStacks(List<String> techStacks) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: techStacks
+          .map((tech) => Chip(
+                label: Text(tech),
+                backgroundColor: Colors.grey[200],
+                labelStyle: const TextStyle(color: Colors.black87),
+              ))
+          .toList(),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () => _showUpdateModal(context, 'Edit Profile'),
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.black87,
+              side: const BorderSide(color: Colors.black87),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Edit Profile'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => _showUpdateModal(context, 'Change Password'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.black87,
+              side: const BorderSide(color: Colors.black87),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Change Password'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showUpdateModal(BuildContext context, String title) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              const Text('Modal content for goes here.'),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black87,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
