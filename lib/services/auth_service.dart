@@ -20,16 +20,14 @@ class AuthService with ReactiveServiceMixin {
         'password': password,
       });
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.statusCode == 200) {
         final token = response.data['token'] ?? response.data['access_token'];
         if (token != null) {
           await _apiService.setAuthToken(token);
-          // Fetch user profile after successful login
           await _fetchUserProfile();
           return true;
         }
       }
-
       print('Login failed with status: ${response.statusCode}');
       print('Response data: ${response.data}');
       return false;

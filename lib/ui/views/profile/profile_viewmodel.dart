@@ -6,10 +6,11 @@ class ProfileViewModel extends BaseViewModel {
   final _authService = locator<AuthService>();
 
   // User Information
-  String get firstName => _authService.currentUser?.firstName ?? 'John';
-  String get lastName => _authService.currentUser?.lastName ?? 'Doe';
-  String get email => _authService.currentUser?.email ?? 'john.doe@example.com';
-  String get role => _authService.currentUser?.role ?? 'Trainer';
+  String get firstName => _authService.currentUser?.firstName ?? 'Example';
+  String get lastName => _authService.currentUser?.lastName ?? 'User';
+  String get email =>
+      _authService.currentUser?.email ?? 'example.user@example.com';
+  String get role => _authService.currentUser?.role ?? 'Guest';
   String get profilePictureUrl => _authService.currentUser?.profileImage ?? '';
   List<String> get techStacks => [
         'Flutter',
