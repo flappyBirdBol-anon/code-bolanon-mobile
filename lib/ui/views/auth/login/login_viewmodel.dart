@@ -32,7 +32,7 @@ class LoginViewModel extends BaseViewModel {
       return;
     }
     try {
-      print(emailController.text + passwordController.text);
+      print('Attempting login with email: ${emailController.text}');
       final success = await _authService.login(
           emailController.text, passwordController.text);
       if (success) {
@@ -40,11 +40,18 @@ class LoginViewModel extends BaseViewModel {
       } else {
         // Show error message (consider using a dialog service)
         print('Login failed. Please check your credentials.');
+        _snackbarService.showSnackbar(
+          message: 'Login failed. Please check your credentials.',
+          duration: const Duration(seconds: 3),
+        );
       }
-      _navigationService.navigateToMainBodyView(role: "trainer");
     } catch (e) {
       // Handle any errors (consider using a dialog service)
       print('An error occurred during login: $e');
+      _snackbarService.showSnackbar(
+        message: 'An error occurred during login: $e',
+        duration: const Duration(seconds: 3),
+      );
     } finally {
       setBusy(false);
     }

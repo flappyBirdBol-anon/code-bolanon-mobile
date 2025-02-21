@@ -31,7 +31,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                 const SizedBox(height: 24),
                 _buildInfoCard(viewModel, context),
                 const SizedBox(height: 24),
-                _buildActionButtons(context),
+                _buildActionButtons(context, viewModel), // Pass viewModel here
               ],
             ),
           ),
@@ -47,8 +47,10 @@ class ProfileView extends StackedView<ProfileViewModel> {
           CircleAvatar(
             radius: 50,
             backgroundColor: Colors.grey[200],
-            backgroundImage: NetworkImage(viewModel.profilePictureUrl),
-            child: viewModel.profilePictureUrl.isEmpty
+            backgroundImage: viewModel.formattedProfilePictureUrl.isNotEmpty
+                ? NetworkImage(viewModel.formattedProfilePictureUrl)
+                : null,
+            child: viewModel.formattedProfilePictureUrl.isEmpty
                 ? const Icon(Icons.person, size: 50, color: Colors.grey)
                 : null,
           ),
@@ -97,7 +99,8 @@ class ProfileView extends StackedView<ProfileViewModel> {
           children: [
             _buildSectionTitle('Tech Stacks'),
             TextButton(
-              onPressed: () => _showUpdateModal(context, 'Manage Tech Stack'),
+              onPressed: () =>
+                  _showUpdateModal(context, 'Manage Tech Stack', viewModel),
               child: const Icon(
                 Icons.edit,
                 color: Colors.black,
@@ -165,13 +168,13 @@ class ProfileView extends StackedView<ProfileViewModel> {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context, ProfileViewModel viewModel) {
     return Row(
       children: [
         Expanded(
-          child: ElevatedButton(
-            onPressed: () => _showUpdateModal(context, 'Edit Profile'),
-            style: ElevatedButton.styleFrom(
+          child: OutlinedButton(
+            onPressed: () => viewModel.showEditProfileModal(context),
+            style: OutlinedButton.styleFrom(
               foregroundColor: Colors.black87,
               side: const BorderSide(color: Colors.black87),
               shape: RoundedRectangleBorder(
@@ -184,7 +187,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
         const SizedBox(width: 16),
         Expanded(
           child: OutlinedButton(
-            onPressed: () => _showUpdateModal(context, 'Change Password'),
+            onPressed: () => viewModel.showChangePasswordModal(context),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.black87,
               side: const BorderSide(color: Colors.black87),
@@ -199,41 +202,15 @@ class ProfileView extends StackedView<ProfileViewModel> {
     );
   }
 
-  void _showUpdateModal(BuildContext context, String title) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              const Text('Modal content for goes here.'),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black87,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  void _showUpdateModal(
+      BuildContext context, String title, ProfileViewModel viewModel) {
+    if (title == 'Manage Tech Stack') {
+      viewModel.showTechStackModal(context);
+    } else if (title == 'Edit Profile') {
+      viewModel.showEditProfileModal(context);
+    } else if (title == 'Change Password') {
+      viewModel.showChangePasswordModal(context);
+    }
   }
 
   @override

@@ -3,6 +3,7 @@ import 'package:code_bolanon/ui/common/widgets/password_validation_list.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
+
 import 'signup_viewmodel.dart';
 
 class SignupView extends StackedView<SignupViewModel> {
@@ -113,7 +114,7 @@ class SignupView extends StackedView<SignupViewModel> {
         ),
         const SizedBox(height: 8),
         CustomTextField(
-          controller: viewModel.certificationController,
+          controller: viewModel.organizationController,
           labelText: 'Organization',
           prefixIcon: Icons.school,
         ),
@@ -174,7 +175,7 @@ class SignupView extends StackedView<SignupViewModel> {
                 style: Theme.of(context).textTheme.bodyMedium,
                 children: [
                   const TextSpan(
-                      text: 'Are you a Trainee? Sign up ',
+                      text: 'Are you a Learner? Sign up ',
                       style: TextStyle(color: Colors.grey)),
                   TextSpan(
                     text: 'Here',
@@ -184,7 +185,7 @@ class SignupView extends StackedView<SignupViewModel> {
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
-                        viewModel.setRole('trainee');
+                        viewModel.setRole('learner');
                       },
                   ),
                   const TextSpan(
