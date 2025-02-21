@@ -32,15 +32,15 @@ class LoginViewModel extends BaseViewModel {
       return;
     }
     try {
-      print(emailController.text + passwordController.text);
-      final success = await _authService.login(
-          emailController.text, passwordController.text);
-      if (success) {
-        await _navigationService.clearStackAndShow(Routes.mainBodyView);
-      } else {
-        // Show error message (consider using a dialog service)
-        print('Login failed. Please check your credentials.');
-      }
+      // print(emailController.text + passwordController.text);
+      // final success = await _authService.login(
+      //     emailController.text, passwordController.text);
+      // if (success) {
+      //   await _navigationService.clearStackAndShow(Routes.mainBodyView);
+      // } else {
+      //   // Show error message (consider using a dialog service)
+      //   print('Login failed. Please check your credentials.');
+      // }
       _navigationService.navigateToMainBodyView(role: "trainer");
     } catch (e) {
       // Handle any errors (consider using a dialog service)

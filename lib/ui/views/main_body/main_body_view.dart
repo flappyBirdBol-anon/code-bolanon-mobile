@@ -1,4 +1,5 @@
 import 'package:code_bolanon/ui/views/menu/menu_view.dart';
+import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart';
 import 'package:code_bolanon/ui/views/trainer_home/trainer_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,7 +56,7 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
                   key: viewModel.navigatorKeys[1],
                   onGenerateRoute: (routeSettings) {
                     return MaterialPageRoute(
-                      builder: (context) => const SizedBox.shrink(),
+                      builder: (context) => const TrainerCoursesView(),
                     );
                   },
                 ),
