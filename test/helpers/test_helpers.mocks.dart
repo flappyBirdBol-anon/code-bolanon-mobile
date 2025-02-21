@@ -726,6 +726,8 @@ class MockAuthService extends _i1.Mock implements _i8.AuthService {
     String? email,
     String? password,
     String? role,
+    String? specialization,
+    String? organization,
   ) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -736,6 +738,8 @@ class MockAuthService extends _i1.Mock implements _i8.AuthService {
             email,
             password,
             role,
+            specialization,
+            organization,
           ],
         ),
         returnValue: _i6.Future<bool>.value(false),
