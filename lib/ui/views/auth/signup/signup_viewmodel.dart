@@ -1,3 +1,4 @@
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -15,7 +16,7 @@ class SignupViewModel extends BaseViewModel {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-  final certificationController = TextEditingController();
+  final organizationController = TextEditingController();
   final specializationController = TextEditingController();
 
   bool _isPasswordVisible = false;
@@ -27,7 +28,7 @@ class SignupViewModel extends BaseViewModel {
   bool _termsAccepted = false;
   bool get termsAccepted => _termsAccepted;
 
-  String _selectedRole = 'trainee';
+  String _selectedRole = 'learner';
   String get selectedRole => _selectedRole;
 
   bool _isLoading = false;
@@ -66,34 +67,42 @@ class SignupViewModel extends BaseViewModel {
       confirmPasswordController.text == passwordController.text;
 
   Future<void> signupWithEmail() async {
-    if (!_validateInputs()) return;
+    if (!_validateInputs()) {
+      return;
+    }
 
     _isLoading = true;
     notifyListeners();
 
     try {
-      // await _authService.reg(
-      //   name:
-      //       '${firstNameController.text.trim()} ${lastNameController.text.trim()}',
-      //   email: emailController.text.trim(),
-      //   password: passwordController.text,
-      //   role: _selectedRole,
-      //   metadata: _selectedRole == 'trainer'
-      //       ? {
-      //           'certification': certificationController.text,
-      //           'specialization': specializationController.text,
-      //         }
-      //       : null,
-      // );
-      _navigationService.replaceWith('/home');
+      print('Attempting signup with email: ${emailController.text}');
+      final success = await _authService.register(
+          firstNameController.text,
+          lastNameController.text,
+          emailController.text,
+          passwordController.text,
+          selectedRole,
+          specializationController.text,
+          organizationController.text);
+      if (success) {
+        await _navigationService.clearStackAndShow(Routes.mainBodyView);
+      } else {
+        // Show error message (consider using a dialog service)
+        print('Sign up failed. Please check your credentials.');
+        _snackbarService.showSnackbar(
+          message: 'Sign up failed. Please check your credentials.',
+          duration: const Duration(seconds: 3),
+        );
+      }
     } catch (e) {
+      // Handle any errors (consider using a dialog service)
+      print('An error occurred during login: $e');
       _snackbarService.showSnackbar(
-        message: 'Signup failed: ${e.toString()}',
+        message: 'An error occurred during login: $e',
         duration: const Duration(seconds: 3),
       );
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      setBusy(false);
     }
   }
 
@@ -174,7 +183,7 @@ class SignupViewModel extends BaseViewModel {
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
-    certificationController.dispose();
+    organizationController.dispose();
     specializationController.dispose();
     super.dispose();
   }

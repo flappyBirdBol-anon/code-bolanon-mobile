@@ -37,8 +37,14 @@ class AuthService with ReactiveServiceMixin {
     }
   }
 
-  Future<bool> register(String firstName, String lastName, String email,
-      String password, String role) async {
+  Future<bool> register(
+      String firstName,
+      String lastName,
+      String email,
+      String password,
+      String role,
+      String? specialization,
+      String? organization) async {
     try {
       final response = await _apiService.post('/register', data: {
         'first_name': firstName,
@@ -46,6 +52,8 @@ class AuthService with ReactiveServiceMixin {
         'email': email,
         'password': password,
         'role': role,
+        'specialization': specialization,
+        'organization': organization
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {
