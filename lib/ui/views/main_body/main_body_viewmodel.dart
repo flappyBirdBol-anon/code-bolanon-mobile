@@ -1,3 +1,5 @@
+import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
@@ -14,6 +16,10 @@ class MainBodyViewModel extends BaseViewModel {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
   ];
+
+  final _authService = locator<AuthService>();
+
+  String? get role => _authService.currentUser?.role;
 
   // Method to handle tab taps
   void onTabTapped(int index) {
