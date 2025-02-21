@@ -13,6 +13,8 @@ import 'package:code_bolanon/ui/views/profile/profile_view.dart';
 import 'package:code_bolanon/ui/views/startup/startup_view.dart';
 import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
+import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart';
+import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -25,6 +27,8 @@ import 'package:stacked_services/stacked_services.dart';
     MaterialRoute(page: ProfileView),
     MaterialRoute(page: MenuView),
     MaterialRoute(page: LearnerHomeView),
+    MaterialRoute(page: TrainerCoursesView),
+    MaterialRoute(page: CourseDetailsView),
 // @stacked-route
   ],
   dependencies: [
