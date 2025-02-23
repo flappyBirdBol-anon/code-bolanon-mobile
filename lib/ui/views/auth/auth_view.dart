@@ -1,6 +1,7 @@
-import 'package:code_bolanon/ui/views/auth/signup/singup_view.dart';
+import 'package:code_bolanon/ui/views/auth/signup/signup_view.dart';
 import 'package:code_bolanon/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:stacked/stacked.dart';
 import 'auth_viewmodel.dart';
 import 'login/login_view.dart';
@@ -18,12 +19,18 @@ class AuthView extends StackedView<AuthViewModel> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // App Logo/Name
-              const Padding(
+              Padding(
                 padding: const EdgeInsets.only(top: 16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    SvgPicture.asset(
+                      'assets/images/logo.svg',
+                      height: 100,
+                      width: 100,
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
                       Constants.appName,
                       style: TextStyle(
                         fontSize: 32,
@@ -38,7 +45,7 @@ class AuthView extends StackedView<AuthViewModel> {
               const SizedBox(height: 58),
               // Description
               Text(
-                'Sign up or login below to manage your project, task, and productivity.',
+                'Sign up or login below to manage your courses, schedules, and productivity.',
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),

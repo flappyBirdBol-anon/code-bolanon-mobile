@@ -1,8 +1,19 @@
+import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
 class TrainerHomeViewModel extends BaseViewModel {
+  final _authService = locator<AuthService>();
+
+  bool _isDarkMode = false;
+  bool get isDarkMode => _isDarkMode;
+
+  String get userName => _authService.currentUser?.fullName ?? 'User';
+  String get userRole => _authService.currentUser?.role ?? 'Guest';
+  String get userImage => _authService.currentUser?.profileImage ?? '';
+  String get userEmail => _authService.currentUser?.email ?? '';
   bool isLoading = true;
   String profileImageUrl = 'assets/images/1.jpg';
   int activeStudents = 150;
@@ -69,7 +80,6 @@ class TrainerHomeViewModel extends BaseViewModel {
     // Add more courses here
   ];
 
-  String userName = 'John Nicolas';
   Future<void> refreshData() async {
     setLoading(true);
     // Simulate API call

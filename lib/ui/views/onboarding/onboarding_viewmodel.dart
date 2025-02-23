@@ -14,21 +14,21 @@ class OnboardingViewModel extends BaseViewModel {
 
   final List<Map<String, String>> onboardingData = [
     {
-      'title': 'Team Up For Success',
+      'title': 'Learn Programming in Bohol',
       'description':
-          'Get ready to unleash your potential and witness the power of teamwork as we embark on this extraordinary project.',
+          'Join our local tech community and learn programming from experienced Boholano developers. From web development to mobile apps, start your coding journey here.',
       'animation': 'assets/animations/team_sucesss.json',
     },
     {
-      'title': 'User-Friendly at its Core',
+      'title': 'Expert Tech Mentors',
       'description':
-          'Discover the essence of user-friendliness as our interface empowers you with intuitive controls and effortless interactions',
+          'Get guided by Bohol\'s finest software developers who understand both global standards and local industry needs. Learn practical coding skills that matter.',
       'animation': 'assets/animations/user_friendly.json',
     },
     {
-      'title': 'Easy Task Creation',
+      'title': 'Hands-on Coding Projects',
       'description':
-          'Quickly add tasks, set due dates, and add descriptions with ease using our task manager app. Simplify your workflow and stay organized.',
+          'Build real-world applications while learning. Practice with projects relevant to Bohol\'s growing tech scene, from tourism apps to business solutions.',
       'animation': 'assets/animations/task_creations.json',
     },
   ];
