@@ -2,7 +2,7 @@ import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:stacked/stacked.dart';
 
-class AuthService with ReactiveServiceMixin {
+class AuthService with ListenableServiceMixin {
   final ApiService _apiService;
 
   final ReactiveValue<UserModel?> _currentUser =

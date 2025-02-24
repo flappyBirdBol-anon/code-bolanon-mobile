@@ -71,6 +71,8 @@ class SignupView extends StackedView<SignupViewModel> {
           obscureText: !viewModel.isPasswordVisible,
           onChanged: (p0) => viewModel.notifyListeners(),
           onToggleVisibility: viewModel.togglePasswordVisibility,
+          focusNode: viewModel.passwordFocusNode,
+          onFocusChange: viewModel.updatePasswordFocus,
         ),
         const SizedBox(height: 16),
         CustomTextField(
@@ -81,22 +83,28 @@ class SignupView extends StackedView<SignupViewModel> {
           onChanged: (p0) => viewModel.notifyListeners(),
           obscureText: !viewModel.isConfirmPasswordVisible,
           onToggleVisibility: viewModel.toggleConfirmPasswordVisibility,
+          focusNode: viewModel.confirmPasswordFocusNode,
+          onFocusChange: viewModel.updateConfirmPasswordFocus,
         ),
         const SizedBox(height: 8),
-        PasswordValidationList(
-          hasMinLength: viewModel.passwordController.text.length >= 8,
-          hasNumber:
-              viewModel.passwordController.text.contains(RegExp(r'[0-9]')),
-          hasUpperCase:
-              viewModel.passwordController.text.contains(RegExp(r'[A-Z]')),
-          hasLowerCase:
-              viewModel.passwordController.text.contains(RegExp(r'[a-z]')),
-          isMatch: viewModel.passwordController.text ==
-                  viewModel.confirmPasswordController.text &&
-              viewModel.passwordController.text.isNotEmpty,
+        Visibility(
+          visible: viewModel.isAnyPasswordFieldFocused,
+          child: PasswordValidationList(
+            hasMinLength: viewModel.passwordController.text.length >= 8,
+            hasNumber:
+                viewModel.passwordController.text.contains(RegExp(r'[0-9]')),
+            hasUpperCase:
+                viewModel.passwordController.text.contains(RegExp(r'[A-Z]')),
+            hasLowerCase:
+                viewModel.passwordController.text.contains(RegExp(r'[a-z]')),
+            isMatch: viewModel.passwordController.text ==
+                    viewModel.confirmPasswordController.text &&
+                viewModel.passwordController.text.isNotEmpty,
+          ),
         ),
         const SizedBox(height: 16),
         _buildRoleSelect(context, viewModel),
+        const SizedBox(height: 16),
       ],
     );
   }
@@ -124,6 +132,7 @@ class SignupView extends StackedView<SignupViewModel> {
           labelText: 'Specialization',
           prefixIcon: Icons.work,
         ),
+        const SizedBox(height: 24),
       ],
     );
   }
@@ -146,11 +155,11 @@ class SignupView extends StackedView<SignupViewModel> {
                   text: 'terms and conditions',
                   style: const TextStyle(
                     color: Colors.blue,
-                    decoration: TextDecoration.underline,
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
                       // Navigate to terms and conditions
+                      //todo: navigate to terms and conditions
                     },
                 ),
                 const TextSpan(
@@ -186,6 +195,17 @@ class SignupView extends StackedView<SignupViewModel> {
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
                         viewModel.setRole('learner');
+                      },
+                  ),
+                  TextSpan(
+                    style: const TextStyle(
+                      color: Colors.blue,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        viewModel.setRole(viewModel.selectedRole == 'trainer'
+                            ? 'learner'
+                            : 'trainer');
                       },
                   ),
                   const TextSpan(

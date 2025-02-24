@@ -18,6 +18,10 @@ class SignupViewModel extends BaseViewModel {
   final confirmPasswordController = TextEditingController();
   final organizationController = TextEditingController();
   final specializationController = TextEditingController();
+  final passwordFocusNode = FocusNode();
+  final confirmPasswordFocusNode = FocusNode();
+  bool isPasswordFieldFocused = false;
+  bool isConfirmPasswordFieldFocused = false;
 
   bool _isPasswordVisible = false;
   bool get isPasswordVisible => _isPasswordVisible;
@@ -172,12 +176,27 @@ class SignupViewModel extends BaseViewModel {
     return true;
   }
 
+  void updatePasswordFocus(bool hasFocus) {
+    isPasswordFieldFocused = hasFocus;
+    notifyListeners();
+  }
+
+  void updateConfirmPasswordFocus(bool hasFocus) {
+    isConfirmPasswordFieldFocused = hasFocus;
+    notifyListeners();
+  }
+
+  bool get isAnyPasswordFieldFocused =>
+      isPasswordFieldFocused || isConfirmPasswordFieldFocused;
+
   void notifyPasswordInput() {
     notifyListeners();
   }
 
   @override
   void dispose() {
+    passwordFocusNode.dispose();
+    confirmPasswordFocusNode.dispose();
     firstNameController.dispose();
     lastNameController.dispose();
     emailController.dispose();

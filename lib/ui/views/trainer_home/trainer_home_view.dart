@@ -43,11 +43,6 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Theme.of(context).primaryColor,
-        child: const Icon(Icons.add),
-      ),
     );
   }
 

@@ -58,27 +58,6 @@ class LoginView extends StackedView<LoginViewModel> {
                 child: const Text('Login',
                     style: TextStyle(color: Color.fromARGB(255, 0, 0, 0))),
               ),
-              const SizedBox(height: 16),
-              const DividerWithText(text: 'or continue with'),
-              const SizedBox(height: 16),
-              SocialLoginButton(
-                onPressed: viewModel.loginWithGoogle,
-                icon: ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [
-                      Colors.blue,
-                      Colors.red,
-                      Colors.yellow,
-                      Colors.green,
-                    ],
-                  ).createShader(bounds),
-                  child: const FaIcon(
-                    FontAwesomeIcons.google,
-                    color: Colors.white,
-                  ),
-                ),
-                label: 'Login with Google',
-              ),
             ],
           ],
         ),

@@ -1,3 +1,3 @@
 class Constants {
-  static const String appName = 'TBD';
+  static const String appName = 'CodeBOL-ANON';
 }
