@@ -18,6 +18,7 @@ class AuthService with ListenableServiceMixin {
       final response = await _apiService.post('/login', data: {
         'email': email,
         'password': password,
+        'platform': 'mobile',
       });
 
       if (response.statusCode == 200) {
@@ -148,20 +149,49 @@ class AuthService with ListenableServiceMixin {
       String? specialization,
       String? organization) async {
     try {
-      final userId =
-          _currentUser.value?.id; // Assuming UserModel has an 'id' field
+      final userId = _currentUser.value?.id;
       if (userId == null) {
         print('User ID is null');
         return false;
       }
+
+      // Debug print before update
+      print('Updating profile with:');
+      print('First Name: $firstName');
+      print('Last Name: $lastName');
+
       final response = await _apiService.put('/users/$userId', data: {
         'first_name': firstName,
         'last_name': lastName,
-        'profile_picture': profilePicture,
+        'profile_image': profilePicture, // Changed from profile_picture
         'specialization': specialization,
         'organization': organization
       });
+
       if (response.statusCode == 200) {
+        // Debug print response
+        print('Server response: ${response.data}');
+
+        if (_currentUser.value != null) {
+          // Create updated user without immediately assigning
+          final updatedUser = _currentUser.value!.copyWith(
+            firstName: firstName,
+            lastName: lastName,
+            profileImage: profilePicture,
+            specialization: specialization,
+            organization: organization,
+          );
+
+          // Debug print the updated user
+          print('Updated user:');
+          print('First Name: ${updatedUser.firstName}');
+          print('Last Name: ${updatedUser.lastName}');
+
+          // Now assign the updated user
+          _currentUser.value = updatedUser;
+        }
+
+        // Removed _fetchUserProfile() call temporarily for debugging
         return true;
       }
       return false;

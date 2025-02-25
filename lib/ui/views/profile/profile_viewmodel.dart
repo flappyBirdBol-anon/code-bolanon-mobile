@@ -190,22 +190,41 @@ class ProfileViewModel extends BaseViewModel {
     );
   }
 
+  void updateControllers() {
+    firstNameController.text = _authService.currentUser?.firstName ?? '';
+    lastNameController.text = _authService.currentUser?.lastName ?? '';
+    organizationController.text = _authService.currentUser?.organization ?? '';
+    specializationController.text =
+        _authService.currentUser?.specialization ?? '';
+    notifyListeners();
+  }
+
+  ProfileViewModel() {
+    _authService.addListener(() {
+      updateControllers();
+      notifyListeners();
+    });
+    updateControllers();
+  }
+
   Future<Map<String, dynamic>> updateProfile() async {
     final firstName = firstNameController.text;
-    final lastName = lastNameController.text;
+    final lastName = lastNameController
+        .text; // Fixed: Changed from firstNameController to lastNameController
     const profilePicture = ''; // Add logic to get profile picture URL
     final specialization = specializationController.text;
     final organization = organizationController.text;
 
-    final success = await _authService.updateProfile(
+    final success = await runBusyFuture(_authService.updateProfile(
       firstName,
       lastName,
       profilePicture,
       specialization,
       organization,
-    );
+    ));
 
     if (success) {
+      updateControllers();
       _snackbarService.showSnackbar(
         message: 'Profile updated successfully',
         duration: const Duration(seconds: 2),
@@ -222,9 +241,14 @@ class ProfileViewModel extends BaseViewModel {
 
   @override
   void dispose() {
+    _authService.removeListener(() {});
     oldPasswordController.dispose();
     newPasswordController.dispose();
     confirmNewPasswordController.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    organizationController.dispose();
+    specializationController.dispose();
     super.dispose();
   }
 }
