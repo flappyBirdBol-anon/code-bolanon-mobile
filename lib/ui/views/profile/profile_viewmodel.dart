@@ -15,11 +15,10 @@ class ProfileViewModel extends BaseViewModel {
   String get lastName => _authService.currentUser?.lastName ?? 'User';
   String get email =>
       _authService.currentUser?.email ?? 'example.user@example.com';
-  String get role => _authService.currentUser?.role ?? 'Guest';
+  String get role => _authService.currentUser?.role ?? 'Unknown';
   String get profilePictureUrl => _authService.currentUser?.profileImage ?? '';
-  String get specialization =>
-      _authService.currentUser?.specialization ?? 'None';
-  String get organization => _authService.currentUser?.organization ?? 'None';
+  String get specialization => _authService.currentUser?.specialization ?? '';
+  String get organization => _authService.currentUser?.organization ?? '';
   bool get isTrainer => role.toLowerCase() == 'trainer';
 
   String get formattedProfilePictureUrl {
@@ -132,8 +131,25 @@ class ProfileViewModel extends BaseViewModel {
     );
   }
 
-  void changePassword() {
+  void changePassword() async {
     if (!_validateInputs()) return;
+
+    final oldPassword = oldPasswordController.text;
+    final newPassword = newPasswordController.text;
+
+    final success = await _authService.updatePassword(oldPassword, newPassword);
+
+    if (success) {
+      _snackbarService.showSnackbar(
+        message: 'Password updated successfully',
+        duration: const Duration(seconds: 2),
+      );
+    } else {
+      _snackbarService.showSnackbar(
+        message: 'Failed to update password',
+        duration: const Duration(seconds: 2),
+      );
+    }
   }
 
   // edit profile modal
@@ -145,13 +161,6 @@ class ProfileViewModel extends BaseViewModel {
       text: locator<AuthService>().currentUser?.organization ?? 'None');
   final specializationController = TextEditingController(
       text: locator<AuthService>().currentUser?.specialization ?? 'None');
-
-  void showEditProfileModal(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => EditProfileModal(viewModel: this),
-    );
-  }
 
   void showTechStackModal(BuildContext context) {
     showModalBottomSheet(
@@ -174,9 +183,41 @@ class ProfileViewModel extends BaseViewModel {
     );
   }
 
+  void showEditProfileModal(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => EditProfileModal(viewModel: this),
+    );
+  }
+
   Future<Map<String, dynamic>> updateProfile() async {
-    print('update profile tapped');
-    return {'success': true};
+    final firstName = firstNameController.text;
+    final lastName = lastNameController.text;
+    const profilePicture = ''; // Add logic to get profile picture URL
+    final specialization = specializationController.text;
+    final organization = organizationController.text;
+
+    final success = await _authService.updateProfile(
+      firstName,
+      lastName,
+      profilePicture,
+      specialization,
+      organization,
+    );
+
+    if (success) {
+      _snackbarService.showSnackbar(
+        message: 'Profile updated successfully',
+        duration: const Duration(seconds: 2),
+      );
+    } else {
+      _snackbarService.showSnackbar(
+        message: 'Failed to update profile',
+        duration: const Duration(seconds: 2),
+      );
+    }
+
+    return {'success': success};
   }
 
   @override
