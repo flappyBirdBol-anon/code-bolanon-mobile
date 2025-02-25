@@ -15,6 +15,7 @@ import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart';
 import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
+import 'package:code_bolanon/ui/views/learner_courses/learner_courses_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -29,6 +30,7 @@ import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
     MaterialRoute(page: LearnerHomeView),
     MaterialRoute(page: TrainerCoursesView),
     MaterialRoute(page: CourseDetailsView),
+    MaterialRoute(page: LearnerCoursesView),
 // @stacked-route
   ],
   dependencies: [

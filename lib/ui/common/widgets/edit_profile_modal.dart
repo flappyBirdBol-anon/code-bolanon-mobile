@@ -14,6 +14,7 @@ class EditProfileModal extends StatefulWidget {
 class _EditProfileModalState extends State<EditProfileModal> {
   Future<void> _saveProfile() async {
     final result = await widget.viewModel.updateProfile();
+    Navigator.pop(context);
     print(result);
   }
 

@@ -43,4 +43,26 @@ class UserModel {
       'organization': organization
     };
   }
+
+  UserModel copyWith({
+    int? id,
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? role,
+    String? profileImage,
+    String? specialization,
+    String? organization,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      profileImage: profileImage ?? this.profileImage,
+      specialization: specialization ?? this.specialization,
+      organization: organization ?? this.organization,
+    );
+  }
 }

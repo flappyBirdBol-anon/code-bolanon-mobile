@@ -22,5 +22,6 @@
     "titleBar.inactiveBackground": "#18463299",
     "titleBar.inactiveForeground": "#e7e7e799"
   },
-  "peacock.color": "#184632"
+  "peacock.color": "#184632",
+  "cmake.sourceDirectory": "D:/June/Classes/OJT/flutter-stacked/Final/code-bolanon-mobile/windows/flutter"
 }
