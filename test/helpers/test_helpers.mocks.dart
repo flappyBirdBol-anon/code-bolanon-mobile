@@ -764,6 +764,16 @@ class MockAuthService extends _i1.Mock implements _i8.AuthService {
       ) as _i6.Future<bool>);
 
   @override
+  _i6.Future<bool> isLoggedIn() => (super.noSuchMethod(
+        Invocation.method(
+          #isLoggedIn,
+          [],
+        ),
+        returnValue: _i6.Future<bool>.value(false),
+        returnValueForMissingStub: _i6.Future<bool>.value(false),
+      ) as _i6.Future<bool>);
+
+  @override
   _i6.Future<Map<String, dynamic>?> getProfile() => (super.noSuchMethod(
         Invocation.method(
           #getProfile,
@@ -774,10 +784,40 @@ class MockAuthService extends _i1.Mock implements _i8.AuthService {
       ) as _i6.Future<Map<String, dynamic>?>);
 
   @override
-  _i6.Future<bool> isLoggedIn() => (super.noSuchMethod(
+  _i6.Future<bool> updatePassword(
+    String? oldPassword,
+    String? newPassword,
+  ) =>
+      (super.noSuchMethod(
         Invocation.method(
-          #isLoggedIn,
-          [],
+          #updatePassword,
+          [
+            oldPassword,
+            newPassword,
+          ],
+        ),
+        returnValue: _i6.Future<bool>.value(false),
+        returnValueForMissingStub: _i6.Future<bool>.value(false),
+      ) as _i6.Future<bool>);
+
+  @override
+  _i6.Future<bool> updateProfile(
+    String? firstName,
+    String? lastName,
+    String? profilePicture,
+    String? specialization,
+    String? organization,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateProfile,
+          [
+            firstName,
+            lastName,
+            profilePicture,
+            specialization,
+            organization,
+          ],
         ),
         returnValue: _i6.Future<bool>.value(false),
         returnValueForMissingStub: _i6.Future<bool>.value(false),
@@ -919,6 +959,68 @@ class MockApiService extends _i1.Mock implements _i10.ApiService {
           this,
           Invocation.method(
             #post,
+            [path],
+            {#data: data},
+          ),
+        )),
+      ) as _i6.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i6.Future<_i2.Response<dynamic>> put(
+    String? path, {
+    dynamic data,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #put,
+          [path],
+          {#data: data},
+        ),
+        returnValue:
+            _i6.Future<_i2.Response<dynamic>>.value(_FakeResponse_0<dynamic>(
+          this,
+          Invocation.method(
+            #put,
+            [path],
+            {#data: data},
+          ),
+        )),
+        returnValueForMissingStub:
+            _i6.Future<_i2.Response<dynamic>>.value(_FakeResponse_0<dynamic>(
+          this,
+          Invocation.method(
+            #put,
+            [path],
+            {#data: data},
+          ),
+        )),
+      ) as _i6.Future<_i2.Response<dynamic>>);
+
+  @override
+  _i6.Future<_i2.Response<dynamic>> patch(
+    String? path, {
+    dynamic data,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #patch,
+          [path],
+          {#data: data},
+        ),
+        returnValue:
+            _i6.Future<_i2.Response<dynamic>>.value(_FakeResponse_0<dynamic>(
+          this,
+          Invocation.method(
+            #patch,
+            [path],
+            {#data: data},
+          ),
+        )),
+        returnValueForMissingStub:
+            _i6.Future<_i2.Response<dynamic>>.value(_FakeResponse_0<dynamic>(
+          this,
+          Invocation.method(
+            #patch,
             [path],
             {#data: data},
           ),
