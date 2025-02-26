@@ -5,6 +5,8 @@
 // **************************************************************************
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:code_bolanon/models/course.dart' as _i14;
+import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart' as _i12;
 import 'package:code_bolanon/ui/views/auth/auth_view.dart' as _i5;
 import 'package:code_bolanon/ui/views/course_details/course_details_view.dart'
     as _i11;
@@ -23,7 +25,7 @@ import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart'
 import 'package:flutter/material.dart' as _i13;
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart' as _i1;
-import 'package:stacked_services/stacked_services.dart' as _i14;
+import 'package:stacked_services/stacked_services.dart' as _i15;
 
 class Routes {
   static const homeView = '/home-view';
@@ -46,7 +48,7 @@ class Routes {
 
   static const courseDetailsView = '/course-details-view';
 
-  static const learnerCoursesView = '/learner-courses-view';
+  static const addLessonView = '/add-lesson-view';
 
   static const all = <String>{
     homeView,
@@ -59,7 +61,7 @@ class Routes {
     learnerHomeView,
     trainerCoursesView,
     courseDetailsView,
-    learnerCoursesView,
+    addLessonView,
   };
 }
 
@@ -106,8 +108,8 @@ class StackedRouter extends _i1.RouterBase {
       page: _i11.CourseDetailsView,
     ),
     _i1.RouteDef(
-      Routes.learnerCoursesView,
-      page: _i12.LearnerCoursesView,
+      Routes.addLessonView,
+      page: _i12.AddLessonView,
     ),
   ];
 
@@ -170,8 +172,18 @@ class StackedRouter extends _i1.RouterBase {
       );
     },
     _i11.CourseDetailsView: (data) {
+      final args = data.getArgs<CourseDetailsViewArguments>(
+        orElse: () => const CourseDetailsViewArguments(),
+      );
       return _i13.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i11.CourseDetailsView(),
+        builder: (context) =>
+            _i11.CourseDetailsView(key: args.key, course: args.course),
+        settings: data,
+      );
+    },
+    _i12.AddLessonView: (data) {
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => const _i12.AddLessonView(),
         settings: data,
       );
     },
@@ -217,7 +229,34 @@ class MainBodyViewArguments {
   }
 }
 
-extension NavigatorStateExtension on _i14.NavigationService {
+class CourseDetailsViewArguments {
+  const CourseDetailsViewArguments({
+    this.key,
+    this.course,
+  });
+
+  final _i13.Key? key;
+
+  final _i14.Course? course;
+
+  @override
+  String toString() {
+    return '{"key": "$key", "course": "$course"}';
+  }
+
+  @override
+  bool operator ==(covariant CourseDetailsViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key && other.course == course;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode ^ course.hashCode;
+  }
+}
+
+extension NavigatorStateExtension on _i15.NavigationService {
   Future<dynamic> navigateToHomeView([
     int? routerId,
     bool preventDuplicates = true,
@@ -347,28 +386,31 @@ extension NavigatorStateExtension on _i14.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> navigateToCourseDetailsView([
+  Future<dynamic> navigateToCourseDetailsView({
+    _i13.Key? key,
+    _i14.Course? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return navigateTo<dynamic>(Routes.courseDetailsView,
+        arguments: CourseDetailsViewArguments(key: key, course: course),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
         transition: transition);
   }
 
-  Future<dynamic> navigateToLearnerCoursesView([
+  Future<dynamic> navigateToAddLessonView([
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
   ]) async {
-    return navigateTo<dynamic>(Routes.learnerCoursesView,
+    return navigateTo<dynamic>(Routes.addLessonView,
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -504,28 +546,31 @@ extension NavigatorStateExtension on _i14.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> replaceWithCourseDetailsView([
+  Future<dynamic> replaceWithCourseDetailsView({
+    _i13.Key? key,
+    _i14.Course? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return replaceWith<dynamic>(Routes.courseDetailsView,
+        arguments: CourseDetailsViewArguments(key: key, course: course),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
         transition: transition);
   }
 
-  Future<dynamic> replaceWithLearnerCoursesView([
+  Future<dynamic> replaceWithAddLessonView([
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
   ]) async {
-    return replaceWith<dynamic>(Routes.learnerCoursesView,
+    return replaceWith<dynamic>(Routes.addLessonView,
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,

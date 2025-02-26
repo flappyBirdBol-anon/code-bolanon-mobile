@@ -102,9 +102,89 @@ class SignupView extends StackedView<SignupViewModel> {
                 viewModel.passwordController.text.isNotEmpty,
           ),
         ),
+        //Implement: add chips here that will be used to select a users preferred stack (for example, laravel, flutter, react, etc)
+        const SizedBox(height: 16),
+        _buildChips(viewModel, context),
         const SizedBox(height: 16),
         _buildRoleSelect(context, viewModel),
         const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildChips(SignupViewModel viewModel, BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select your preferred tech stack:',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (viewModel.selectedTechStacks.isNotEmpty) ...[
+                Text(
+                  'Selected: ${viewModel.selectedTechStacks.length}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 8.0,
+                children: [
+                  for (String stack in viewModel.availableTechStacks)
+                    FilterChip(
+                      label: Text(stack),
+                      selected: viewModel.selectedTechStacks.contains(stack),
+                      onSelected: (bool selected) {
+                        viewModel.toggleTechStack(stack);
+                      },
+                      selectedColor:
+                          Theme.of(context).primaryColor.withOpacity(0.2),
+                      checkmarkColor: Theme.of(context).primaryColor,
+                      labelStyle: TextStyle(
+                        fontWeight: viewModel.selectedTechStacks.contains(stack)
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: viewModel.selectedTechStacks.contains(stack)
+                            ? Theme.of(context).primaryColor
+                            : Colors.black87,
+                      ),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      elevation: 0,
+                      pressElevation: 2,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: viewModel.selectedTechStacks.contains(stack)
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey.shade400,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }

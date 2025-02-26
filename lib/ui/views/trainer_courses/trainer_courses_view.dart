@@ -30,6 +30,7 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => viewModel.showAddCourseDialog(context),
+        // onPressed: () => viewModel.navigateToAddCourseView(context),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add),
       ),
@@ -148,122 +149,125 @@ class _CourseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Card(
-          elevation: 4,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(12)),
-                    child: Image.asset(
-                      course.thumbnail,
-                      height: constraints.maxHeight * 0.4,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: course.isActive ? Colors.green : Colors.grey,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        course.isActive ? 'Active' : 'Inactive',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
+        return InkWell(
+          onTap: () => viewModel.navigateToCourseDetails(context, course),
+          child: Card(
+            elevation: 4,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(12)),
+                      child: Image.asset(
+                        course.thumbnail,
+                        height: constraints.maxHeight * 0.4,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        course.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        course.description,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
+                        decoration: BoxDecoration(
+                          color: course.isActive ? Colors.green : Colors.grey,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        child: Text(
+                          course.isActive ? 'Active' : 'Inactive',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
-                      const SizedBox(
-                        height: 5,
-                      ),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.people,
-                            size: 16,
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          course.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          course.description,
+                          style: const TextStyle(
                             color: AppColors.textSecondary,
+                            fontSize: 12,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${course.studentsEnrolled} Students',
-                            style: const TextStyle(
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.people,
+                              size: 16,
                               color: AppColors.textSecondary,
-                              fontSize: 12,
                             ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            '\$${course.price}.00',
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 12,
+                            const SizedBox(width: 4),
+                            Text(
+                              '${course.studentsEnrolled} Students',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 20),
-                            onPressed: () => _showEditDialog(context),
-                            color: AppColors.primary,
-                          ),
-                          const Spacer(),
-                          Switch(
-                            value: course.isActive,
-                            onChanged: (_) => onToggleStatus(),
-                            activeColor: AppColors.primary,
-                          ),
-                        ],
-                      ),
-                    ],
+                            const Spacer(),
+                            Text(
+                              '\$${course.price}.00',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 20),
+                              onPressed: () => _showEditDialog(context),
+                              color: AppColors.primary,
+                            ),
+                            const Spacer(),
+                            Switch(
+                              value: course.isActive,
+                              onChanged: (_) => onToggleStatus(),
+                              activeColor: AppColors.primary,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
