@@ -5,6 +5,7 @@ class CourseModel {
   final double price;
   final double rating;
   final int reviews;
+  final int lessons;
 
   CourseModel({
     required this.id,
@@ -13,5 +14,6 @@ class CourseModel {
     required this.price,
     required this.rating,
     required this.reviews,
+    required this.lessons,
   });
 }

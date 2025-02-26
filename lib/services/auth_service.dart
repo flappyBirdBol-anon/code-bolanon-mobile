@@ -43,6 +43,7 @@ class AuthService with ListenableServiceMixin {
       String email,
       String password,
       String role,
+      List<String> selectedTechStacks,
       String? specialization,
       String? organization) async {
     try {
@@ -53,7 +54,8 @@ class AuthService with ListenableServiceMixin {
         'password': password,
         'role': role,
         'specialization': specialization,
-        'organization': organization
+        'organization': organization,
+        'tech_stacks': selectedTechStacks,
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {

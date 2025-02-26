@@ -47,29 +47,34 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
               index: viewModel.currentIndex,
               children: [
                 Navigator(
-                  key: viewModel.navigatorKeys[0],
-                  onGenerateRoute: (routeSettings) {
-                    if (viewModel.role == 'trainer') {
-                      return MaterialPageRoute(
-                        builder: (context) => const TrainerHomeView(),
-                      );
-                    } else if (viewModel.role == 'learner') {
-                      return MaterialPageRoute(
-                        builder: (context) => const LearnerHomeView(),
-                      );
-                    } else {
-                      return MaterialPageRoute(
-                        builder: (context) => const HomeView(),
-                      );
-                    }
-                  },
-                ),
+                    key: viewModel.navigatorKeys[0],
+                    onGenerateRoute: (routeSettings) {
+                      return viewModel.role == 'trainer'
+                          ? MaterialPageRoute(
+                              builder: (context) => const TrainerHomeView(),
+                            )
+                          : viewModel.role == 'learner'
+                              ? MaterialPageRoute(
+                                  builder: (context) => const LearnerHomeView(),
+                                )
+                              : MaterialPageRoute(
+                                  builder: (context) => const HomeView(),
+                                );
+                    }),
                 Navigator(
                   key: viewModel.navigatorKeys[1],
                   onGenerateRoute: (routeSettings) {
-                    return MaterialPageRoute(
-                      builder: (context) => const TrainerCoursesView(),
-                    );
+                    return viewModel.role == 'trainer'
+                        ? MaterialPageRoute(
+                            builder: (context) => const TrainerCoursesView(),
+                          )
+                        : viewModel.role == 'learner'
+                            ? MaterialPageRoute(
+                                builder: (context) => const LearnerHomeView(),
+                              )
+                            : MaterialPageRoute(
+                                builder: (context) => const HomeView(),
+                              );
                   },
                 ),
                 Navigator(

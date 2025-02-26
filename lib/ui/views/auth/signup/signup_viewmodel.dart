@@ -23,6 +23,33 @@ class SignupViewModel extends BaseViewModel {
   bool isPasswordFieldFocused = false;
   bool isConfirmPasswordFieldFocused = false;
 
+  // Tech stack selection properties
+  final List<String> availableTechStacks = [
+    'Flutter',
+    'React',
+    'Laravel',
+    'Node.js',
+    'Python',
+    'Vue.js',
+    'Angular',
+    'Django',
+    'Ruby on Rails',
+    'Swift',
+    'Kotlin',
+    'Java',
+    'Go',
+    'PHP',
+    'AWS',
+    'Azure',
+    'Firebase',
+    'MongoDB',
+    'PostgreSQL',
+    'MySQL'
+  ];
+
+  final Set<String> _selectedTechStacks = {};
+  List<String> get selectedTechStacks => _selectedTechStacks.toList();
+
   bool _isPasswordVisible = false;
   bool get isPasswordVisible => _isPasswordVisible;
 
@@ -58,6 +85,16 @@ class SignupViewModel extends BaseViewModel {
     notifyListeners();
   }
 
+  // Toggle tech stack selection
+  void toggleTechStack(String stack) {
+    if (_selectedTechStacks.contains(stack)) {
+      _selectedTechStacks.remove(stack);
+    } else {
+      _selectedTechStacks.add(stack);
+    }
+    notifyListeners();
+  }
+
   bool get isPasswordValid =>
       passwordController.text.length >= 8 &&
       passwordController.text.contains(RegExp(r'[0-9]')) &&
@@ -81,13 +118,16 @@ class SignupViewModel extends BaseViewModel {
     try {
       print('Attempting signup with email: ${emailController.text}');
       final success = await _authService.register(
-          firstNameController.text,
-          lastNameController.text,
-          emailController.text,
-          passwordController.text,
-          selectedRole,
-          specializationController.text,
-          organizationController.text);
+        firstNameController.text,
+        lastNameController.text,
+        emailController.text,
+        passwordController.text,
+        selectedRole,
+        [specializationController.text],
+        organizationController.text,
+        selectedTechStacks
+            as String?, // Add selected tech stacks to registration
+      );
       if (success) {
         await _navigationService.clearStackAndShow(Routes.mainBodyView);
       } else {
@@ -152,6 +192,14 @@ class SignupViewModel extends BaseViewModel {
         confirmPasswordController.text.isEmpty) {
       _snackbarService.showSnackbar(
         message: 'Please fill in all required fields',
+        duration: const Duration(seconds: 2),
+      );
+      return false;
+    }
+
+    if (_selectedTechStacks.isEmpty) {
+      _snackbarService.showSnackbar(
+        message: 'Please select at least one tech stack',
         duration: const Duration(seconds: 2),
       );
       return false;
