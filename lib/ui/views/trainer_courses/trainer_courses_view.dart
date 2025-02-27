@@ -109,7 +109,7 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 14,
-        childAspectRatio: 0.64,
+        childAspectRatio: 0.55,
       ),
       itemCount: viewModel.courses.length,
       itemBuilder: (context, index) {

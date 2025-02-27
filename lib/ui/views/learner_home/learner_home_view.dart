@@ -1,6 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:percent_indicator/percent_indicator.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:stacked/stacked.dart';
 
@@ -21,26 +21,23 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
           onRefresh: () async => viewModel.refreshData(),
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(viewModel),
+                  const SizedBox(height: 16),
+                  _buildHeader(viewModel, Theme.of(context)),
                   const SizedBox(height: 24),
                   _buildPopularCoursesCarousel(viewModel),
                   const SizedBox(height: 24),
-                  _buildProgressIndicators(viewModel),
-                  const SizedBox(height: 24),
-                  _buildTechStack(viewModel),
+                  _buildRecommendedBasedOnTechStack(viewModel),
                   const SizedBox(height: 24),
                   _buildTopRatedCourses(viewModel),
                   const SizedBox(height: 24),
                   _buildRecentRegisteredCourses(viewModel),
                   const SizedBox(height: 24),
                   _buildUpcomingSessions(viewModel),
-                  const SizedBox(height: 24),
-                  _buildRecommendedBasedOnTechStack(viewModel),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -50,274 +47,101 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
     );
   }
 
-  Widget _buildHeader(LearnerHomeViewModel viewModel) {
+  Widget _buildHeader(LearnerHomeViewModel viewModel, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.indigo[800]!, Colors.indigo[600]!],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          colors: isDark
+              ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+              : [theme.primaryColor, theme.primaryColor.withOpacity(0.8)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.indigo.withOpacity(0.3),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.1),
             offset: const Offset(0, 4),
+            blurRadius: 12,
           ),
         ],
       ),
       child: Row(
         children: [
-          CircleAvatar(
-              radius: 30,
-              backgroundImage: AssetImage(viewModel.profileImageUrl),
-              backgroundColor: Colors.white),
+          _buildProfileAvatar(viewModel),
           const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome back,',
-                  style: TextStyle(color: Colors.white.withOpacity(0.9)),
-                ),
-                Text(
-                  viewModel.userFullName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  viewModel.userEmail,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon:
-                  const Icon(Icons.notifications_outlined, color: Colors.white),
-              onPressed: () {},
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.search, color: Colors.white),
-              onPressed: () {},
-            ),
-          ),
+          Expanded(child: _buildWelcomeText(viewModel)),
+          _headerIconButton(Icons.notifications_outlined, () {}),
         ],
       ),
     );
   }
 
-  Widget _buildProgressIndicators(LearnerHomeViewModel viewModel) {
+  Widget _buildProfileAvatar(LearnerHomeViewModel viewModel) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Colors.white.withOpacity(0.5),
+          width: 2.0,
+        ),
+        shape: BoxShape.circle,
+      ),
+      child: CircleAvatar(
+        radius: 28,
+        backgroundImage: AssetImage(viewModel.profileImageUrl),
+        backgroundColor: Colors.white.withOpacity(0.2),
+      ),
+    );
+  }
+
+  Widget _buildWelcomeText(LearnerHomeViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Your Progress',
-          style: TextStyle(
+        Text(
+          'Welcome back,',
+          style: GoogleFonts.inter(
+            color: Colors.white.withOpacity(0.9),
+            fontSize: 14,
+            fontWeight: FontWeight.w300,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          viewModel.userFullName,
+          style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildCircularProgress(
-              title: 'Completed',
-              value: viewModel.completedCoursesPercentage,
-              color: Colors.green,
-              count: viewModel.completedCourses,
-              total: viewModel.totalEnrolledCourses,
-            ),
-            _buildCircularProgress(
-              title: 'In Progress',
-              value: viewModel.inProgressCoursesPercentage,
-              color: Colors.orange,
-              count: viewModel.inProgressCourses,
-              total: viewModel.totalEnrolledCourses,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCircularProgress({
-    required String title,
-    required double value,
-    required Color color,
-    required int count,
-    required int total,
-  }) {
-    return Column(
-      children: [
-        CircularPercentIndicator(
-          radius: 45.0,
-          lineWidth: 10.0,
-          percent: value,
-          center: Text(
-            '${(value * 100).toInt()}%',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16.0,
-            ),
-          ),
-          progressColor: color,
-          backgroundColor: const Color.fromARGB(255, 193, 190, 190),
-          circularStrokeCap: CircularStrokeCap.round,
-          animation: true,
-          animationDuration: 1500,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          '$count of $total courses',
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
+            color: Colors.white,
+            letterSpacing: 0.3,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTopRatedUsers(LearnerHomeViewModel viewModel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Most Active Users',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+  Widget _headerIconButton(IconData icon, VoidCallback onPressed) {
+    return Container(
+      margin: const EdgeInsets.only(left: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 110,
-          child: viewModel.isLoading
-              ? _buildUsersSkeleton()
-              : ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: viewModel.topUsers.length,
-                  itemBuilder: (context, index) {
-                    final user = viewModel.topUsers[index];
-                    return Container(
-                      width: 90,
-                      margin: const EdgeInsets.only(right: 12),
-                      child: Column(
-                        children: [
-                          Stack(
-                            alignment: Alignment.bottomRight,
-                            children: [
-                              CircleAvatar(
-                                radius: 35,
-                                backgroundImage: AssetImage(user.imageUrl),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.indigo,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '#${index + 1}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            user.name,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            '${user.coursesCompleted} courses',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUsersSkeleton() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return Container(
-            width: 90,
-            margin: const EdgeInsets.only(right: 12),
-            child: Column(
-              children: [
-                const CircleAvatar(
-                  radius: 35,
-                  backgroundColor: Colors.white,
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  height: 12,
-                  width: 70,
-                  color: Colors.white,
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  height: 10,
-                  width: 50,
-                  color: Colors.white,
-                ),
-              ],
-            ),
-          );
-        },
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white, size: 20),
+        onPressed: onPressed,
+        padding: const EdgeInsets.all(8),
+        constraints: const BoxConstraints(),
       ),
     );
   }
@@ -645,7 +469,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -655,135 +479,144 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
         borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
-            Image.asset(
-              course.imageUrl,
-              height: 220,
-              width: double.infinity,
-              fit: BoxFit.cover,
+            _buildCourseImage(course),
+            _buildGradientOverlay(),
+            _buildCourseInfo(course),
+            _buildPlayButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCourseImage(CourseModel course) {
+    return Image.asset(
+      course.imageUrl,
+      height: 220,
+      width: double.infinity,
+      fit: BoxFit.cover,
+    );
+  }
+
+  Widget _buildGradientOverlay() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.transparent,
+            Colors.black.withOpacity(0.8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCourseInfo(CourseModel course) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.indigo.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(12),
             ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.people, color: Colors.white, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  '${(course.enrolledStudents / 1000).toStringAsFixed(1)}k enrolled',
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            course.title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      course.rating.toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
                   ],
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.indigo.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(12),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.play_lesson,
+                        color: Colors.white, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${course.totalLessons} lessons',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.people, color: Colors.white, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${(course.enrolledStudents / 1000).toStringAsFixed(1)}k enrolled',
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    course.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.star,
-                                color: Colors.amber, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              course.rating.toString(),
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.play_lesson,
-                                color: Colors.white, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${course.totalLessons} lessons',
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Positioned.fill(
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    // Handle course tap
-                  },
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.play_arrow_rounded,
-                        color: Colors.white,
-                        size: 32,
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
               ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlayButton() {
+    return Positioned.fill(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            // Handle course tap
+          },
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                color: Colors.white,
+                size: 32,
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );

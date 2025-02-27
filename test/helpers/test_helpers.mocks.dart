@@ -9,6 +9,7 @@ import 'dart:ui' as _i7;
 import 'package:code_bolanon/services/api_service.dart' as _i10;
 import 'package:code_bolanon/services/auth_service.dart' as _i8;
 import 'package:code_bolanon/services/theme_service.dart' as _i9;
+import 'package:code_bolanon/services/user_service.dart' as _i11;
 import 'package:dio/dio.dart' as _i2;
 import 'package:flutter/material.dart' as _i5;
 import 'package:mockito/mockito.dart' as _i1;
@@ -733,6 +734,7 @@ class MockAuthService extends _i1.Mock implements _i8.AuthService {
     String? email,
     String? password,
     String? role,
+    List<String>? selectedTechStacks,
     String? specialization,
     String? organization,
   ) =>
@@ -745,6 +747,7 @@ class MockAuthService extends _i1.Mock implements _i8.AuthService {
             email,
             password,
             role,
+            selectedTechStacks,
             specialization,
             organization,
           ],
@@ -768,56 +771,6 @@ class MockAuthService extends _i1.Mock implements _i8.AuthService {
         Invocation.method(
           #isLoggedIn,
           [],
-        ),
-        returnValue: _i6.Future<bool>.value(false),
-        returnValueForMissingStub: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
-
-  @override
-  _i6.Future<Map<String, dynamic>?> getProfile() => (super.noSuchMethod(
-        Invocation.method(
-          #getProfile,
-          [],
-        ),
-        returnValue: _i6.Future<Map<String, dynamic>?>.value(),
-        returnValueForMissingStub: _i6.Future<Map<String, dynamic>?>.value(),
-      ) as _i6.Future<Map<String, dynamic>?>);
-
-  @override
-  _i6.Future<bool> updatePassword(
-    String? oldPassword,
-    String? newPassword,
-  ) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #updatePassword,
-          [
-            oldPassword,
-            newPassword,
-          ],
-        ),
-        returnValue: _i6.Future<bool>.value(false),
-        returnValueForMissingStub: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
-
-  @override
-  _i6.Future<bool> updateProfile(
-    String? firstName,
-    String? lastName,
-    String? profilePicture,
-    String? specialization,
-    String? organization,
-  ) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #updateProfile,
-          [
-            firstName,
-            lastName,
-            profilePicture,
-            specialization,
-            organization,
-          ],
         ),
         returnValue: _i6.Future<bool>.value(false),
         returnValueForMissingStub: _i6.Future<bool>.value(false),
@@ -1056,4 +1009,115 @@ class MockApiService extends _i1.Mock implements _i10.ApiService {
         returnValue: _i6.Future<String?>.value(),
         returnValueForMissingStub: _i6.Future<String?>.value(),
       ) as _i6.Future<String?>);
+}
+
+/// A class which mocks [UserService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockUserService extends _i1.Mock implements _i11.UserService {
+  @override
+  int get listenersCount => (super.noSuchMethod(
+        Invocation.getter(#listenersCount),
+        returnValue: 0,
+        returnValueForMissingStub: 0,
+      ) as int);
+
+  @override
+  _i6.Future<void> fetchUserProfile() => (super.noSuchMethod(
+        Invocation.method(
+          #fetchUserProfile,
+          [],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
+
+  @override
+  _i6.Future<Map<String, dynamic>?> getProfile() => (super.noSuchMethod(
+        Invocation.method(
+          #getProfile,
+          [],
+        ),
+        returnValue: _i6.Future<Map<String, dynamic>?>.value(),
+        returnValueForMissingStub: _i6.Future<Map<String, dynamic>?>.value(),
+      ) as _i6.Future<Map<String, dynamic>?>);
+
+  @override
+  _i6.Future<bool> updatePassword(
+    String? oldPassword,
+    String? newPassword,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updatePassword,
+          [
+            oldPassword,
+            newPassword,
+          ],
+        ),
+        returnValue: _i6.Future<bool>.value(false),
+        returnValueForMissingStub: _i6.Future<bool>.value(false),
+      ) as _i6.Future<bool>);
+
+  @override
+  _i6.Future<bool> updateProfile(
+    String? firstName,
+    String? lastName,
+    String? profilePicture,
+    String? specialization,
+    String? organization,
+    int? userId,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateProfile,
+          [
+            firstName,
+            lastName,
+            profilePicture,
+            specialization,
+            organization,
+            userId,
+          ],
+        ),
+        returnValue: _i6.Future<bool>.value(false),
+        returnValueForMissingStub: _i6.Future<bool>.value(false),
+      ) as _i6.Future<bool>);
+
+  @override
+  void listenToReactiveValues(List<dynamic>? reactiveValues) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #listenToReactiveValues,
+          [reactiveValues],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void addListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 }

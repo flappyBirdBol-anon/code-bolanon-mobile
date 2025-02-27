@@ -1,5 +1,5 @@
+import 'package:code_bolanon/ui/views/available_courses/available_courses_view.dart';
 import 'package:code_bolanon/ui/views/home/home_view.dart';
-import 'package:code_bolanon/ui/views/learner_courses/learner_courses_view.dart';
 import 'package:code_bolanon/ui/views/learner_home/learner_home_view.dart';
 import 'package:code_bolanon/ui/views/menu/menu_view.dart';
 import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart';
@@ -69,7 +69,8 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
                               builder: (context) => const TrainerCoursesView(),
                             )
                           : MaterialPageRoute(
-                              builder: (context) => const LearnerCoursesView(),
+                              builder: (context) =>
+                                  const AvailableCoursesView(),
                             );
                     }),
                 Navigator(

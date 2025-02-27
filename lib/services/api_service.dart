@@ -3,11 +3,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
+  static ApiService? _instance;
   final String baseUrl = 'http://143.198.197.240/api';
   late Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  ApiService() {
+  // Private constructor
+  ApiService._() {
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       responseType: ResponseType.json,
@@ -42,6 +44,12 @@ class ApiService {
         return handler.next(error);
       },
     ));
+  }
+
+  // Factory constructor
+  factory ApiService() {
+    _instance ??= ApiService._();
+    return _instance!;
   }
 
   Future<Response> get(String path) async {
