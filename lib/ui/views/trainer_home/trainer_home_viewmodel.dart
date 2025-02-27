@@ -1,12 +1,8 @@
-import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/course_model.dart';
-import 'package:code_bolanon/services/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'package:stacked/stacked.dart';
 
-class TrainerHomeViewModel extends BaseViewModel {
-  final _authService = locator<AuthService>();
-
+class TrainerHomeViewModel extends AppBaseViewModel {
   bool _isDarkMode = false;
   bool get isDarkMode => _isDarkMode;
 
@@ -14,10 +10,10 @@ class TrainerHomeViewModel extends BaseViewModel {
   DateTime? _selectedDate;
   DateTime? get selectedDate => _selectedDate;
 
-  String get userName => _authService.currentUser?.fullName ?? 'User';
-  String get userRole => _authService.currentUser?.role ?? 'Guest';
-  String get userImage => _authService.currentUser?.profileImage ?? '';
-  String get userEmail => _authService.currentUser?.email ?? '';
+  String get userName => userService.currentUser?.fullName ?? 'User';
+  String get userRole => userService.currentUser?.role ?? 'Guest';
+  String get userImage => userService.currentUser?.profileImage ?? '';
+  String get userEmail => userService.currentUser?.email ?? '';
   bool isLoading = true;
   String profileImageUrl = 'assets/images/1.jpg';
   int activeStudents = 150;

@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
@@ -248,43 +249,26 @@ class ProfileView extends StackedView<ProfileViewModel> {
   Widget _buildActionButtons(BuildContext context, ProfileViewModel viewModel) {
     return Column(
       children: [
-        _buildButton(
-          'Edit Profile',
-          Icons.edit,
-          () async {
+        CustomButton(
+          text: 'Edit Profile',
+          icon: Icons.edit,
+          onPressed: () async {
             viewModel.showEditProfileModal(context);
-            // Refresh profile data after edit
           },
-          const Color(0xFF4C3575),
+          backgroundColor: const Color(0xFF4C3575),
+          width: double.infinity,
+          height: 48,
         ),
         const SizedBox(height: 12),
-        _buildButton(
-          'Change Password',
-          Icons.lock_outline,
-          () => viewModel.showChangePasswordModal(context),
-          const Color.fromARGB(255, 147, 154, 185),
+        CustomButton(
+          text: 'Change Password',
+          icon: Icons.lock_outline,
+          onPressed: () => viewModel.showChangePasswordModal(context),
+          backgroundColor: const Color.fromARGB(255, 147, 154, 185),
+          width: double.infinity,
+          height: 48,
         ),
       ],
-    );
-  }
-
-  Widget _buildButton(
-      String text, IconData icon, VoidCallback onPressed, Color color) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon, size: 18),
-        label: Text(text),
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: color,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-      ),
     );
   }
 

@@ -132,8 +132,10 @@ class ProfileViewModel extends AppBaseViewModel {
 
     final oldPassword = oldPasswordController.text;
     final newPassword = newPasswordController.text;
+    final newPasswordConfirmation = confirmNewPasswordController.text;
 
-    final success = await userService.updatePassword(oldPassword, newPassword);
+    final success = await userService.updatePassword(
+        oldPassword, newPassword, newPasswordConfirmation);
 
     if (success) {
       snackbarService.showSnackbar(
