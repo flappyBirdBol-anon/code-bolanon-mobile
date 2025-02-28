@@ -1,9 +1,9 @@
 import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'package:stacked/stacked.dart';
 
-class MainBodyViewModel extends BaseViewModel {
+class MainBodyViewModel extends AppBaseViewModel {
   int _currentIndex =
       0; // Private variable to keep track of the current tab index
 
@@ -19,7 +19,7 @@ class MainBodyViewModel extends BaseViewModel {
 
   final _authService = locator<AuthService>();
 
-  String? get role => _authService.currentUser?.role;
+  String? get role => userService.currentUser?.role;
 
   // Method to handle tab taps
   void onTabTapped(int index) {

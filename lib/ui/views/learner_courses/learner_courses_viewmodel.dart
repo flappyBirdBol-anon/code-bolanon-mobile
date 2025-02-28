@@ -1,12 +1,15 @@
-import 'package:code_bolanon/app/app_base_view_model.dart';
+import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:stacked/stacked.dart';
 
-class LearnerHomeViewModel extends AppBaseViewModel {
+class LearnerCoursesViewModel extends BaseViewModel {
+  final _authService = locator<AuthService>();
   bool isLoading = true;
 
   // User Info
-  String get userFullName => userService.currentUser?.fullName ?? 'User';
-  String get userEmail => userService.currentUser?.email ?? '';
+  String get userFullName => _authService.currentUser?.fullName ?? 'User';
+  String get userEmail => _authService.currentUser?.email ?? '';
   String profileImageUrl = 'assets/images/profile.jpg';
 
   // Progress Tracking
@@ -103,7 +106,7 @@ class LearnerHomeViewModel extends AppBaseViewModel {
     _loadCourses();
     _loadSessions();
     // Add listener to auth service
-    userService.addListener(() {
+    _authService.addListener(() {
       notifyListeners();
     });
   }
@@ -214,7 +217,7 @@ class LearnerHomeViewModel extends AppBaseViewModel {
 
   @override
   void dispose() {
-    userService.removeListener(() {});
+    _authService.removeListener(() {});
     super.dispose();
   }
 }

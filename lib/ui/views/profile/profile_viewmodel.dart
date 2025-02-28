@@ -1,25 +1,20 @@
 import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/ui/common/widgets/change_password_modal.dart';
 import 'package:code_bolanon/ui/common/widgets/edit_profile_modal.dart';
 import 'package:code_bolanon/ui/common/widgets/tech_stack_modal.dart';
 import 'package:flutter/material.dart';
-import 'package:stacked/stacked.dart';
-import 'package:stacked_services/stacked_services.dart';
 
-class ProfileViewModel extends BaseViewModel {
-  final _authService = locator<AuthService>();
-  final _snackbarService = locator<SnackbarService>();
-
-  String get firstName => _authService.currentUser?.firstName ?? 'Example';
-  String get lastName => _authService.currentUser?.lastName ?? 'User';
+class ProfileViewModel extends AppBaseViewModel {
+  String get firstName => userService.currentUser?.firstName ?? 'Example';
+  String get lastName => userService.currentUser?.lastName ?? 'User';
   String get email =>
-      _authService.currentUser?.email ?? 'example.user@example.com';
-  String get role => _authService.currentUser?.role ?? 'Guest';
-  String get profilePictureUrl => _authService.currentUser?.profileImage ?? '';
-  String get specialization =>
-      _authService.currentUser?.specialization ?? 'None';
-  String get organization => _authService.currentUser?.organization ?? 'None';
+      userService.currentUser?.email ?? 'example.user@example.com';
+  String get role => userService.currentUser?.role ?? 'Unknown';
+  String get profilePictureUrl => userService.currentUser?.profileImage ?? '';
+  String get specialization => userService.currentUser?.specialization ?? '';
+  String get organization => userService.currentUser?.organization ?? '';
   bool get isTrainer => role.toLowerCase() == 'trainer';
 
   String get formattedProfilePictureUrl {
@@ -95,7 +90,7 @@ class ProfileViewModel extends BaseViewModel {
     if (oldPasswordController.text.isEmpty ||
         newPasswordController.text.isEmpty ||
         confirmNewPasswordController.text.isEmpty) {
-      _snackbarService.showSnackbar(
+      snackbarService.showSnackbar(
         message: 'Please fill in all required fields',
         duration: const Duration(seconds: 2),
       );
@@ -103,7 +98,7 @@ class ProfileViewModel extends BaseViewModel {
     }
 
     if (!isNewPasswordValid) {
-      _snackbarService.showSnackbar(
+      snackbarService.showSnackbar(
         message: 'Password does not meet requirements',
         duration: const Duration(seconds: 2),
       );
@@ -111,7 +106,7 @@ class ProfileViewModel extends BaseViewModel {
     }
 
     if (!isConfirmNewPasswordValid) {
-      _snackbarService.showSnackbar(
+      snackbarService.showSnackbar(
         message: 'Passwords do not match',
         duration: const Duration(seconds: 2),
       );
@@ -132,8 +127,25 @@ class ProfileViewModel extends BaseViewModel {
     );
   }
 
-  void changePassword() {
+  void changePassword() async {
     if (!_validateInputs()) return;
+
+    final oldPassword = oldPasswordController.text;
+    final newPassword = newPasswordController.text;
+
+    final success = await userService.updatePassword(oldPassword, newPassword);
+
+    if (success) {
+      snackbarService.showSnackbar(
+        message: 'Password updated successfully',
+        duration: const Duration(seconds: 2),
+      );
+    } else {
+      snackbarService.showSnackbar(
+        message: 'Failed to update password',
+        duration: const Duration(seconds: 2),
+      );
+    }
   }
 
   // edit profile modal
@@ -145,13 +157,6 @@ class ProfileViewModel extends BaseViewModel {
       text: locator<AuthService>().currentUser?.organization ?? 'None');
   final specializationController = TextEditingController(
       text: locator<AuthService>().currentUser?.specialization ?? 'None');
-
-  void showEditProfileModal(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => EditProfileModal(viewModel: this),
-    );
-  }
 
   void showTechStackModal(BuildContext context) {
     showModalBottomSheet(
@@ -174,16 +179,83 @@ class ProfileViewModel extends BaseViewModel {
     );
   }
 
+  void showEditProfileModal(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => EditProfileModal(viewModel: this),
+    );
+  }
+
+  void updateControllers() {
+    firstNameController.text = userService.currentUser?.firstName ?? '';
+    lastNameController.text = userService.currentUser?.lastName ?? '';
+    organizationController.text = userService.currentUser?.organization ?? '';
+    specializationController.text =
+        userService.currentUser?.specialization ?? '';
+    notifyListeners();
+  }
+
+  ProfileViewModel() {
+    userService.addListener(() {
+      updateControllers();
+      notifyListeners();
+    });
+    updateControllers();
+  }
+
+  // Add user ID getter
+  int get userId => userService.currentUser?.id ?? 0;
+
   Future<Map<String, dynamic>> updateProfile() async {
-    print('update profile tapped');
-    return {'success': true};
+    if (userId == 0) {
+      snackbarService.showSnackbar(
+        message: 'Unable to update profile: User ID not found',
+        duration: const Duration(seconds: 2),
+      );
+      return {'success': false};
+    }
+
+    final firstName = firstNameController.text;
+    final lastName = lastNameController.text;
+    const profilePicture = '';
+    final specialization = specializationController.text;
+    final organization = organizationController.text;
+
+    final success = await runBusyFuture(userService.updateProfile(
+      firstName,
+      lastName,
+      profilePicture,
+      specialization,
+      organization,
+      userId, // Pass the user ID
+    ));
+
+    if (success) {
+      updateControllers();
+      snackbarService.showSnackbar(
+        message: 'Profile updated successfully',
+        duration: const Duration(seconds: 2),
+      );
+    } else {
+      snackbarService.showSnackbar(
+        message: 'Failed to update profile',
+        duration: const Duration(seconds: 2),
+      );
+    }
+
+    return {'success': success};
   }
 
   @override
   void dispose() {
+    userService.removeListener(() {});
     oldPasswordController.dispose();
     newPasswordController.dispose();
     confirmNewPasswordController.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    organizationController.dispose();
+    specializationController.dispose();
     super.dispose();
   }
 }

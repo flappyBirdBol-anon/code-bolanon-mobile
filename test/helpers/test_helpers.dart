@@ -7,6 +7,7 @@ import 'package:code_bolanon/services/theme_service.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/services/user_service.dart';
 // @stacked-import
 
 import 'test_helpers.mocks.dart';
@@ -22,6 +23,7 @@ import 'test_helpers.mocks.dart';
     MockSpec<ApiService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<CourseService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<ImageService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<UserService>(onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
   ],
 )
@@ -34,6 +36,7 @@ void registerServices() {
   getAndRegisterApiService();
   getAndRegisterCourseService();
   getAndRegisterImageService();
+  getAndRegisterUserService();
 // @stacked-mock-register
 }
 
@@ -123,6 +126,13 @@ MockImageService getAndRegisterImageService() {
   _removeRegistrationIfExists<ImageService>();
   final service = MockImageService();
   locator.registerSingleton<ImageService>(service);
+  return service;
+}
+
+MockUserService getAndRegisterUserService() {
+  _removeRegistrationIfExists<UserService>();
+  final service = MockUserService();
+  locator.registerSingleton<UserService>(service);
   return service;
 }
 // @stacked-mock-create

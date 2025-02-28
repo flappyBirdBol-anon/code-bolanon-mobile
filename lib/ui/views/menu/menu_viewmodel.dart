@@ -1,23 +1,17 @@
-import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
-import 'package:code_bolanon/services/auth_service.dart';
-import 'package:stacked/stacked.dart';
-import 'package:stacked_services/stacked_services.dart';
+import 'package:code_bolanon/app/app_base_view_model.dart';
 
-class MenuViewModel extends BaseViewModel {
-  final _authService = locator<AuthService>();
-  final _navigationService = locator<NavigationService>();
-
+class MenuViewModel extends AppBaseViewModel {
   bool _isDarkMode = false;
   bool get isDarkMode => _isDarkMode;
 
-  String get userName => _authService.currentUser?.fullName ?? 'User';
-  String get userRole => _authService.currentUser?.role ?? 'Guest';
-  String get userImage => _authService.currentUser?.profileImage ?? '';
-  String get userEmail => _authService.currentUser?.email ?? '';
+  String get userName => userService.currentUser?.fullName ?? 'User';
+  String get userRole => userService.currentUser?.role ?? 'Guest';
+  String get userImage => userService.currentUser?.profileImage ?? '';
+  String get userEmail => userService.currentUser?.email ?? '';
 
   MenuViewModel() {
-    _authService.addListener(_onUserChanged);
+    userService.addListener(_onUserChanged);
   }
 
   void _onUserChanged() {
@@ -26,7 +20,7 @@ class MenuViewModel extends BaseViewModel {
 
   @override
   void dispose() {
-    _authService.removeListener(_onUserChanged);
+    userService.removeListener(_onUserChanged);
     super.dispose();
   }
 
@@ -36,15 +30,15 @@ class MenuViewModel extends BaseViewModel {
   }
 
   Future<void> profile() async {
-    await _navigationService.navigateToProfileView();
+    await navigationService.navigateToProfileView();
   }
 
   Future<void> logout() async {
     setBusy(true);
     try {
-      final success = await _authService.logout();
+      final success = await authService.logout();
       if (success) {
-        await _navigationService.clearStackAndShow(Routes.authView);
+        await navigationService.clearStackAndShow(Routes.authView);
       }
     } catch (e) {
       print('error during logging out: $e');

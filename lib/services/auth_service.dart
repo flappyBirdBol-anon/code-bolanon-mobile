@@ -1,15 +1,18 @@
+import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
+import 'package:code_bolanon/services/user_service.dart';
 import 'package:stacked/stacked.dart';
 
 class AuthService with ListenableServiceMixin {
-  final ApiService _apiService;
+  final ApiService _apiService = ApiService();
+  final _userService = locator<UserService>();
 
   final ReactiveValue<UserModel?> _currentUser =
       ReactiveValue<UserModel?>(null);
   UserModel? get currentUser => _currentUser.value;
 
-  AuthService(this._apiService) {
+  AuthService() {
     listenToReactiveValues([_currentUser]);
   }
 
@@ -18,13 +21,14 @@ class AuthService with ListenableServiceMixin {
       final response = await _apiService.post('/login', data: {
         'email': email,
         'password': password,
+        'platform': 'mobile',
       });
 
       if (response.statusCode == 200) {
         final token = response.data['token'] ?? response.data['access_token'];
         if (token != null) {
           await _apiService.setAuthToken(token);
-          await _fetchUserProfile();
+          await _userService.fetchUserProfile();
           return true;
         }
       }
@@ -63,7 +67,7 @@ class AuthService with ListenableServiceMixin {
         if (token != null) {
           await _apiService.setAuthToken(token);
           // Fetch user profile after successful registration
-          await _fetchUserProfile();
+          await _userService.fetchUserProfile();
           return true;
         }
       }
@@ -74,24 +78,13 @@ class AuthService with ListenableServiceMixin {
     }
   }
 
-  Future<void> _fetchUserProfile() async {
-    try {
-      final profileData = await getProfile();
-      if (profileData != null) {
-        _currentUser.value = UserModel.fromJson(profileData);
-      }
-    } catch (e) {
-      print('Error fetching user profile: $e');
-    }
-  }
-
   Future<bool> logout() async {
     try {
       final response = await _apiService.post('/logout');
 
       if (response.statusCode == 200) {
         await _apiService.clearAuthToken();
-        _currentUser.value = null;
+        _userService.setUser(null);
         return true;
       }
       return false;
@@ -101,24 +94,10 @@ class AuthService with ListenableServiceMixin {
     }
   }
 
-  Future<Map<String, dynamic>?> getProfile() async {
-    try {
-      final response = await _apiService.get('/profile');
-
-      if (response.statusCode == 200) {
-        return response.data['data'];
-      }
-      return null;
-    } catch (e) {
-      print('Get profile error: $e');
-      return null;
-    }
-  }
-
   Future<bool> isLoggedIn() async {
     final token = await _apiService.getAuthToken();
     if (token != null && _currentUser.value == null) {
-      await _fetchUserProfile();
+      await _userService.fetchUserProfile();
     }
     return token != null;
   }

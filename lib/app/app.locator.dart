@@ -18,6 +18,7 @@ import '../services/course_service.dart';
 import '../services/image_service.dart';
 import '../services/theme_service.dart';
 import 'package:dio/dio.dart';
+import '../services/user_service.dart';
 
 final locator = StackedLocator.instance;
 
@@ -33,7 +34,7 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => BottomSheetService());
   locator.registerLazySingleton(() => DialogService());
   locator.registerLazySingleton(() => NavigationService());
-  locator.registerLazySingleton(() => AuthService(locator<ApiService>()));
+  locator.registerLazySingleton(() => AuthService());
   locator.registerLazySingleton(() => ThemeService());
   locator.registerLazySingleton(() => SnackbarService());
   locator.registerLazySingleton(() => ApiService());
@@ -49,4 +50,5 @@ Future<void> setupLocator({
         dioo: locator<ApiService>().dio,
         // Access the Dio instance from ApiService
       ));
+  locator.registerLazySingleton(() => UserService());
 }

@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/views/available_courses/available_courses_view.dart';
 import 'package:code_bolanon/ui/views/home/home_view.dart';
 import 'package:code_bolanon/ui/views/learner_home/learner_home_view.dart';
 import 'package:code_bolanon/ui/views/menu/menu_view.dart';
@@ -58,31 +59,30 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
                                   builder: (context) => const LearnerHomeView(),
                                 )
                               : MaterialPageRoute(
-                                  builder: (context) => const HomeView(),
-                                );
+                                  builder: (context) => const HomeView());
                     }),
                 Navigator(
-                  key: viewModel.navigatorKeys[1],
-                  onGenerateRoute: (routeSettings) {
-                    return viewModel.role == 'trainer'
-                        ? MaterialPageRoute(
-                            builder: (context) => const TrainerCoursesView(),
-                          )
-                        : viewModel.role == 'learner'
-                            ? MaterialPageRoute(
-                                builder: (context) => const LearnerHomeView(),
-                              )
-                            : MaterialPageRoute(
-                                builder: (context) => const HomeView(),
-                              );
-                  },
-                ),
+                    key: viewModel.navigatorKeys[1],
+                    onGenerateRoute: (routeSettings) {
+                      return viewModel.role == 'trainer'
+                          ? MaterialPageRoute(
+                              builder: (context) => const TrainerCoursesView(),
+                            )
+                          : MaterialPageRoute(
+                              builder: (context) =>
+                                  const AvailableCoursesView(),
+                            );
+                    }),
                 Navigator(
                   key: viewModel.navigatorKeys[2],
                   onGenerateRoute: (routeSettings) {
-                    return MaterialPageRoute(
-                      builder: (context) => const SizedBox.shrink(),
-                    );
+                    return viewModel.role == 'trainer'
+                        ? MaterialPageRoute(
+                            builder: (context) => const SizedBox.shrink(),
+                          )
+                        : MaterialPageRoute(
+                            builder: (context) => const SizedBox.shrink(),
+                          );
                   },
                 ),
                 Navigator(

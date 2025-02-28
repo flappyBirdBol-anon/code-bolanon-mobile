@@ -5,12 +5,14 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ApiService {
+  static ApiService? _instance;
   final String baseUrl = 'http://143.198.197.240/api';
   late Dio _dio;
   Dio get dio => _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  ApiService() {
+  // Private constructor
+  ApiService._() {
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       responseType: ResponseType.json,
@@ -47,6 +49,12 @@ class ApiService {
     ));
   }
 
+  // Factory constructor
+  factory ApiService() {
+    _instance ??= ApiService._();
+    return _instance!;
+  }
+
   Future<Response> get(String path) async {
     try {
       final response = await _dio.get(path);
@@ -59,6 +67,24 @@ class ApiService {
   Future<Response> post(String path, {dynamic data}) async {
     try {
       final response = await _dio.post(path, data: data);
+      return response;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Response> put(String path, {dynamic data}) async {
+    try {
+      final response = await _dio.put(path, data: data);
+      return response;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Response> patch(String path, {dynamic data}) async {
+    try {
+      final response = await _dio.patch(path, data: data);
       return response;
     } on DioException catch (e) {
       throw _handleError(e);
