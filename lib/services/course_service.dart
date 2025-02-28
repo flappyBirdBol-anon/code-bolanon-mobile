@@ -99,6 +99,7 @@ class CourseService {
     try {
       // Prepare update data
       final Map<String, dynamic> updateData = {};
+      if (courseId != null) updateData['id'] = courseId;
       if (title != null) updateData['title'] = title;
       if (description != null) updateData['description'] = description;
       if (price != null) updateData['price'] = price.toString();
@@ -110,6 +111,7 @@ class CourseService {
 
       if (image != null) {
         // Use the dedicated file upload method
+        print("image null");
         response = await _apiService.uploadFile(
           '/courses/$courseId',
           fields: updateData,
@@ -117,6 +119,7 @@ class CourseService {
         );
       } else {
         // Regular JSON request for update without file
+        print("no image, just regular json");
         response =
             await _apiService.post('/courses/$courseId', data: updateData);
       }

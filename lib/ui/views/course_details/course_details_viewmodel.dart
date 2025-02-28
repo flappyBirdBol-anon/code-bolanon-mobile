@@ -4,6 +4,7 @@ import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -20,11 +21,11 @@ class Lesson {
 class CourseDetailsViewModel extends BaseViewModel {
   int _selectedTabIndex = 0;
   int get selectedTabIndex => _selectedTabIndex;
-  final _authService = locator<AuthService>();
+  final _userService = locator<UserService>();
   final _imageService = locator<ImageService>(); // Add ImageService
 
-  String get profilePictureUrl => _authService.currentUser?.profileImage ?? '';
-  String get userName => _authService.currentUser?.fullName ?? 'User';
+  String get profilePictureUrl => _userService.currentUser?.profileImage ?? '';
+  String get userName => _userService.currentUser?.fullName ?? 'User';
   bool _isLoading = true;
   bool get isLoading => _isLoading;
   final _navigationService = locator<NavigationService>();
