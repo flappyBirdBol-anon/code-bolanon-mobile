@@ -126,10 +126,10 @@ class SignupView extends StackedView<SignupViewModel> {
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
+          // decoration: BoxDecoration(
+          //   borderRadius: BorderRadius.circular(12),
+          //   // border: Border.all(color: const Color.fromARGB(255, 255, 255, 255)),
+          // ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -146,7 +146,7 @@ class SignupView extends StackedView<SignupViewModel> {
               ],
               Wrap(
                 spacing: 8.0,
-                runSpacing: 8.0,
+                runSpacing: 4.0,
                 children: [
                   for (String stack in viewModel.availableTechStacks)
                     FilterChip(
@@ -167,8 +167,8 @@ class SignupView extends StackedView<SignupViewModel> {
                             : Colors.black87,
                       ),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      elevation: 0,
-                      pressElevation: 2,
+                      elevation: 1.5,
+                      pressElevation: 2.5,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       shape: RoundedRectangleBorder(
@@ -270,7 +270,6 @@ class SignupView extends StackedView<SignupViewModel> {
                     text: 'Here',
                     style: const TextStyle(
                       color: Colors.blue,
-                      decoration: TextDecoration.underline,
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
@@ -313,7 +312,6 @@ class SignupView extends StackedView<SignupViewModel> {
                   text: 'Here',
                   style: const TextStyle(
                     color: Colors.blue,
-                    decoration: TextDecoration.underline,
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
