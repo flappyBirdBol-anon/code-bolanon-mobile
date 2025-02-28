@@ -1,18 +1,22 @@
 // lib/viewmodels/trainer_courses_viewmodel.dart
 import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/services/course_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/common/helpers/dialog_helper.dart';
 import 'package:code_bolanon/ui/common/widgets/course_dialog.dart';
-
 import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stacked/stacked.dart';
-import 'package:stacked_services/stacked_services.dart'; // For navigation service
+import 'package:stacked_services/stacked_services.dart';
 
 class TrainerCoursesViewModel extends BaseViewModel {
   final _imagePicker = ImagePicker();
-  final _navigationService =
-      NavigationService(); // Add this if using stacked navigation
+  final _navigationService = NavigationService();
+
+  // Add service dependencies
+  final CourseService _courseService;
+  final ImageService _imageService;
 
   List<Course> _courses = [];
   String _selectedFilter = 'All';
@@ -22,46 +26,65 @@ class TrainerCoursesViewModel extends BaseViewModel {
   List<Course> get courses => _filterCourses();
   String get selectedFilter => _selectedFilter;
   bool get isBusy => _isBusy;
+  ImageService get imageService => _imageService; // Expose image service for UI
 
-  void init() {
+  // Constructor with dependency injection
+  TrainerCoursesViewModel({
+    required CourseService courseService,
+    required ImageService imageService,
+  })  : _courseService = courseService,
+        _imageService = imageService;
+
+  Future<void> init() async {
     setBusy(true);
-    // Simulate fetching courses from API
-    _courses = [
-      Course(
-        id: '1',
-        title: 'Web Development Fundamentals',
-        description:
-            'Learn the basics of web development with HTML, CSS, and JavaScript',
-        thumbnail: 'assets/images/1.jpg',
-        isActive: true,
-        studentsEnrolled: 45,
-        price: 10,
-        rating: 4.5,
-      ),
-      Course(
-        id: '2',
-        title: 'Flutter Development Fundamentals',
-        description:
-            'Learn flutter development with Dart, and build beautiful apps',
-        thumbnail: 'assets/images/2.jpg',
-        isActive: true,
-        studentsEnrolled: 56,
-        price: 20,
-        rating: 4.8,
-      ),
-      Course(
-        id: '3',
-        title: 'Python Development Fundamentals',
-        description:
-            'Learn python development with Django, and build beautiful apps',
-        thumbnail: 'assets/images/3.jpg',
-        isActive: true,
-        studentsEnrolled: 45,
-        price: 60,
-        rating: 4.2,
-      ),
-    ];
-    setBusy(false);
+    try {
+      // Fetch courses from API using CourseService
+      _courses = await _courseService.getCourses();
+
+      // The CourseService already triggers image prefetching in the background
+      // through the ImageService.prefetchCourseImages method
+    } catch (e) {
+      _showErrorMessage('Failed to load courses: ${e.toString()}');
+
+      // Fallback to sample data if API fails
+      _courses = [
+        Course(
+          id: '1',
+          title: 'Web Development Fundamentals',
+          description:
+              'Learn the basics of web development with HTML, CSS, and JavaScript',
+          thumbnail: 'assets/images/1.jpg',
+          isActive: true,
+          studentsEnrolled: 45,
+          price: 10,
+          rating: 4.5,
+        ),
+        Course(
+          id: '2',
+          title: 'Flutter Development Fundamentals',
+          description:
+              'Learn flutter development with Dart, and build beautiful apps',
+          thumbnail: 'assets/images/2.jpg',
+          isActive: true,
+          studentsEnrolled: 56,
+          price: 20,
+          rating: 4.8,
+        ),
+        Course(
+          id: '3',
+          title: 'Python Development Fundamentals',
+          description:
+              'Learn python development with Django, and build beautiful apps',
+          thumbnail: 'assets/images/3.jpg',
+          isActive: true,
+          studentsEnrolled: 45,
+          price: 60,
+          rating: 4.2,
+        ),
+      ];
+    } finally {
+      setBusy(false);
+    }
   }
 
   void setFilter(String filter) {
@@ -94,7 +117,58 @@ class TrainerCoursesViewModel extends BaseViewModel {
     }
   }
 
-  // Enhanced course creation with proper busy state management
+  // Get a widget to display a course image
+  Widget getCourseImageWidget({
+    required Course course,
+    double? width,
+    double? height,
+    BoxFit fit = BoxFit.cover,
+    Widget? placeholder,
+    Widget? errorWidget,
+  }) {
+    // Handle local assets differently
+    if (course.thumbnail != null && course.thumbnail!.startsWith('assets/')) {
+      return Image.asset(
+        course.thumbnail!,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return errorWidget ?? _buildDefaultErrorWidget(width, height);
+        },
+      );
+    }
+
+    // If it's a remote image, use the ImageService
+    if (course.thumbnail != null && course.thumbnail!.isNotEmpty) {
+      final imageUrl =
+          _imageService.getCourseThumbnailFromPath(course.thumbnail!);
+
+      return _imageService.loadImage(
+        imageUrl: imageUrl,
+        courseId: course.id,
+        width: width,
+        height: height,
+        fit: fit,
+        placeholder: placeholder,
+        errorWidget: errorWidget,
+      );
+    }
+
+    // If no image path, return error widget
+    return errorWidget ?? _buildDefaultErrorWidget(width, height);
+  }
+
+  Widget _buildDefaultErrorWidget(double? width, double? height) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.grey[300],
+      child: Icon(Icons.image_not_supported, color: Colors.grey[600]),
+    );
+  }
+
+  // Enhanced course creation with proper busy state management and image caching
   Future<void> addNewCourse({
     required String title,
     required String description,
@@ -104,26 +178,40 @@ class TrainerCoursesViewModel extends BaseViewModel {
     try {
       setBusy(true);
 
-      // Simulate API call to save course with delay
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final newCourse = Course(
-        id: DateTime.now().toString(),
+      // Use CourseService to add the course
+      final newCourse = await _courseService.addCourse(
         title: title,
         description: description,
-        thumbnail: image?.path ?? 'assets/images/default.jpg',
-        isActive: true,
-        studentsEnrolled: 0,
-        rating: 0,
         price: price.toInt(),
+        image: image,
       );
 
+      // Add to local list
       _courses.add(newCourse);
+
+      // Clear selected image
+      _selectedImage = null;
 
       // Show success message
       _showSuccessMessage('Course created successfully');
     } catch (e) {
       _showErrorMessage('Failed to create course: ${e.toString()}');
+
+      // Fallback to local creation if API fails
+      if (_courses.isNotEmpty) {
+        final newCourse = Course(
+          id: DateTime.now().toString(),
+          title: title,
+          description: description,
+          thumbnail: image?.path ?? 'assets/images/default.jpg',
+          isActive: true,
+          studentsEnrolled: 0,
+          rating: 0,
+          price: price.toInt(),
+        );
+
+        _courses.add(newCourse);
+      }
     } finally {
       setBusy(false);
     }
@@ -139,41 +227,62 @@ class TrainerCoursesViewModel extends BaseViewModel {
     try {
       setBusy(true);
 
-      // Simulate API call with delay
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Use CourseService to update the course
+      final updatedCourse = await _courseService.updateCourse(
+        courseId: courseId,
+        title: title,
+        description: description,
+        price: price?.toInt(),
+        image: newImage,
+      );
 
+      // Update local list
       final courseIndex =
           _courses.indexWhere((course) => course.id == courseId);
-      if (courseIndex == -1) {
-        throw Exception('Course not found');
+      if (courseIndex != -1) {
+        _courses[courseIndex] = updatedCourse;
       }
 
-      final course = _courses[courseIndex];
-      _courses[courseIndex] = Course(
-        id: course.id,
-        title: title ?? course.title,
-        description: description ?? course.description,
-        thumbnail: newImage?.path ?? course.thumbnail,
-        isActive: course.isActive,
-        studentsEnrolled: course.studentsEnrolled,
-        rating: course.rating,
-        price: (price ?? course.price).toInt(),
-      );
+      // Clear selected image
+      _selectedImage = null;
 
       _showSuccessMessage('Course updated successfully');
     } catch (e) {
       _showErrorMessage('Failed to update course: ${e.toString()}');
+
+      // Fallback to local update if API fails
+      final courseIndex =
+          _courses.indexWhere((course) => course.id == courseId);
+      if (courseIndex != -1) {
+        final course = _courses[courseIndex];
+        _courses[courseIndex] = Course(
+          id: course.id,
+          title: title ?? course.title,
+          description: description ?? course.description,
+          thumbnail: newImage?.path ?? course.thumbnail,
+          isActive: course.isActive,
+          studentsEnrolled: course.studentsEnrolled,
+          rating: course.rating,
+          price: (price ?? course.price).toInt(),
+        );
+      }
     } finally {
       setBusy(false);
     }
   }
 
-  void toggleCourseStatus(String courseId) {
+  Future<void> toggleCourseStatus(String courseId) async {
     try {
       final courseIndex =
           _courses.indexWhere((course) => course.id == courseId);
       if (courseIndex == -1) return;
 
+      setBusy(true);
+
+      // In a real app, you would call an API here
+      // await _courseService.toggleCourseStatus(courseId);
+
+      // For now, just update locally
       final course = _courses[courseIndex];
       _courses[courseIndex] = Course(
         id: course.id,
@@ -189,9 +298,11 @@ class TrainerCoursesViewModel extends BaseViewModel {
       final statusText =
           _courses[courseIndex].isActive ? 'activated' : 'deactivated';
       _showSuccessMessage('Course ${statusText} successfully');
-      notifyListeners();
     } catch (e) {
       _showErrorMessage('Failed to update course status: ${e.toString()}');
+    } finally {
+      setBusy(false);
+      notifyListeners();
     }
   }
 
@@ -236,61 +347,6 @@ class TrainerCoursesViewModel extends BaseViewModel {
       ),
     );
   }
-
-  // // Option 2: Full-page approach for adding course
-  // void navigateToAddCourseView(BuildContext context) {
-  //   Navigator.of(context).push(
-  //     MaterialPageRoute(
-  //       builder: (context) => CourseCreationView(
-  //         onSave: (title, description, price, image) {
-  //           addNewCourse(
-  //             title: title,
-  //             description: description,
-  //             price: price,
-  //             image: image,
-  //           );
-  //         },
-  //       ),
-  //     ),
-  //   );
-
-  //   // Alternative using Stacked navigation service:
-  //   // _navigationService.navigateToView(
-  //   //   CourseCreationView(
-  //   //     onSave: (title, description, price, image) {
-  //   //       addNewCourse(
-  //   //         title: title,
-  //   //         description: description,
-  //   //         price: price,
-  //   //         image: image,
-  //   //       );
-  //   //     },
-  //   //   ),
-  //   // );
-  // }
-
-  // // Option 2: Full-page approach for editing course
-  // void navigateToEditCourseView(BuildContext context, Course course) {
-  //   Navigator.of(context).push(
-  //     MaterialPageRoute(
-  //       builder: (context) => CourseCreationView(
-  //         isEditing: true,
-  //         initialCourseName: course.title,
-  //         initialDescription: course.description,
-  //         initialPrice: course.price.toDouble(),
-  //         onSave: (title, description, price, image) {
-  //           editCourse(
-  //             course.id,
-  //             title: title,
-  //             description: description,
-  //             price: price,
-  //             newImage: image,
-  //           );
-  //         },
-  //       ),
-  //     ),
-  //   );
-  // }
 
   void navigateToCourseDetails(BuildContext context, Course course) {
     Navigator.push(

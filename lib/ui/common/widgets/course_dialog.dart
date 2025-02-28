@@ -43,7 +43,7 @@ class _CourseDialogState extends State<CourseDialog>
     descriptionController =
         TextEditingController(text: widget.initialDescription ?? '');
     priceController =
-        TextEditingController(text: widget.initialPrice?.toString() ?? '0');
+        TextEditingController(text: widget.initialPrice?.toString() ?? '');
 
     _animationController = AnimationController(
       vsync: this,

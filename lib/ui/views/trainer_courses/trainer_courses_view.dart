@@ -1,5 +1,9 @@
 // lib/views/trainer_courses_view.dart
+import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/services/api_service.dart';
+import 'package:code_bolanon/services/course_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/course_dialog.dart';
 import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_viewmodel.dart';
@@ -23,14 +27,15 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
             _buildHeader(viewModel),
             _buildFilters(viewModel),
             Expanded(
-              child: _buildCourseGrid(viewModel),
+              child: viewModel.isBusy
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildCourseGrid(viewModel),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => viewModel.showAddCourseDialog(context),
-        // onPressed: () => viewModel.navigateToAddCourseView(context),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add),
       ),
@@ -103,30 +108,59 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
   }
 
   Widget _buildCourseGrid(TrainerCoursesViewModel viewModel) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 14,
-        childAspectRatio: 0.64,
-      ),
-      itemCount: viewModel.courses.length,
-      itemBuilder: (context, index) {
-        final course = viewModel.courses[index];
-        return _CourseCard(
-          course: course,
-          onEdit: () => viewModel.editCourse(course.id),
-          onToggleStatus: () => viewModel.toggleCourseStatus(course.id),
-          viewModel: viewModel,
+    return LayoutBuilder(builder: (context, constraints) {
+      // Calculate responsive grid parameters based on screen size
+      final double width = constraints.maxWidth;
+      final int crossAxisCount = width > 600 ? 3 : 2;
+      final double aspectRatio = width > 600 ? 0.75 : 0.64;
+
+      if (viewModel.courses.isEmpty) {
+        return const Center(
+          child: Text(
+            'No courses found',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary,
+            ),
+          ),
         );
-      },
-    );
+      }
+
+      return GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 14,
+          childAspectRatio: aspectRatio,
+        ),
+        itemCount: viewModel.courses.length,
+        itemBuilder: (context, index) {
+          final course = viewModel.courses[index];
+          return _CourseCard(
+            course: course,
+            onEdit: () => viewModel.showEditCourseDialog(context, course),
+            onToggleStatus: () => viewModel.toggleCourseStatus(course.id),
+            viewModel: viewModel,
+          );
+        },
+      );
+    });
   }
 
   @override
-  TrainerCoursesViewModel viewModelBuilder(BuildContext context) =>
-      TrainerCoursesViewModel();
+  TrainerCoursesViewModel viewModelBuilder(BuildContext context) {
+    // Create and inject dependencies
+    // In a real app, you would use a proper DI framework
+    final apiService = locator<ApiService>();
+    final imageService = locator<ImageService>();
+    final courseService = CourseService(apiService, imageService);
+
+    return TrainerCoursesViewModel(
+      courseService: courseService,
+      imageService: imageService,
+    );
+  }
 
   @override
   void onViewModelReady(TrainerCoursesViewModel viewModel) => viewModel.init();
@@ -156,7 +190,7 @@ class _CourseCard extends StatelessWidget {
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Column(
-              mainAxisSize: MainAxisSize.max,
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Stack(
@@ -164,11 +198,9 @@ class _CourseCard extends StatelessWidget {
                     ClipRRect(
                       borderRadius:
                           const BorderRadius.vertical(top: Radius.circular(12)),
-                      child: Image.asset(
-                        course.thumbnail,
-                        height: constraints.maxHeight * 0.4,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: _buildCourseImage(),
                       ),
                     ),
                     Positioned(
@@ -194,7 +226,7 @@ class _CourseCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                Expanded(
+                Flexible(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Column(
@@ -210,18 +242,18 @@ class _CourseCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 6),
-                        Text(
-                          course.description,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
+                        Flexible(
+                          child: Text(
+                            course.description,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(
-                          height: 5,
-                        ),
+                        const SizedBox(height: 5),
                         Row(
                           children: [
                             const Icon(
@@ -251,14 +283,19 @@ class _CourseCard extends StatelessWidget {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.edit, size: 20),
-                              onPressed: () => _showEditDialog(context),
+                              onPressed: onEdit,
                               color: AppColors.primary,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
                             ),
                             const Spacer(),
-                            Switch(
-                              value: course.isActive,
-                              onChanged: (_) => onToggleStatus(),
-                              activeColor: AppColors.primary,
+                            Transform.scale(
+                              scale: 0.8,
+                              child: Switch(
+                                value: course.isActive,
+                                onChanged: (_) => onToggleStatus(),
+                                activeColor: AppColors.primary,
+                              ),
                             ),
                           ],
                         ),
@@ -274,24 +311,28 @@ class _CourseCard extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => CourseDialog(
-        title: 'Edit Course',
-        initialCourseName: course.title,
-        initialDescription: course.description,
-        initialPrice: course.price.toDouble(),
-        onSave: (title, description, price, image) {
-          onEdit();
-          viewModel.editCourse(
-            course.id,
-            title: title,
-            description: description,
-            price: price,
-            newImage: image,
-          );
-        },
+  // Use the ImageService to load and display the course image
+  Widget _buildCourseImage() {
+    return viewModel.getCourseImageWidget(
+      course: course,
+      fit: BoxFit.cover,
+      placeholder: Container(
+        color: Colors.grey[200],
+        child: const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+          ),
+        ),
+      ),
+      errorWidget: Container(
+        color: Colors.grey[300],
+        child: const Center(
+          child: Icon(
+            Icons.image_not_supported,
+            size: 40,
+            color: Colors.grey,
+          ),
+        ),
       ),
     );
   }
