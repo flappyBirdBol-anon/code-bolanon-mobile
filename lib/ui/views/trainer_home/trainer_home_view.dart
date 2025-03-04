@@ -1,12 +1,13 @@
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:code_bolanon/ui/views/trainer_home/trainer_home_viewmodel.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:stacked/stacked.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:stacked/stacked.dart';
 
 class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
   const TrainerHomeView({Key? key}) : super(key: key);
@@ -463,7 +464,8 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: isDark ? Color(0xFF0F172A) : Colors.grey[100],
+                        color:
+                            isDark ? const Color(0xFF0F172A) : Colors.grey[100],
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -487,7 +489,9 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: isDark ? Color(0xFF1E293B) : Colors.white,
+                              color: isDark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white,
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
@@ -553,7 +557,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                               color: isSelected
                                   ? theme.primaryColor
                                   : isDark
-                                      ? Color(0xFF0F172A)
+                                      ? const Color(0xFF0F172A)
                                       : Colors.grey[100],
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
@@ -1192,7 +1196,13 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
   Widget _buildFeatureCourses(
       TrainerHomeViewModel viewModel, ThemeData theme, TextStyle bodyStyle) {
     if (viewModel.isLoading) {
-      return _buildCoursesCarouselSkeleton();
+      return CustomCard(
+        text: '',
+        onPressed: () {},
+        isHorizontalCard: true,
+        isLoading: true,
+        itemCount: 3,
+      );
     }
 
     final isDark = theme.brightness == Brightness.dark;
@@ -1210,152 +1220,25 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
           builder: (BuildContext context) {
             return GestureDetector(
               onTap: () => viewModel.openCourse(course.id),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 6.0),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      offset: const Offset(0, 4),
-                      blurRadius: 8,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12),
-                          ),
-                          child: Image.asset(
-                            course.imageUrl,
-                            height: 120,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Positioned(
-                          top: 10,
-                          left: 10,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.7),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.play_circle_outline,
-                                  color: Colors.white,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "${course.lessons} Lessons",
-                                  style: bodyStyle.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            course.title,
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Text(
-                                '\$${course.price}',
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.primaryColor,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const Spacer(),
-                              const Icon(
-                                Icons.star,
-                                color: Colors.amber,
-                                size: 15,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${course.rating}',
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                ' (${course.reviews})',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              child: CustomCard(
+                text: course.title,
+                onPressed: () => viewModel.openCourse(course.id),
+                isHorizontalCard: true,
+                isLoading: false,
+                backgroundColor: cardColor,
+                height: 200,
+                width: 260,
+                imageUrl: course.imageUrl,
+                lessons: course.lessons,
+                rating: course.rating,
+                reviews: course.reviews,
+                price: '\$${course.price}',
+                instructorName: 'Sample',
               ),
             );
           },
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildCoursesCarouselSkeleton() {
-    return SizedBox(
-      height: 200,
-      child: Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: 3,
-          itemBuilder: (context, index) {
-            return Container(
-              width: 260,
-              margin: const EdgeInsets.only(right: 12.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-            );
-          },
-        ),
-      ),
     );
   }
 
