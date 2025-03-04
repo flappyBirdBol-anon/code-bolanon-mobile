@@ -1,5 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_list_item.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:code_bolanon/ui/views/trainer_home/trainer_home_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -1265,66 +1266,42 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
               ),
             ],
           ),
-          child: viewModel.isLoading
-              ? _buildActivitySkeleton()
-              : ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: viewModel.recentActivities.length,
-                  separatorBuilder: (context, index) => Divider(
-                    height: 1,
-                    color: isDark ? Colors.grey[700] : Colors.grey[200],
-                    indent: 60,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: viewModel.isLoading
+                ? ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 3,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      return CustomListItem(
+                        text: '',
+                        onPressed: () {},
+                        isLoading: true,
+                        useTileStyle: true,
+                      );
+                    },
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: viewModel.recentActivities.length,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final activity = viewModel.recentActivities[index];
+                      return CustomListItem(
+                        text: activity.title,
+                        subtitle: activity.timestamp,
+                        leadingIcon: activity.icon,
+                        onPressed: () => viewModel.openActivity(activity.id),
+                        useTileStyle: true,
+                      );
+                    },
                   ),
-                  itemBuilder: (context, index) {
-                    final activity = viewModel.recentActivities[index];
-                    return ListTile(
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.primaryColor.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          activity.icon,
-                          color: theme.primaryColor,
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(
-                        activity.title,
-                        style: bodyStyle.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      subtitle: Text(
-                        activity.timestamp,
-                        style: bodyStyle.copyWith(
-                          fontSize: 12,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                      ),
-                      trailing: Container(
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[800] : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.chevron_right,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
-                            size: 20,
-                          ),
-                          constraints: const BoxConstraints(),
-                          padding: const EdgeInsets.all(8),
-                          onPressed: () => viewModel.openActivity(activity.id),
-                        ),
-                      ),
-                      onTap: () => viewModel.openActivity(activity.id),
-                    );
-                  },
-                ),
+          ),
         ),
       ],
     );
@@ -1513,69 +1490,24 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
         ),
         const SizedBox(height: 16),
         Container(
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
-              width: 1,
-            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                offset: const Offset(0, 4),
+                blurRadius: 12,
+                spreadRadius: 0,
+              ),
+            ],
           ),
-          child: InkWell(
-            onTap: () => viewModel.openReviewSession(),
-            borderRadius: BorderRadius.circular(12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[800] : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.event_note_outlined,
-                    color: isDark ? Colors.grey[400] : Colors.grey[700],
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Code Review Session',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tomorrow at 10:00 AM',
-                        style: GoogleFonts.inter(
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[800] : Colors.grey[200],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: isDark ? Colors.grey[400] : Colors.grey[700],
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
+          child: CustomListItem(
+            text: 'Code Review Session',
+            subtitle: 'Tomorrow at 10:00 AM',
+            leadingIcon: Icons.event_note_outlined,
+            onPressed: () => viewModel.openReviewSession(),
+            useTileStyle: true,
           ),
         ),
       ],
