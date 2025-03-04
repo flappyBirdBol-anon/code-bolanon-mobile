@@ -59,17 +59,32 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
         ),
         body: Column(
           children: [
-            // Thumbnail
+            // Thumbnail with cached image
             AspectRatio(
               aspectRatio: 16 / 9,
               child: Container(
                 margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: AssetImage(course!.thumbnail),
-                    fit: BoxFit.cover,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: viewModel.getCourseImageWidget(
+                  fit: BoxFit.cover,
+                  placeholder: Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                  errorWidget: Container(
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: Icon(
+                        Icons.image_not_supported,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -442,5 +457,5 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
 
   @override
   void onViewModelReady(CourseDetailsViewModel viewModel) =>
-      viewModel.initialize();
+      viewModel.initialize(course);
 }

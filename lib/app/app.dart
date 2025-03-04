@@ -18,6 +18,8 @@ import 'package:code_bolanon/ui/views/startup/startup_view.dart';
 import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart';
 import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
+import 'package:code_bolanon/services/course_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
 // @stacked-import
 
 @StackedApp(
@@ -44,6 +46,8 @@ import 'package:stacked_services/stacked_services.dart';
     LazySingleton(classType: ThemeService),
     LazySingleton(classType: SnackbarService),
     LazySingleton(classType: ApiService),
+    LazySingleton(classType: CourseService),
+    LazySingleton(classType: ImageService),
     LazySingleton(classType: UserService),
 // @stacked-service
   ],

@@ -1,11 +1,14 @@
 // api_service.dart
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ApiService {
   static ApiService? _instance;
   final String baseUrl = 'http://143.198.197.240/api';
   late Dio _dio;
+  Dio get dio => _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   // Private constructor
@@ -130,5 +133,75 @@ class ApiService {
 
   Future<String?> getAuthToken() async {
     return await _storage.read(key: 'auth_token');
+  }
+
+  // Add this to your ApiService class
+  Future<Response> uploadFile(
+    String path, {
+    required Map<String, dynamic> fields,
+    required Map<String, XFile> files,
+    String method = 'POST',
+  }) async {
+    try {
+      // Create form data
+      FormData formData = FormData();
+
+      // Add all text fields
+      fields.forEach((key, value) {
+        formData.fields.add(MapEntry(key, value.toString()));
+      });
+
+      // Add all files
+      for (var entry in files.entries) {
+        String fileName = entry.value.name;
+        if (fileName.isEmpty) {
+          fileName = entry.value.path.split('/').last;
+        }
+
+        formData.files.add(MapEntry(
+          entry.key,
+          await MultipartFile.fromFile(
+            entry.value.path,
+            filename: fileName,
+            contentType: _getContentType(fileName),
+          ),
+        ));
+      }
+
+      // If method spoofing is needed (for PUT/PATCH/DELETE with file uploads)
+      if (method != 'POST' && !fields.containsKey('_method')) {
+        formData.fields.add(MapEntry('_method', method));
+      }
+
+      final response = await _dio.post(
+        path,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+          method: 'POST', // Always use POST for multipart
+        ),
+      );
+
+      return response;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  MediaType? _getContentType(String path) {
+    final ext = path.split('.').last.toLowerCase();
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+        return MediaType.parse('image/jpeg');
+      case 'png':
+        return MediaType.parse('image/png');
+      case 'gif':
+        return MediaType.parse('image/gif');
+      case 'webp':
+        return MediaType.parse('image/webp');
+      default:
+        return null;
+    }
   }
 }

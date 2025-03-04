@@ -1,5 +1,6 @@
 import 'package:code_bolanon/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:stacked/stacked.dart';
 import 'package:lottie/lottie.dart';
 import 'onboarding_viewmodel.dart';
@@ -16,20 +17,31 @@ class OnboardingView extends StackedView<OnboardingViewModel> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              const Padding(
-                padding: EdgeInsets.only(top: 16.0),
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      Constants.appName,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 0, 0, 0),
+                    SizedBox(
+                      height: 100,
+                      width: 100,
+                      child: SvgPicture.asset(
+                        'assets/images/logo.svg',
+                        fit: BoxFit.cover,
+                        clipBehavior: Clip.hardEdge,
+                        // Control position and scaling
+                        alignment: Alignment.center,
                       ),
                     ),
+                    // Text(
+                    //   Constants.appName,
+                    //   style: TextStyle(
+                    //     fontFamily: 'Poppins',
+                    //     fontSize: 24,
+                    //     fontWeight: FontWeight.bold,
+                    //     color: Color.fromARGB(255, 0, 0, 0),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),

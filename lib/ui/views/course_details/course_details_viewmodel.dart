@@ -1,7 +1,10 @@
 // lib/views/course_details/course_details_viewmodel.dart
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
+import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/services/auth_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -18,18 +21,92 @@ class Lesson {
 class CourseDetailsViewModel extends BaseViewModel {
   int _selectedTabIndex = 0;
   int get selectedTabIndex => _selectedTabIndex;
-  final _authService = locator<AuthService>();
-  String get profilePictureUrl => _authService.currentUser?.profileImage ?? '';
-  String get userName => _authService.currentUser?.fullName ?? 'User';
+  final _userService = locator<UserService>();
+  final _imageService = locator<ImageService>(); // Add ImageService
+
+  String get profilePictureUrl => _userService.currentUser?.profileImage ?? '';
+  String get userName => _userService.currentUser?.fullName ?? 'User';
   bool _isLoading = true;
   bool get isLoading => _isLoading;
   final _navigationService = locator<NavigationService>();
 
-  Future<void> initialize() async {
+  // Reference to the course
+  Course? _course;
+  Course? get course => _course;
+
+  // Initialize with a course
+  Future<void> initialize(Course? course) async {
+    _course = course;
+
+    if (_course != null && _course!.thumbnail != null) {
+      // Prefetch the course image to ensure it's cached
+      final imageUrl =
+          _imageService.getCourseThumbnailFromPath(_course!.thumbnail!);
+      await _imageService.prefetchImage(imageUrl, courseId: _course!.id);
+    }
+
     // Load additional course details if needed
     await Future.delayed(const Duration(seconds: 1)); // Simulate loading
     _isLoading = false;
     notifyListeners();
+  }
+
+  // Get a widget to display the course image
+  Widget getCourseImageWidget({
+    double? width,
+    double? height,
+    BoxFit fit = BoxFit.cover,
+    Widget? placeholder,
+    Widget? errorWidget,
+  }) {
+    if (_course == null || _course!.thumbnail == null) {
+      return errorWidget ?? _buildDefaultErrorWidget(width, height);
+    }
+
+    // Handle local assets differently
+    if (_course!.thumbnail!.startsWith('assets/')) {
+      return Image.asset(
+        _course!.thumbnail!,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return errorWidget ?? _buildDefaultErrorWidget(width, height);
+        },
+      );
+    }
+
+    // Use ImageService for remote images
+    final imageUrl =
+        _imageService.getCourseThumbnailFromPath(_course!.thumbnail!);
+
+    return _imageService.loadImage(
+      imageUrl: imageUrl,
+      courseId: _course!.id,
+      width: width,
+      height: height,
+      fit: fit,
+      placeholder: placeholder ?? _buildDefaultPlaceholder(width, height),
+      errorWidget: errorWidget ?? _buildDefaultErrorWidget(width, height),
+    );
+  }
+
+  Widget _buildDefaultPlaceholder(double? width, double? height) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.grey[200],
+      child: const Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  Widget _buildDefaultErrorWidget(double? width, double? height) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.grey[300],
+      child: Icon(Icons.image_not_supported, color: Colors.grey[600]),
+    );
   }
 
   final List<Lesson> _lessons = [
@@ -72,7 +149,7 @@ class CourseDetailsViewModel extends BaseViewModel {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Lesson Title',
               ),
             ),
@@ -105,11 +182,5 @@ class CourseDetailsViewModel extends BaseViewModel {
   void navigateToAddLesson() {
     // Using Stacked Services
     _navigationService.navigateTo(Routes.addLessonView);
-
-    // Or using regular navigation
-    // Navigator.push(
-    //   _navigationService.navigatorKey.currentContext!,
-    //   MaterialPageRoute(builder: (context) => const AddLessonView()),
-    // );
   }
 }

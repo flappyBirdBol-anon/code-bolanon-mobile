@@ -2,6 +2,7 @@ import 'package:code_bolanon/ui/views/auth/signup/signup_view.dart';
 import 'package:code_bolanon/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'auth_viewmodel.dart';
 import 'login/login_view.dart';
@@ -24,21 +25,27 @@ class AuthView extends StackedView<AuthViewModel> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SvgPicture.asset(
-                      'assets/images/logo.svg',
+                    SizedBox(
                       height: 100,
                       width: 100,
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      Constants.appName,
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: "Poppins",
-                        color: Color.fromARGB(255, 5, 102, 182),
+                      child: SvgPicture.asset(
+                        'assets/images/logo.svg',
+                        fit: BoxFit.cover,
+                        clipBehavior: Clip.hardEdge,
+                        // Control position and scaling
+                        alignment: Alignment.center,
                       ),
                     ),
+                    const SizedBox(width: 12),
+                    // const Text(
+                    //   // Constants.appName,
+                    //   style: TextStyle(
+                    //     fontSize: 32,
+                    //     fontWeight: FontWeight.bold,
+                    //     fontFamily: "Poppins",
+                    //     color: Color.fromARGB(255, 5, 102, 182),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -46,11 +53,16 @@ class AuthView extends StackedView<AuthViewModel> {
               // Description
               Text(
                 'Sign up or login below to manage your courses, schedules, and productivity.',
-                style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
+                style: GoogleFonts.bitter(
+                  color: const Color.fromARGB(115, 0, 0, 0),
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 58),
               // Login/Signup Tabs
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -66,7 +78,8 @@ class AuthView extends StackedView<AuthViewModel> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+
+              const SizedBox(height: 7),
               // Page View
               Expanded(
                 child: PageView(

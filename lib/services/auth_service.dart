@@ -2,6 +2,7 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stacked/stacked.dart';
 
 class AuthService with ListenableServiceMixin {
@@ -85,12 +86,22 @@ class AuthService with ListenableServiceMixin {
       if (response.statusCode == 200) {
         await _apiService.clearAuthToken();
         _userService.setUser(null);
+        clearUserData();
         return true;
       }
       return false;
     } catch (e) {
       print('Logout error: $e');
       return false;
+    }
+  }
+
+  Future<void> clearUserData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('current_user');
+    } catch (e) {
+      print('Error clearing user data: $e');
     }
   }
 

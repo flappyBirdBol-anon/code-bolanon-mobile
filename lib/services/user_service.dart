@@ -1,11 +1,18 @@
+import 'dart:convert';
+
 import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stacked/stacked.dart';
 
 class UserService with ListenableServiceMixin {
   final ReactiveValue<UserModel?> _currentUser =
       ReactiveValue<UserModel?>(null);
   UserModel? get currentUser => _currentUser.value;
+
+  final ReactiveValue<UserModel?> _loggedInUser =
+      ReactiveValue<UserModel?>(null);
+  UserModel? get loggedInUser => _loggedInUser.value;
 
   UserService() {
     listenToReactiveValues([_currentUser]);
@@ -16,9 +23,32 @@ class UserService with ListenableServiceMixin {
       final profileData = await getProfile();
       if (profileData != null) {
         _currentUser.value = UserModel.fromJson(profileData);
+
+        // Save to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        final userJson = json.encode(_currentUser.value?.toJson());
+        await prefs.setString('current_user', userJson);
+        _loggedInUser.value = await getUserFromPrefs();
       }
     } catch (e) {
       print('Error fetching user profile: $e');
+    }
+  }
+
+  Future<UserModel?> getUserFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString('current_user');
+
+      if (userJson != null) {
+        final userData = json.decode(userJson);
+
+        return UserModel.fromJson(userData);
+      }
+      return null;
+    } catch (e) {
+      print('Error retrieving user from SharedPreferences: $e');
+      return null;
     }
   }
 

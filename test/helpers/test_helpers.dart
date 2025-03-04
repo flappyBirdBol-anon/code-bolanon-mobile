@@ -5,6 +5,8 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/theme_service.dart';
 import 'package:code_bolanon/services/api_service.dart';
+import 'package:code_bolanon/services/course_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 // @stacked-import
 
@@ -19,6 +21,8 @@ import 'test_helpers.mocks.dart';
     MockSpec<AuthService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<ThemeService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<ApiService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<CourseService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<ImageService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<UserService>(onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
   ],
@@ -30,6 +34,8 @@ void registerServices() {
   getAndRegisterAuthService();
   getAndRegisterThemeService();
   getAndRegisterApiService();
+  getAndRegisterCourseService();
+  getAndRegisterImageService();
   getAndRegisterUserService();
 // @stacked-mock-register
 }
@@ -106,6 +112,20 @@ MockApiService getAndRegisterApiService() {
   _removeRegistrationIfExists<ApiService>();
   final service = MockApiService();
   locator.registerSingleton<ApiService>(service);
+  return service;
+}
+
+MockCourseService getAndRegisterCourseService() {
+  _removeRegistrationIfExists<CourseService>();
+  final service = MockCourseService();
+  locator.registerSingleton<CourseService>(service);
+  return service;
+}
+
+MockImageService getAndRegisterImageService() {
+  _removeRegistrationIfExists<ImageService>();
+  final service = MockImageService();
+  locator.registerSingleton<ImageService>(service);
   return service;
 }
 
