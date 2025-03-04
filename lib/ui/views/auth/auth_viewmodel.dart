@@ -1,11 +1,19 @@
-import 'package:stacked/stacked.dart';
 import 'package:flutter/material.dart';
+import 'package:stacked/stacked.dart';
+
 import '../../../app/app.locator.dart';
 import '../../../services/theme_service.dart';
 
 class AuthViewModel extends BaseViewModel {
   final _themeService = locator<ThemeService>();
   final PageController pageController = PageController();
+  late final TextEditingController emailController;
+  late final TextEditingController passwordController;
+
+  AuthViewModel() {
+    emailController = TextEditingController();
+    passwordController = TextEditingController();
+  }
 
   int _currentPage = 0;
   int get currentPage => _currentPage;
@@ -32,6 +40,9 @@ class AuthViewModel extends BaseViewModel {
 
   @override
   void dispose() {
+    // Dispose controllers before super.dispose()
+    emailController.dispose();
+    passwordController.dispose();
     pageController.dispose();
     super.dispose();
   }

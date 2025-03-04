@@ -120,7 +120,9 @@ class ProfileViewModel extends AppBaseViewModel {
     notifyListeners();
   }
 
-  void showChangePasswordModal(BuildContext context) {
+  Future<void> showChangePasswordModal(BuildContext context) async {
+    navigationService.back();
+    await Future.delayed(const Duration(milliseconds: 100));
     showDialog(
       context: context,
       builder: (context) => ChangePasswordModal(viewModel: this),
@@ -181,7 +183,9 @@ class ProfileViewModel extends AppBaseViewModel {
     );
   }
 
-  void showEditProfileModal(BuildContext context) {
+  Future<void> showEditProfileModal(BuildContext context) async {
+    navigationService.back();
+    await Future.delayed(const Duration(milliseconds: 100));
     showDialog(
       context: context,
       builder: (context) => EditProfileModal(viewModel: this),
@@ -248,16 +252,20 @@ class ProfileViewModel extends AppBaseViewModel {
     return {'success': success};
   }
 
+  final List<TextEditingController> _controllers = [];
+
+  TextEditingController createController(String initialText) {
+    final controller = TextEditingController(text: initialText);
+    _controllers.add(controller);
+    return controller;
+  }
+
   @override
   void dispose() {
-    userService.removeListener(() {});
-    oldPasswordController.dispose();
-    newPasswordController.dispose();
-    confirmNewPasswordController.dispose();
-    firstNameController.dispose();
-    lastNameController.dispose();
-    organizationController.dispose();
-    specializationController.dispose();
+    for (var controller in _controllers) {
+      controller.dispose();
+    }
+    _controllers.clear();
     super.dispose();
   }
 }

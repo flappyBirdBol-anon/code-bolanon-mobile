@@ -20,8 +20,9 @@ class MenuViewModel extends AppBaseViewModel {
 
   @override
   void dispose() {
-    userService.removeListener(_onUserChanged);
-    super.dispose();
+    if (!isBusy) {
+      super.dispose();
+    }
   }
 
   void toggleDarkMode(bool value) {
@@ -34,14 +35,21 @@ class MenuViewModel extends AppBaseViewModel {
   }
 
   Future<void> logout() async {
+    if (isBusy) return;
+
     setBusy(true);
     try {
       final success = await authService.logout();
       if (success) {
+        // Wait for cleanup before navigation
+        await Future.microtask(() {});
+
+        // Use clearStackAndShow to ensure clean navigation
         await navigationService.clearStackAndShow(Routes.authView);
       }
     } catch (e) {
-      print('error during logging out: $e');
+      setError(e.toString());
+      print('Error during logout: $e');
     } finally {
       setBusy(false);
     }
