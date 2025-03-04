@@ -66,7 +66,8 @@ class UserService with ListenableServiceMixin {
     }
   }
 
-  Future<bool> updatePassword(String oldPassword, String newPassword) async {
+  Future<bool> updatePassword(String oldPassword, String newPassword,
+      String newPasswordConfirmation) async {
     try {
       final userId =
           _currentUser.value?.id; // Assuming UserModel has an 'id' field
@@ -74,8 +75,11 @@ class UserService with ListenableServiceMixin {
         print('User ID is null');
         return false;
       }
-      final response = await ApiService().patch('/users/$userId/password',
-          data: {'oldPassword': oldPassword, 'newPassword': newPassword});
+      final response = await ApiService().patch('/change-password', data: {
+        'current_password': oldPassword,
+        'new_password': newPassword,
+        'new_password_confirmation': newPasswordConfirmation
+      });
       if (response.statusCode == 200) {
         return true;
       }
