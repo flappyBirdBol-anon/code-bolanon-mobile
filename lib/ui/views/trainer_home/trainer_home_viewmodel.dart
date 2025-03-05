@@ -1,4 +1,5 @@
 import 'package:code_bolanon/app/app_base_view_model.dart';
+import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:flutter/material.dart';
 
@@ -18,6 +19,9 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   int activeStudents = 150;
   int totalCourses = 12;
   double totalRevenue = 15000;
+
+  List<AppointmentModel> _upcomingAppointments = [];
+  List<AppointmentModel> get upcomingAppointments => _upcomingAppointments;
 
   TrainerHomeViewModel() {
     _init();
@@ -190,6 +194,11 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     // Navigate to code review session
   }
 
+  void openSession(String sessionId) {
+    // Implementation for opening a session
+    print('Opening session: $sessionId');
+  }
+
   // Activity related actions
   void openActivity(String id) {
     debugPrint('Opening activity with ID: $id');
@@ -205,13 +214,10 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   // Data management
   Future<void> refreshData() async {
     setLoading(true);
-    // Simulate API call
     await Future.delayed(const Duration(seconds: 2));
 
-    // Refresh data
-    activeStudents = 165; // Updated values after refresh
-    totalCourses = 14;
-    totalRevenue = 16500;
+    // Now we can just use the built-in mock data
+    _upcomingAppointments = AppointmentModel.getMockAppointments();
 
     setLoading(false);
   }

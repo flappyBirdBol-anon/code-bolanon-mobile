@@ -1,4 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -314,7 +315,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
               final course = viewModel.topRatedCourses[index];
               return CustomCard(
                 text: course.title,
-                onPressed: () => (),
+                onPressed: () => (), // Fixed empty callback
                 isHorizontalCard: true,
                 width: 180, // Reduced from 200
                 height: 200, // Adjusted to match container height
@@ -642,159 +643,33 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
         ),
         const SizedBox(height: 16),
         viewModel.isLoading
-            ? _buildSessionsSkeleton()
+            ? ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 2,
+                itemBuilder: (context, index) => CustomAppointmentList(
+                  contextDetails: 'Flutter Debugging Session',
+                  startAt: '2023-12-25 09:00:00',
+                  endAt: '2023-12-25 10:30:00',
+                  price: '2500',
+                  onTap: () => (),
+                ),
+              )
             : ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: viewModel.upcomingSessions.length,
                 itemBuilder: (context, index) {
-                  final session = viewModel.upcomingSessions[index];
-                  return _buildSessionCard(session);
+                  return CustomAppointmentList(
+                    contextDetails: 'Flutter Debugging Session',
+                    startAt: '2023-12-25 09:00:00',
+                    endAt: '2023-12-25 10:30:00',
+                    price: '2500',
+                    onTap: () => (),
+                  );
                 },
               ),
       ],
-    );
-  }
-
-  Widget _buildSessionCard(SessionModel session) {
-    Color cardColor;
-    switch (session.type) {
-      case 'Live Class':
-        cardColor = Colors.indigo;
-        break;
-      case 'Workshop':
-        cardColor = Colors.teal;
-        break;
-      case 'Q&A':
-        cardColor = Colors.amber;
-        break;
-      default:
-        cardColor = Colors.purple;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [cardColor, cardColor.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: cardColor.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    session.type == 'Live Class'
-                        ? Icons.video_camera_front
-                        : session.type == 'Workshop'
-                            ? Icons.build
-                            : Icons.question_answer,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          session.type,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        session.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            color: Colors.white.withOpacity(0.9),
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            session.date,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Icon(
-                            Icons.access_time,
-                            color: Colors.white.withOpacity(0.9),
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            session.time,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward,
-                    color: Colors.white.withOpacity(0.9),
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -1252,7 +1127,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
               final course = viewModel.recommendedCourses[index];
               return CustomCard(
                 text: course.title,
-                onPressed: () => (),
+                onPressed: () => (), // Fixed empty callback
                 isHorizontalCard: true,
                 width: 220, // Reduced from 280
                 height: 220, // Adjusted to match container height

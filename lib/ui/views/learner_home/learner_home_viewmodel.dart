@@ -96,12 +96,12 @@ class LearnerHomeViewModel extends AppBaseViewModel {
   ];
 
   // Sessions
-  List<SessionModel> upcomingSessions = [];
+  final List<AvailabilityModel> _upcomingSessions = [];
+  List<AvailabilityModel> get upcomingSessions => _upcomingSessions;
 
   LearnerHomeViewModel() {
     _init();
     _loadCourses();
-    _loadSessions();
     // Add listener to auth service
     userService.addListener(() {
       notifyListeners();
@@ -188,28 +188,25 @@ class LearnerHomeViewModel extends AppBaseViewModel {
     ];
   }
 
-  void _loadSessions() {
-    upcomingSessions = [
-      SessionModel(
-        title: 'Flutter State Management',
-        type: 'Live Class',
-        date: 'June 15, 2023',
-        time: '10:00 AM',
-      ),
-      // Add more sessions...
-    ];
-  }
-
   Future<void> refreshData() async {
     isLoading = true;
     notifyListeners();
 
     await Future.delayed(const Duration(seconds: 2));
     _loadCourses();
-    _loadSessions();
 
     isLoading = false;
     notifyListeners();
+  }
+
+  void openSession(String sessionId) {
+    // Implementation for opening a session
+    print('Opening session: $sessionId');
+  }
+
+  void openCourse(String courseId) {
+    // Implementation for opening a course
+    print('Opening course: $courseId');
   }
 
   @override
@@ -267,13 +264,13 @@ class CourseModel {
   });
 }
 
-class SessionModel {
+class AvailabilityModel {
   final String title;
   final String type;
   final String date;
   final String time;
 
-  SessionModel({
+  AvailabilityModel({
     required this.title,
     required this.type,
     required this.date,

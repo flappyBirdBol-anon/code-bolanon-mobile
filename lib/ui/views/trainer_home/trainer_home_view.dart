@@ -1,5 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:code_bolanon/ui/common/utils/tech_stack_colors.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_list_item.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_stack_chip.dart';
@@ -82,8 +83,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                       _buildCodeChallenges(
                           theme, headingStyle, bodyStyle, codeStyle, viewModel),
                       const SizedBox(height: 32),
-                      _buildUpcomingSessions(
-                          viewModel, theme, headingStyle, bodyStyle),
+                      _buildUpcomingSessions(viewModel),
                       const SizedBox(height: 32),
                       _buildRecentActivity(
                           viewModel, theme, headingStyle, bodyStyle),
@@ -1315,145 +1315,50 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     );
   }
 
-  Widget _buildUpcomingSessions(TrainerHomeViewModel viewModel, ThemeData theme,
-      TextStyle headingStyle, TextStyle bodyStyle) {
-    final isDark = theme.brightness == Brightness.dark;
-
+  Widget _buildUpcomingSessions(TrainerHomeViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Upcoming Sessions", style: headingStyle),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF312E81) : const Color(0xFFE0E7FF),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.indigo.withOpacity(isDark ? 0.3 : 0.2),
-                offset: const Offset(0, 4),
-                blurRadius: 12,
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.15)
-                          : Colors.white.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          offset: const Offset(0, 2),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.video_camera_front_outlined,
-                      color: isDark ? Colors.white : Colors.indigo[700],
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Advanced JavaScript Workshop',
-                          style: GoogleFonts.inter(
-                            color: isDark ? Colors.white : Colors.indigo[800],
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Today at 2:00 PM • 90 minutes',
-                          style: GoogleFonts.inter(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.8)
-                                : Colors.indigo[700],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  _buildAttendeeIndicator(),
-                  const SizedBox(width: 8),
-                  Text(
-                    '24 students enrolled',
-                    style: bodyStyle.copyWith(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.8)
-                          : Colors.indigo[700],
-                      fontSize: 13,
-                    ),
-                  ),
-                  const Spacer(),
-                  ElevatedButton(
-                    onPressed: () => viewModel.startSession(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          isDark ? Colors.white.withOpacity(0.2) : Colors.white,
-                      foregroundColor:
-                          isDark ? Colors.white : Colors.indigo[700],
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      'Start Session',
-                      style: bodyStyle.copyWith(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+        const Text(
+          "Upcoming Sessions",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 16),
-        Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                offset: const Offset(0, 4),
-                blurRadius: 12,
-                spreadRadius: 0,
+        viewModel.isLoading
+            ? ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 2,
+                itemBuilder: (context, index) => CustomAppointmentList(
+                  contextDetails: 'Flutter Debugging',
+                  startAt: 'Today at 3:00 PM',
+                  endAt: '4:00 PM',
+                  studentsEnrolled: 5,
+                  onTap: () {}, // Fixed null callback
+                  isLoading: true,
+                ),
+              )
+            : ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: viewModel.upcomingAppointments.length,
+                itemBuilder: (context, index) {
+                  final appointment = viewModel.upcomingAppointments[index];
+                  return CustomAppointmentList(
+                    contextDetails: appointment.contextDetails,
+                    startAt: appointment.availability?.startAt ?? '',
+                    endAt: appointment.availability?.endAt ?? '',
+                    price: appointment.availability?.price,
+                    studentsEnrolled: 23, // Get actual data from your model
+                    isTrainerView: true, // Specify trainer view
+                    onTap: () =>
+                        viewModel.openSession(appointment.id.toString()),
+                  );
+                },
               ),
-            ],
-          ),
-          child: CustomListItem(
-            text: 'Code Review Session',
-            subtitle: 'Tomorrow at 10:00 AM',
-            leadingIcon: Icons.event_note_outlined,
-            onPressed: () => viewModel.openReviewSession(),
-            useTileStyle: true,
-          ),
-        ),
       ],
     );
   }
