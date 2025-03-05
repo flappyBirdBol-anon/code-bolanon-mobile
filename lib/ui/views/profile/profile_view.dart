@@ -1,7 +1,9 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_button.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_stack_chip.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 
 import 'profile_viewmodel.dart';
@@ -134,57 +136,112 @@ class ProfileView extends StackedView<ProfileViewModel> {
 
   Widget _buildTechStackSection(
       ProfileViewModel viewModel, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+
+    // Add the same language color mapping as trainer home view
+    final Map<String, Color> languageColors = {
+      'JavaScript': Colors.yellow[700]!,
+      'Python': Colors.blue[700]!,
+      'Java': Colors.orange[800]!,
+      'Ruby': Colors.red[700]!,
+      'C#': Colors.purple[700]!,
+      'PHP': Colors.indigo[600]!,
+      'Swift': Colors.orange[600]!,
+      'Kotlin': Colors.purple[600]!,
+      'Go': Colors.cyan[700]!,
+      'TypeScript': Colors.blue[600]!,
+      'C++': Colors.blue[800]!,
+      'Rust': Colors.deepOrange[800]!,
+      'Development': Colors.teal[700]!,
+      'Design': Colors.pink[600]!,
+      'Tech': Colors.indigo[500]!,
+      'Marketing': Colors.green[700]!,
+      'Business': Colors.amber[800]!,
+      'Sports': Colors.lightBlue[700]!,
+      'IT Software': Colors.deepPurple[600]!,
+    };
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Tech Stacks',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2D3142),
+            Text(
+              "Your Stack",
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
               ),
             ),
-            IconButton(
+            TextButton.icon(
               onPressed: () =>
                   _showUpdateModal(context, 'Manage Tech Stack', viewModel),
-              icon: const Icon(Icons.edit, size: 20),
-              style: IconButton.styleFrom(
-                backgroundColor: const Color(0xFF4C3575).withOpacity(0.1),
-                foregroundColor: const Color(0xFF4C3575),
+              icon: const Icon(Icons.add, size: 16),
+              label: Text(
+                "Add",
+                style: GoogleFonts.firaCode(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: viewModel.techStacks
-              .map((tech) => FadeInLeft(
-                    duration: const Duration(milliseconds: 500),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE9ECEF),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        tech,
-                        style: const TextStyle(
-                          color: Color(0xFF2D3142),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ))
-              .toList(),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                offset: const Offset(0, 4),
+                blurRadius: 12,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: _buildTechStacks(viewModel, theme),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTechStacks(ProfileViewModel viewModel, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: viewModel.techStacks.map((tech) {
+        return CustomStackChip(
+          label: tech,
+          selected: true,
+          isDark: isDark,
+          icon: Icons.code,
+          color: viewModel.getTechColor(tech, theme),
+          textStyle: GoogleFonts.firaCode(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+          onTap: () {},
+        );
+      }).toList(),
     );
   }
 

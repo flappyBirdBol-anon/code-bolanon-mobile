@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/widgets/custom_stack_chip.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_text_field.dart';
 import 'package:code_bolanon/ui/common/widgets/password_validation_list.dart';
 import 'package:flutter/gestures.dart';
@@ -126,10 +127,6 @@ class SignupView extends StackedView<SignupViewModel> {
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          // decoration: BoxDecoration(
-          //   borderRadius: BorderRadius.circular(12),
-          //   // border: Border.all(color: const Color.fromARGB(255, 255, 255, 255)),
-          // ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -146,39 +143,15 @@ class SignupView extends StackedView<SignupViewModel> {
               ],
               Wrap(
                 spacing: 8.0,
-                runSpacing: 4.0,
+                runSpacing: 8.0,
                 children: [
                   for (String stack in viewModel.availableTechStacks)
-                    FilterChip(
-                      label: Text(stack),
+                    CustomStackChip(
+                      label: stack,
                       selected: viewModel.selectedTechStacks.contains(stack),
-                      onSelected: (bool selected) {
-                        viewModel.toggleTechStack(stack);
-                      },
-                      selectedColor:
-                          Theme.of(context).primaryColor.withOpacity(0.2),
-                      checkmarkColor: Theme.of(context).primaryColor,
-                      labelStyle: TextStyle(
-                        fontWeight: viewModel.selectedTechStacks.contains(stack)
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                        color: viewModel.selectedTechStacks.contains(stack)
-                            ? Theme.of(context).primaryColor
-                            : Colors.black87,
-                      ),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      elevation: 1.5,
-                      pressElevation: 2.5,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(
-                          color: viewModel.selectedTechStacks.contains(stack)
-                              ? Theme.of(context).primaryColor
-                              : Colors.grey.shade400,
-                        ),
-                      ),
+                      onTap: () => viewModel.toggleTechStack(stack),
+                      icon: Icons.code,
+                      isOutlined: true,
                     ),
                 ],
               ),

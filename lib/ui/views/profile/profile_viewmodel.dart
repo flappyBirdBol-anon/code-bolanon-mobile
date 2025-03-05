@@ -1,6 +1,7 @@
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/services/auth_service.dart';
+import 'package:code_bolanon/ui/common/utils/tech_stack_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/change_password_modal.dart';
 import 'package:code_bolanon/ui/common/widgets/edit_profile_modal.dart';
 import 'package:code_bolanon/ui/common/widgets/tech_stack_modal.dart';
@@ -44,6 +45,10 @@ class ProfileViewModel extends AppBaseViewModel {
   ];
 
   List<String> get techStacks => _techStacks;
+
+  Color getTechColor(String tech, ThemeData theme) {
+    return TechStackColors.getColorForTech(tech, theme);
+  }
 
   final oldPasswordController = TextEditingController();
   final newPasswordController = TextEditingController();
@@ -163,6 +168,7 @@ class ProfileViewModel extends AppBaseViewModel {
       text: locator<AuthService>().currentUser?.specialization ?? 'None');
 
   void showTechStackModal(BuildContext context) {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

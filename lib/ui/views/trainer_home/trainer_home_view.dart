@@ -1,6 +1,8 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:code_bolanon/ui/common/utils/tech_stack_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_list_item.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_stack_chip.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:code_bolanon/ui/views/trainer_home/trainer_home_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -882,74 +884,16 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
   Widget _buildLanguageChip(
       String language, ThemeData theme, TextStyle codeStyle) {
     final isDark = theme.brightness == Brightness.dark;
+    final color = TechStackColors.getColorForTech(language, theme);
 
-    // Language-specific colors
-    final Map<String, Color> languageColors = {
-      'JavaScript': Colors.yellow[700]!,
-      'Python': Colors.blue[700]!,
-      'Java': Colors.orange[800]!,
-      'Ruby': Colors.red[700]!,
-      'C#': Colors.purple[700]!,
-      'PHP': Colors.indigo[600]!,
-      'Swift': Colors.orange[600]!,
-      'Kotlin': Colors.purple[600]!,
-      'Go': Colors.cyan[700]!,
-      'TypeScript': Colors.blue[600]!,
-      'C++': Colors.blue[800]!,
-      'Rust': Colors.deepOrange[800]!,
-      'Development': Colors.teal[700]!,
-      'Design': Colors.pink[600]!,
-      'Tech': Colors.indigo[500]!,
-      'Marketing': Colors.green[700]!,
-      'Business': Colors.amber[800]!,
-      'Sports': Colors.lightBlue[700]!,
-      'IT Software': Colors.deepPurple[600]!,
-    };
-
-    final color = languageColors[language] ?? theme.primaryColor;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark ? color.withOpacity(0.2) : color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: color.withOpacity(isDark ? 0.5 : 0.3),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.1),
-                offset: const Offset(0, 2),
-                blurRadius: 4,
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.code,
-                size: 16,
-                color: isDark ? color.withOpacity(0.9) : color,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                language,
-                style: codeStyle.copyWith(
-                  color: isDark ? color.withOpacity(0.9) : color,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return CustomStackChip(
+      label: language,
+      selected: true,
+      isDark: isDark,
+      icon: Icons.code,
+      color: color,
+      textStyle: codeStyle,
+      onTap: () {},
     );
   }
 
