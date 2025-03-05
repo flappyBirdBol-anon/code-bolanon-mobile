@@ -126,8 +126,6 @@ class ProfileViewModel extends AppBaseViewModel {
   }
 
   Future<void> showChangePasswordModal(BuildContext context) async {
-    navigationService.back();
-    await Future.delayed(const Duration(milliseconds: 100));
     showDialog(
       context: context,
       builder: (context) => ChangePasswordModal(viewModel: this),
@@ -190,8 +188,6 @@ class ProfileViewModel extends AppBaseViewModel {
   }
 
   Future<void> showEditProfileModal(BuildContext context) async {
-    navigationService.back();
-    await Future.delayed(const Duration(milliseconds: 100));
     showDialog(
       context: context,
       builder: (context) => EditProfileModal(viewModel: this),

@@ -1,7 +1,10 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../app_colors.dart';
+import 'custom_text_field.dart';
 
 class CourseDialog extends StatefulWidget {
   final String title;
@@ -81,7 +84,8 @@ class _CourseDialogState extends State<CourseDialog>
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(Icons.school, color: AppColors.primary),
+                        child:
+                            const Icon(Icons.school, color: AppColors.primary),
                       ),
                       const SizedBox(width: 16),
                       Text(
@@ -279,7 +283,7 @@ class _CourseDialogState extends State<CourseDialog>
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  const Text(
                     'Click to browse',
                     style: TextStyle(
                       color: AppColors.primary,
@@ -302,36 +306,17 @@ class _CourseDialogState extends State<CourseDialog>
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
+    return CustomTextField(
       controller: controller,
+      labelText: labelText,
+      hintText: hintText,
+      prefixIcon: prefixIcon,
       maxLines: maxLines,
       keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        prefixIcon: Icon(prefixIcon, color: AppColors.primary.withOpacity(0.7)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
       validator: validator,
+      fillColor: Colors.grey[50],
+      borderColor: Colors.grey[300],
+      focusedBorderColor: AppColors.primary,
     );
   }
 

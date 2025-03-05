@@ -78,12 +78,18 @@ class _EditProfileModalState extends State<EditProfileModal> {
                       controller: widget.viewModel.firstNameController,
                       labelText: 'First name',
                       prefixIcon: Icons.person,
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Please enter your first name'
+                          : null,
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(height: 16), // Add vertical spacing
                     CustomTextField(
                       controller: widget.viewModel.lastNameController,
                       labelText: 'Last name',
                       prefixIcon: Icons.person,
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Please enter your last name'
+                          : null,
                     ),
                     if (widget.viewModel.role == 'trainer')
                       _buildTrainerFields(widget.viewModel, context),
@@ -123,17 +129,22 @@ class _EditProfileModalState extends State<EditProfileModal> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         CustomTextField(
           controller: viewModel.organizationController,
           labelText: 'Organization',
           prefixIcon: Icons.school,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Please enter your organization' : null,
         ),
         const SizedBox(height: 16),
         CustomTextField(
           controller: viewModel.specializationController,
           labelText: 'Specialization',
           prefixIcon: Icons.work,
+          validator: (value) => value?.isEmpty ?? true
+              ? 'Please enter your specialization'
+              : null,
         ),
       ],
     );

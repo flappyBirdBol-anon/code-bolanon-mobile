@@ -1,9 +1,9 @@
 import 'package:code_bolanon/ui/views/auth/signup/signup_view.dart';
-import 'package:code_bolanon/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
+
 import 'auth_viewmodel.dart';
 import 'login/login_view.dart';
 

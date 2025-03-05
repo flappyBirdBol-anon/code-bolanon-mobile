@@ -19,7 +19,7 @@ class SignupView extends StackedView<SignupViewModel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
             _buildCommonFields(viewModel, context),
             const SizedBox(height: 16),
             if (viewModel.selectedRole == 'trainer')
@@ -40,19 +40,23 @@ class SignupView extends StackedView<SignupViewModel> {
           children: [
             Expanded(
               child: CustomTextField(
-                controller: viewModel
-                    .firstNameController, // You'll need to add this controller
+                controller: viewModel.firstNameController,
                 labelText: 'First name',
                 prefixIcon: Icons.person,
+                validator: (value) => value?.isEmpty ?? true
+                    ? 'Please enter your first name'
+                    : null,
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: CustomTextField(
-                controller: viewModel
-                    .lastNameController, // You'll need to add this controller
+                controller: viewModel.lastNameController,
                 labelText: 'Last name',
                 prefixIcon: Icons.person,
+                validator: (value) => value?.isEmpty ?? true
+                    ? 'Please enter your last name'
+                    : null,
               ),
             ),
           ],
@@ -62,6 +66,9 @@ class SignupView extends StackedView<SignupViewModel> {
           controller: viewModel.emailController,
           labelText: 'Enter your email',
           prefixIcon: Icons.email,
+          keyboardType: TextInputType.emailAddress,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Please enter your email' : null,
         ),
         const SizedBox(height: 16),
         CustomTextField(
@@ -178,12 +185,17 @@ class SignupView extends StackedView<SignupViewModel> {
           controller: viewModel.organizationController,
           labelText: 'Organization',
           prefixIcon: Icons.school,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Please enter your organization' : null,
         ),
         const SizedBox(height: 16),
         CustomTextField(
           controller: viewModel.specializationController,
           labelText: 'Specialization',
           prefixIcon: Icons.work,
+          validator: (value) => value?.isEmpty ?? true
+              ? 'Please enter your specialization'
+              : null,
         ),
         const SizedBox(height: 24),
       ],
