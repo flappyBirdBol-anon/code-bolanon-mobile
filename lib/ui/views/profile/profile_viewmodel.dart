@@ -6,6 +6,7 @@ import 'package:code_bolanon/ui/common/widgets/change_password_modal.dart';
 import 'package:code_bolanon/ui/common/widgets/edit_profile_modal.dart';
 import 'package:code_bolanon/ui/common/widgets/tech_stack_modal.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileViewModel extends AppBaseViewModel {
   String get firstName => userService.currentUser?.firstName ?? 'Example';
@@ -214,6 +215,13 @@ class ProfileViewModel extends AppBaseViewModel {
   // Add user ID getter
   int get userId => userService.currentUser?.id ?? 0;
 
+  XFile? selectedProfileImage;
+
+  void handleProfilePictureSelection(XFile? image) {
+    selectedProfileImage = image;
+    notifyListeners();
+  }
+
   Future<Map<String, dynamic>> updateProfile() async {
     if (userId == 0) {
       snackbarService.showSnackbar(
@@ -228,6 +236,34 @@ class ProfileViewModel extends AppBaseViewModel {
     const profilePicture = '';
     final specialization = specializationController.text;
     final organization = organizationController.text;
+
+    try {
+      // First upload the image if there's a new one selected
+      String? newImageUrl;
+      if (selectedProfileImage != null) {
+        // Add your image upload logic here
+        // newImageUrl = await _uploadImage(selectedProfileImage!);
+      }
+
+      // Then update the profile with all the data including the new image URL if any
+      final updatedProfile = {
+        'firstName': firstNameController.text,
+        'lastName': lastNameController.text,
+        if (role == 'trainer') ...{
+          'organization': organizationController.text,
+          'specialization': specializationController.text,
+        },
+        if (newImageUrl != null) 'profilePicture': newImageUrl,
+      };
+
+      // Add your profile update API call here
+      // await _profileService.updateProfile(updatedProfile);
+
+      selectedProfileImage = null;
+      notifyListeners();
+    } catch (e) {
+      // Handle errors
+    }
 
     final success = await runBusyFuture(userService.updateProfile(
       firstName,
