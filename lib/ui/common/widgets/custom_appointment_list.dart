@@ -129,18 +129,39 @@ class CustomAppointmentList extends StatelessWidget {
                     if (price != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        'Price: ₱$price',
+                        '₱$price',
                         style: GoogleFonts.inter(
                           color: isDark
                               ? Colors.white.withOpacity(0.8)
                               : Colors.indigo[700],
                           fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
+              if (!isTrainerView)
+                Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.15)
+                        : Colors.white.withOpacity(0.7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: onTap,
+                    icon: Icon(
+                      Icons.arrow_forward_rounded,
+                      color: isDark ? Colors.white : Colors.indigo[700],
+                    ),
+                    iconSize: 20,
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                  ),
+                ),
             ],
           ),
           if (isTrainerView) ...[
@@ -187,23 +208,6 @@ class CustomAppointmentList extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ] else ...[
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                onPressed: onTap,
-                icon: Icon(
-                  Icons.arrow_forward_rounded,
-                  color: isDark ? Colors.white : Colors.indigo[700],
-                ),
-                style: IconButton.styleFrom(
-                  backgroundColor: isDark
-                      ? Colors.white.withOpacity(0.15)
-                      : Colors.white.withOpacity(0.7),
-                ),
-              ),
             ),
           ],
         ],

@@ -1351,7 +1351,6 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                     contextDetails: appointment.contextDetails,
                     startAt: appointment.availability?.startAt ?? '',
                     endAt: appointment.availability?.endAt ?? '',
-                    price: appointment.availability?.price,
                     studentsEnrolled: 23, // Get actual data from your model
                     isTrainerView: true, // Specify trainer view
                     onTap: () =>

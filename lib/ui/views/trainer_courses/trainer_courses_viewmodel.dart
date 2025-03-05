@@ -21,10 +21,11 @@ class TrainerCoursesViewModel extends BaseViewModel {
   List<Course> _courses = [];
   String _selectedFilter = 'All';
   XFile? _selectedImage;
-  bool _isBusy = false;
+  final bool _isBusy = false;
 
   List<Course> get courses => _filterCourses();
   String get selectedFilter => _selectedFilter;
+  @override
   bool get isBusy => _isBusy;
   ImageService get imageService => _imageService; // Expose image service for UI
 
@@ -127,9 +128,9 @@ class TrainerCoursesViewModel extends BaseViewModel {
     Widget? errorWidget,
   }) {
     // Handle local assets differently
-    if (course.thumbnail != null && course.thumbnail!.startsWith('assets/')) {
+    if (course.thumbnail.startsWith('assets/')) {
       return Image.asset(
-        course.thumbnail!,
+        course.thumbnail,
         width: width,
         height: height,
         fit: fit,
@@ -140,9 +141,9 @@ class TrainerCoursesViewModel extends BaseViewModel {
     }
 
     // If it's a remote image, use the ImageService
-    if (course.thumbnail != null && course.thumbnail!.isNotEmpty) {
+    if (course.thumbnail.isNotEmpty) {
       final imageUrl =
-          _imageService.getCourseThumbnailFromPath(course.thumbnail!);
+          _imageService.getCourseThumbnailFromPath(course.thumbnail);
 
       return _imageService.loadImage(
         imageUrl: imageUrl,
@@ -297,7 +298,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
 
       final statusText =
           _courses[courseIndex].isActive ? 'activated' : 'deactivated';
-      _showSuccessMessage('Course ${statusText} successfully');
+      _showSuccessMessage('Course $statusText successfully');
     } catch (e) {
       _showErrorMessage('Failed to update course status: ${e.toString()}');
     } finally {

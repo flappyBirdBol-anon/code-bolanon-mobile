@@ -648,11 +648,11 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: 2,
                 itemBuilder: (context, index) => CustomAppointmentList(
-                  contextDetails: 'Flutter Debugging Session',
+                  contextDetails: 'Loading...',
                   startAt: '2023-12-25 09:00:00',
                   endAt: '2023-12-25 10:30:00',
-                  price: '2500',
-                  onTap: () => (),
+                  onTap: () {},
+                  isLoading: true,
                 ),
               )
             : ListView.builder(
@@ -660,12 +660,14 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: viewModel.upcomingSessions.length,
                 itemBuilder: (context, index) {
+                  final appointment = viewModel.upcomingSessions[index];
                   return CustomAppointmentList(
-                    contextDetails: 'Flutter Debugging Session',
-                    startAt: '2023-12-25 09:00:00',
-                    endAt: '2023-12-25 10:30:00',
-                    price: '2500',
-                    onTap: () => (),
+                    contextDetails: appointment.contextDetails,
+                    startAt: appointment.availability?.startAt ?? '',
+                    endAt: appointment.availability?.endAt ?? '',
+                    onTap: () =>
+                        viewModel.openSession(appointment.id.toString()),
+                    isTrainerView: false,
                   );
                 },
               ),

@@ -1,4 +1,5 @@
 import 'package:code_bolanon/app/app_base_view_model.dart';
+import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:flutter/material.dart';
 
 class LearnerHomeViewModel extends AppBaseViewModel {
@@ -96,12 +97,13 @@ class LearnerHomeViewModel extends AppBaseViewModel {
   ];
 
   // Sessions
-  final List<AvailabilityModel> _upcomingSessions = [];
-  List<AvailabilityModel> get upcomingSessions => _upcomingSessions;
+  List<AppointmentModel> _upcomingSessions = [];
+  List<AppointmentModel> get upcomingSessions => _upcomingSessions;
 
   LearnerHomeViewModel() {
     _init();
     _loadCourses();
+    _loadSessions();
     // Add listener to auth service
     userService.addListener(() {
       notifyListeners();
@@ -188,12 +190,19 @@ class LearnerHomeViewModel extends AppBaseViewModel {
     ];
   }
 
+  void _loadSessions() {
+    // Use the mock data from AppointmentModel
+    _upcomingSessions = AppointmentModel.getMockAppointments();
+    notifyListeners();
+  }
+
   Future<void> refreshData() async {
     isLoading = true;
     notifyListeners();
 
     await Future.delayed(const Duration(seconds: 2));
     _loadCourses();
+    _loadSessions(); // Add this line to reload sessions
 
     isLoading = false;
     notifyListeners();

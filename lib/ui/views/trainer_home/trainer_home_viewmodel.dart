@@ -25,7 +25,6 @@ class TrainerHomeViewModel extends AppBaseViewModel {
 
   TrainerHomeViewModel() {
     _init();
-    print(userName);
   }
 
   List<RecentActivity> recentActivities = [
@@ -214,12 +213,12 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   // Data management
   Future<void> refreshData() async {
     setLoading(true);
-    await Future.delayed(const Duration(seconds: 2));
 
-    // Now we can just use the built-in mock data
+    // Load mock appointments
     _upcomingAppointments = AppointmentModel.getMockAppointments();
 
     setLoading(false);
+    notifyListeners(); // Make sure UI updates
   }
 
   void setLoading(bool value) {
@@ -227,13 +226,11 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     notifyListeners();
   }
 
-  void _init() {
+  void _init() async {
     // Initialize with current month
     _selectedDate = DateTime.now();
-
-    Future.delayed(const Duration(seconds: 3), () {
-      setLoading(false);
-    });
+    // Load data immediately instead of waiting
+    await refreshData();
   }
 }
 
