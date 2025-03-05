@@ -1,6 +1,7 @@
 // lib/views/course_details/course_details_view.dart
 import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart' show AppColors;
+import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
@@ -32,29 +33,19 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
       length: 3,
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(
+        appBar: CustomAppBar(
+          title: 'Course Details',
           backgroundColor: Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: const Text(
-            'Course Details',
-            style: TextStyle(color: Colors.black),
-          ),
+          showNotificationButton: true,
           actions: [
-            // IconButton(
-            //   icon:
-            //       const Icon(Icons.shopping_cart_outlined, color: Colors.black),
-            //   onPressed: () {},
-            // ),
             IconButton(
-              icon:
-                  const Icon(Icons.notifications_outlined, color: Colors.black),
-              onPressed: () {},
+              icon: const Icon(
+                Icons.arrow_back,
+                color: Color(0xFF2D3142),
+                size: 26,
+              ),
+              onPressed: () => Navigator.pop(context),
             ),
-            const SizedBox(width: 16),
           ],
         ),
         body: Column(
@@ -228,7 +219,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             ),
             title: Text(viewModel.userName),
             subtitle: const Row(
-              children: const [
+              children: [
                 Icon(Icons.star, color: Colors.amber, size: 16),
                 SizedBox(width: 4),
                 Text('7.2'),

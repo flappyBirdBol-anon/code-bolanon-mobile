@@ -5,7 +5,7 @@ import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
-import 'package:code_bolanon/ui/common/widgets/course_dialog.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -21,10 +21,16 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
   ) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: CustomAppBar(
+        title: 'Courses',
+        showSearchButton: true,
+        showNotificationButton: true,
+        onSearchTap: () => (),
+        onNotificationTap: () => (),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(viewModel),
             _buildFilters(viewModel),
             Expanded(
               child: viewModel.isBusy
@@ -38,39 +44,6 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
         onPressed: () => viewModel.showAddCourseDialog(context),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add),
-      ),
-    );
-  }
-
-  Widget _buildHeader(TrainerCoursesViewModel viewModel) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Courses',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {},
-                color: AppColors.primary,
-              ),
-              IconButton(
-                icon: const Icon(Icons.notifications_none),
-                onPressed: () {},
-                color: AppColors.primary,
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
