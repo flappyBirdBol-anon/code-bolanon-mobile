@@ -1,4 +1,5 @@
 // course_service.dart
+import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
@@ -9,7 +10,12 @@ class CourseService {
   final ApiService _apiService;
   final ImageService _imageService;
 
-  CourseService(this._apiService, this._imageService);
+  CourseService({ApiService? apiService, ImageService? imageService})
+      : _apiService = apiService ?? locator<ApiService>(),
+        _imageService = imageService ?? locator<ImageService>();
+
+  List<Course>? _courses;
+  List<Course>? get courseList => _courses;
 
   Future<List<Course>> getCourses() async {
     final response = await _apiService.get('/courses');
@@ -17,7 +23,7 @@ class CourseService {
     if (response.statusCode == 200) {
       final List<dynamic> coursesJson = response.data['data'];
       final courses = coursesJson.map((json) => Course.fromJson(json)).toList();
-
+      _courses = courses;
       // Prefetch and cache all course images in the background
       _imageService.prefetchCourseImages(courses);
 
@@ -27,7 +33,7 @@ class CourseService {
     }
   }
 
-  Future<Course> getCourseById(String courseId) async {
+  Future<Course> getCourseById(int courseId) async {
     final response = await _apiService.get('/courses/$courseId');
 
     if (response.statusCode == 200) {
@@ -49,7 +55,7 @@ class CourseService {
   Future<Course> addCourse({
     required String title,
     required String description,
-    required int price,
+    required double price,
     XFile? image,
   }) async {
     try {

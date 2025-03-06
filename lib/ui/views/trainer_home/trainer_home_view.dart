@@ -1,3 +1,4 @@
+import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:code_bolanon/ui/views/trainer_home/trainer_home_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -74,9 +75,9 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                       const SizedBox(height: 32),
                       _buildCodingLanguages(
                           viewModel, theme, headingStyle, codeStyle),
-                      const SizedBox(height: 32),
-                      _buildCodeChallenges(
-                          theme, headingStyle, bodyStyle, codeStyle, viewModel),
+                      // const SizedBox(height: 32),
+                      // _buildCodeChallenges(
+                      //     theme, headingStyle, bodyStyle, codeStyle, viewModel),
                       const SizedBox(height: 32),
                       _buildUpcomingSessions(
                           viewModel, theme, headingStyle, bodyStyle),
@@ -1205,7 +1206,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
         enableInfiniteScroll: false,
         padEnds: false,
       ),
-      items: viewModel.featureCourses.map((course) {
+      items: viewModel.courseList.map((course) {
         return Builder(
           builder: (BuildContext context) {
             return GestureDetector(
@@ -1233,11 +1234,9 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(12),
                           ),
-                          child: Image.asset(
-                            course.imageUrl,
-                            height: 120,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
+                          child: AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: _buildCourseImage(viewModel, course),
                           ),
                         ),
                         Positioned(
@@ -1260,7 +1259,8 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  "${course.lessons} Lessons",
+                                  //TODO temporary for lesson count
+                                  "${course.id} Lessons",
                                   style: bodyStyle.copyWith(
                                     color: Colors.white,
                                     fontSize: 10,
@@ -1279,7 +1279,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                         children: [
                           Text(
                             course.title,
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.figtree(
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
@@ -1312,7 +1312,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                                 ),
                               ),
                               Text(
-                                ' (${course.reviews})',
+                                ' (${course.rating})',
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   color: isDark
@@ -1752,7 +1752,35 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     );
   }
 
+  Widget _buildCourseImage(TrainerHomeViewModel viewModel, Course course) {
+    return viewModel.getCourseImageWidget(
+      course: course,
+      fit: BoxFit.cover,
+      placeholder: Container(
+        color: Colors.grey[200],
+        child: const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+          ),
+        ),
+      ),
+      errorWidget: Container(
+        color: Colors.grey[300],
+        child: const Center(
+          child: Icon(
+            Icons.image_not_supported,
+            size: 40,
+            color: Colors.grey,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   TrainerHomeViewModel viewModelBuilder(BuildContext context) =>
       TrainerHomeViewModel();
+
+  @override
+  void onViewModelReady(TrainerHomeViewModel viewModel) => viewModel.init();
 }

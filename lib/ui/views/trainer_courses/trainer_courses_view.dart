@@ -37,7 +37,10 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => viewModel.showAddCourseDialog(context),
         backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -112,8 +115,8 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
       // Calculate responsive grid parameters based on screen size
       final double width = constraints.maxWidth;
       final int crossAxisCount = width > 600 ? 3 : 2;
-      final double aspectRatio = width > 600 ? 0.75 : 0.64;
-
+      // final double aspectRatio = width > 600 ? 0.75 : 0.75;
+      const double aspectRatio = 0.74;
       if (viewModel.courses.isEmpty) {
         return const Center(
           child: Text(
@@ -154,7 +157,7 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
     // In a real app, you would use a proper DI framework
     final apiService = locator<ApiService>();
     final imageService = locator<ImageService>();
-    final courseService = CourseService(apiService, imageService);
+    final courseService = CourseService();
 
     return TrainerCoursesViewModel(
       courseService: courseService,
@@ -271,7 +274,7 @@ class _CourseCard extends StatelessWidget {
                             ),
                             const Spacer(),
                             Text(
-                              '\$${course.price}.00',
+                              '\$${course.price}',
                               style: const TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 12,
@@ -279,22 +282,84 @@ class _CourseCard extends StatelessWidget {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 20),
-                              onPressed: onEdit,
-                              color: AppColors.primary,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: onEdit,
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.edit_outlined,
+                                        size: 16,
+                                        color: AppColors.primary,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Edit',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                             const Spacer(),
-                            Transform.scale(
-                              scale: 0.8,
-                              child: Switch(
-                                value: course.isActive,
-                                onChanged: (_) => onToggleStatus(),
-                                activeColor: AppColors.primary,
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: onToggleStatus,
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: course.isActive
+                                        ? AppColors.primary.withOpacity(0.1)
+                                        : Colors.grey.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        course.isActive
+                                            ? Icons.toggle_on
+                                            : Icons.toggle_off,
+                                        size: 18,
+                                        color: course.isActive
+                                            ? AppColors.primary
+                                            : Colors.grey,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        course.isActive ? 'ON' : 'OFF',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: course.isActive
+                                              ? AppColors.primary
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ],

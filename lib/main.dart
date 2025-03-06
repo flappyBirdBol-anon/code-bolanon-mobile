@@ -1,18 +1,28 @@
+import 'dart:ui';
+
 import 'package:code_bolanon/app/app.bottomsheets.dart';
+import 'package:code_bolanon/app/app.dialog.dart';
 import 'package:code_bolanon/app/app.dialogs.dart';
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
-import 'package:code_bolanon/db/supabase.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:media_kit/media_kit.dart';
 import 'package:stacked_services/stacked_services.dart';
 
-Future<void> main() async {
+// Define enum types for snackbars
+enum SnackbarType { error, success, info }
+
+void main() async {
+  // await initializeSupabase();
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeSupabase();
+  MediaKit.ensureInitialized();
   await setupLocator();
+
   setupDialogUi();
+  setupSnackbarUi();
   setupBottomSheetUi();
+  // Add this line t o setup snackbar UI
 
   final AuthService authService = locator<AuthService>();
   String initialRoute = Routes.onboardingView;
@@ -28,8 +38,13 @@ Future<void> main() async {
     // You might want to navigate to an error screen or show a dialog
   }
 
+  // Set Flutter rendering features if needed
+  // Note: Setting Impeller should be done in Android/iOS platform-specific files
+
   runApp(MainApp(initialRoute: initialRoute));
 }
+
+// Add this function to setup snackbar UI
 
 class MainApp extends StatelessWidget {
   final String initialRoute;

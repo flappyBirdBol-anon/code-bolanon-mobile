@@ -1,71 +1,65 @@
-// lib/views/course_details/course_details_viewmodel.dart
+// lib/ui/views/lessons_full/lessons_full_viewmodel.dart
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
-import 'package:code_bolanon/services/auth_service.dart';
+import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
-import 'package:code_bolanon/services/user_service.dart';
-import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart';
-import 'package:code_bolanon/ui/views/lessons_full/lessons_full_view.dart';
+
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class CourseDetailsViewModel extends ReactiveViewModel {
-  int _selectedTabIndex = 0;
-  int get selectedTabIndex => _selectedTabIndex;
-  final _userService = locator<UserService>();
-  final _imageService = locator<ImageService>();
+class LessonsFullViewModel extends BaseViewModel {
   final _lessonsService = locator<LessonsService>();
+  final _courseService = locator<CourseService>();
+  final _imageService = locator<ImageService>();
   final _navigationService = locator<NavigationService>();
   final _dialogService = locator<DialogService>();
 
-  @override
-  List<ReactiveServiceMixin> get reactiveServices => [_lessonsService];
-
-  // Filter lessons for this course
-  List<Lesson> get courseLessons =>
-      _lessonsService.lessons!.where((l) => l.courseId == course!.id).toList();
-
-  String get profilePictureUrl => _userService.currentUser?.profileImage ?? '';
-  String get userName => _userService.currentUser?.fullName ?? 'User';
-  bool _isLoading = true;
-  bool get isLoading => _isLoading;
-  notifyListeners();
-  // Reference to the course
+  int _courseId = 0;
   Course? _course;
-  Course? get course => _course;
-
-  // Lessons for the course
   List<Lesson> _lessons = [];
-  List<Lesson> get lessons => _lessons;
 
-  // Initialize with a course
-  Future<void> initialize(Course? course) async {
-    _course = course;
+  List<Lesson> get lessons => _lessons;
+  String get courseName => _course?.title ?? 'Course Lessons';
+  String get courseDescription =>
+      _course?.description ?? 'No description available';
+  String get courseRating => (_course?.rating ?? 0.0).toString();
+
+  Future<void> initialize(int courseId) async {
+    _courseId = courseId;
     setBusy(true);
 
-    if (_course != null && _course!.thumbnail != null) {
-      // Prefetch the course image to ensure it's cached
-      final imageUrl =
-          _imageService.getCourseThumbnailFromPath(_course!.thumbnail);
-      await _imageService.prefetchImage(imageUrl, courseId: _course!.id);
-    }
+    // Load course details
+    await _loadCourseDetails();
 
     // Load lessons
     await _loadLessons();
 
-    _isLoading = false;
     setBusy(false);
-    notifyListeners();
   }
 
-  // Load lessons from the service
+  Future<void> _loadCourseDetails() async {
+    try {
+      if (_courseId > 0) {
+        _course = await _courseService.getCourseById(_courseId);
+      }
+    } catch (e) {
+      // Handle error
+      await _dialogService.showDialog(
+        title: 'Error Loading Course',
+        description: 'Could not load course details. Please try again later.',
+      );
+    }
+  }
+
   Future<void> _loadLessons() async {
     try {
-      _lessons = await _lessonsService.getLessons(courseId: course!.id);
+      _lessons = await _lessonsService.getLessons();
       notifyListeners();
     } catch (e) {
       // Handle error
@@ -79,11 +73,12 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   // Refresh lessons
   Future<void> refreshLessons() async {
     setBusy(true);
+    await _lessonsService.getLessons(forceRefresh: true);
     await _loadLessons();
     setBusy(false);
   }
 
-  // Get a widget to display the course image
+  // Get course image widget
   Widget getCourseImageWidget({
     double? width,
     double? height,
@@ -92,25 +87,25 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     Widget? errorWidget,
   }) {
     if (_course == null || _course!.thumbnail == null) {
-      return errorWidget ?? _buildDefaultErrorWidget(width, height);
+      return _buildDefaultErrorWidget(width, height);
     }
 
     // Handle local assets differently
     if (_course!.thumbnail!.startsWith('assets/')) {
       return Image.asset(
-        _course!.thumbnail,
+        _course!.thumbnail!,
         width: width,
         height: height,
         fit: fit,
         errorBuilder: (context, error, stackTrace) {
-          return errorWidget ?? _buildDefaultErrorWidget(width, height);
+          return _buildDefaultErrorWidget(width, height);
         },
       );
     }
 
     // Use ImageService for remote images
     final imageUrl =
-        _imageService.getCourseThumbnailFromPath(_course!.thumbnail);
+        _imageService.getCourseThumbnailFromPath(_course!.thumbnail!);
 
     return _imageService.loadImage(
       imageUrl: imageUrl,
@@ -118,8 +113,8 @@ class CourseDetailsViewModel extends ReactiveViewModel {
       width: width,
       height: height,
       fit: fit,
-      placeholder: placeholder ?? _buildDefaultPlaceholder(width, height),
-      errorWidget: errorWidget ?? _buildDefaultErrorWidget(width, height),
+      placeholder: _buildDefaultPlaceholder(width, height),
+      errorWidget: _buildDefaultErrorWidget(width, height),
     );
   }
 
@@ -141,28 +136,22 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     );
   }
 
-  void setTabIndex(int index) {
-    _selectedTabIndex = index;
-    notifyListeners();
-  }
-
-  void navigateToAddLesson(Course course) {
-    _navigationService.navigateTo(Routes.addLessonView, arguments: course);
-  }
-
-  void navigateToLessonsFullView() {
-    _navigationService.navigateToView(
-      LessonsFullView(
-          courseId: _course?.id != null
-              ? int.tryParse(_course!.id.toString()) ?? 0
-              : 0),
-    );
+  // Navigation methods
+  void navigateToAddLesson() {
+    _navigationService.navigateTo(Routes.addLessonView);
   }
 
   void navigateToLessonDetails(Lesson lesson) {
     _navigationService.navigateTo(
       Routes.lessonDetailsView,
-      arguments: LessonDetailsViewArguments(lesson: lesson),
+      arguments: lesson,
+    );
+  }
+
+  void navigateToEditLesson(Lesson lesson) {
+    _navigationService.navigateTo(
+      Routes.addLessonView,
+      arguments: lesson,
     );
   }
 
@@ -194,6 +183,49 @@ class CourseDetailsViewModel extends ReactiveViewModel {
       } finally {
         setBusy(false);
       }
+    }
+  }
+
+  // Download lesson
+  Future<void> downloadLesson(Lesson lesson) async {
+    try {
+      setBusy(true);
+
+      // Show a dialog to indicate download is starting
+      await _dialogService.showDialog(
+        title: 'Downloading',
+        description: 'Starting download for ${lesson.label}...',
+      );
+
+      // Here you would implement the actual download logic
+      // For now, we'll just simulate a download
+      await Future.delayed(const Duration(seconds: 2));
+
+      await _dialogService.showDialog(
+        title: 'Download Complete',
+        description: '${lesson.label} has been downloaded successfully.',
+      );
+    } catch (e) {
+      await _dialogService.showDialog(
+        title: 'Download Failed',
+        description: 'Could not download the lesson: $e',
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Share lesson
+  Future<void> shareLesson(Lesson lesson) async {
+    try {
+      final String shareText =
+          'Check out this lesson: ${lesson.label}\n${lesson.fileUrl}';
+      await Share.share(shareText);
+    } catch (e) {
+      await _dialogService.showDialog(
+        title: 'Share Failed',
+        description: 'Could not share the lesson: $e',
+      );
     }
   }
 

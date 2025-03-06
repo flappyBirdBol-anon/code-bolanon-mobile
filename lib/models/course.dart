@@ -2,7 +2,7 @@
 class Course {
   final String id;
   final String title;
-  final int price;
+  final double price;
   final String description;
   final String thumbnail;
   final bool isActive;
@@ -29,7 +29,7 @@ class Course {
       isActive: json['is_active'] ?? true,
       studentsEnrolled: json['students_enrolled'] ?? 0,
       rating: (json['rating'] ?? 0.0).toDouble(),
-      price: int.tryParse(json['price']?.toString() ?? '0') ?? 0,
+      price: double.tryParse(json['price'] ?? 0.00) ?? 0.00,
     );
   }
 
@@ -50,7 +50,7 @@ class Course {
     bool? isActive,
     int? studentsEnrolled,
     double? rating,
-    int? price,
+    double? price,
   }) {
     return Course(
       id: id ?? this.id,

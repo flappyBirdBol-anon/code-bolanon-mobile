@@ -1,9 +1,11 @@
 import 'package:code_bolanon/app/app.bottomsheets.dart';
-import 'package:code_bolanon/app/app.dialogs.dart';
+
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/ui/common/app_strings.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
+
+import '../../dialogs/app.dialog_type.dart';
 
 class HomeViewModel extends BaseViewModel {
   final _dialogService = locator<DialogService>();
@@ -20,7 +22,7 @@ class HomeViewModel extends BaseViewModel {
 
   void showDialog() {
     _dialogService.showCustomDialog(
-      variant: DialogType.infoAlert,
+      variant: DialogType.basic,
       title: 'Stacked Rocks!',
       description: 'Give stacked $_counter stars on Github',
     );
