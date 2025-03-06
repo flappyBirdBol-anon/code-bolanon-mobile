@@ -51,6 +51,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(4)),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
