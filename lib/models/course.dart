@@ -8,6 +8,8 @@ class Course {
   final bool isActive;
   final int studentsEnrolled;
   final double rating;
+  final int lessons;
+  final int reviews;
 
   Course({
     required this.id,
@@ -18,6 +20,8 @@ class Course {
     this.isActive = true,
     this.studentsEnrolled = 0,
     this.rating = 0.0,
+    this.lessons = 16,
+    this.reviews = 4,
   });
 
   factory Course.fromJson(Map<String, dynamic> json) {

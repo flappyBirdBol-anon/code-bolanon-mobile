@@ -113,7 +113,7 @@ class CoursesListItem extends StatelessWidget {
         ),
         const SizedBox(height: 4), // Reduced spacing
         _buildInfoRow(),
-        const SizedBox(height: 2), // Reduced spacing
+        const SizedBox(height: 14), // Reduced spacing
         _buildActionRow(),
       ],
     );
@@ -158,27 +158,79 @@ class CoursesListItem extends StatelessWidget {
     if (!showControls) return const SizedBox.shrink();
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         if (onEdit != null)
-          IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 18),
-            onPressed: onEdit,
-            color: AppColors.primary,
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            constraints: const BoxConstraints(
-              minWidth: 32,
-              minHeight: 32,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onEdit,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.edit_outlined,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Edit',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
+        const Spacer(),
         if (onToggleStatus != null)
-          Transform.scale(
-            scale: 0.7,
-            child: Switch.adaptive(
-              value: course.isActive,
-              onChanged: (_) => onToggleStatus?.call(),
-              activeColor: AppColors.primary,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onToggleStatus,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: course.isActive
+                      ? AppColors.primary.withOpacity(0.1)
+                      : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      course.isActive ? Icons.toggle_on : Icons.toggle_off,
+                      size: 18,
+                      color: course.isActive ? AppColors.primary : Colors.grey,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      course.isActive ? 'ON' : 'OFF',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color:
+                            course.isActive ? AppColors.primary : Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
       ],

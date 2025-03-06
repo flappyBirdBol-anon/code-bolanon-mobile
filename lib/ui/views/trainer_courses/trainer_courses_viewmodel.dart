@@ -5,14 +5,13 @@ import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/common/helpers/dialog_helper.dart';
 import 'package:code_bolanon/ui/common/widgets/course_dialog.dart';
 import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stacked/stacked.dart';
-import 'package:stacked_services/stacked_services.dart';
 
 class TrainerCoursesViewModel extends BaseViewModel {
   final _imagePicker = ImagePicker();
-  final _navigationService = NavigationService();
 
   // Add service dependencies
   final CourseService _courseService;
@@ -21,11 +20,10 @@ class TrainerCoursesViewModel extends BaseViewModel {
   List<Course> _courses = [];
   String _selectedFilter = 'All';
   XFile? _selectedImage;
-  final bool _isBusy = false;
+  bool _isBusy = false;
 
   List<Course> get courses => _filterCourses();
   String get selectedFilter => _selectedFilter;
-  @override
   bool get isBusy => _isBusy;
   ImageService get imageService => _imageService; // Expose image service for UI
 
@@ -128,9 +126,9 @@ class TrainerCoursesViewModel extends BaseViewModel {
     Widget? errorWidget,
   }) {
     // Handle local assets differently
-    if (course.thumbnail.startsWith('assets/')) {
+    if (course.thumbnail != null && course.thumbnail!.startsWith('assets/')) {
       return Image.asset(
-        course.thumbnail,
+        course.thumbnail!,
         width: width,
         height: height,
         fit: fit,
@@ -141,9 +139,9 @@ class TrainerCoursesViewModel extends BaseViewModel {
     }
 
     // If it's a remote image, use the ImageService
-    if (course.thumbnail.isNotEmpty) {
+    if (course.thumbnail != null && course.thumbnail!.isNotEmpty) {
       final imageUrl =
-          _imageService.getCourseThumbnailFromPath(course.thumbnail);
+          _imageService.getCourseThumbnailFromPath(course.thumbnail!);
 
       return _imageService.loadImage(
         imageUrl: imageUrl,
@@ -298,7 +296,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
 
       final statusText =
           _courses[courseIndex].isActive ? 'activated' : 'deactivated';
-      _showSuccessMessage('Course $statusText successfully');
+      _showSuccessMessage('Course ${statusText} successfully');
     } catch (e) {
       _showErrorMessage('Failed to update course status: ${e.toString()}');
     } finally {

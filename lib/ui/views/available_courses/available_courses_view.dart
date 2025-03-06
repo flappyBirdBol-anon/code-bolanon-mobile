@@ -150,9 +150,8 @@ class AvailableCoursesView extends StackedView<AvailableCoursesViewModel> {
 
   @override
   AvailableCoursesViewModel viewModelBuilder(BuildContext context) {
-    final apiService = locator<ApiService>();
     final imageService = locator<ImageService>();
-    final courseService = CourseService(apiService, imageService);
+    final courseService = CourseService();
 
     return AvailableCoursesViewModel(
       courseService: courseService,

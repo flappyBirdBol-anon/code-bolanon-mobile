@@ -25,6 +25,7 @@ class UserService with ListenableServiceMixin {
         _currentUser.value = UserModel.fromJson(profileData);
 
         // Save to SharedPreferences
+
         final prefs = await SharedPreferences.getInstance();
         final userJson = json.encode(_currentUser.value?.toJson());
         await prefs.setString('current_user', userJson);

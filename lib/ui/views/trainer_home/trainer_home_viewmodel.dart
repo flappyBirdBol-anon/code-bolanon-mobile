@@ -1,7 +1,13 @@
+import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
+import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/services/course_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
 import 'package:flutter/material.dart';
+import 'package:stacked_services/stacked_services.dart';
 
 class TrainerHomeViewModel extends AppBaseViewModel {
   bool _isDarkMode = false;
@@ -19,7 +25,9 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   int activeStudents = 150;
   int totalCourses = 12;
   double totalRevenue = 15000;
-
+  final _courseService = locator<CourseService>();
+  final _imageService = locator<ImageService>();
+  final _navigationService = locator<NavigationService>();
   List<AppointmentModel> _upcomingAppointments = [];
   List<AppointmentModel> get upcomingAppointments => _upcomingAppointments;
 
@@ -336,6 +344,17 @@ class TrainerHomeViewModel extends AppBaseViewModel {
       isLoading = false; // Changed from setLoading(false)
       notifyListeners();
     }
+  }
+
+  void _showErrorMessage(String message) {
+    // If using dialog service from stacked:
+    // _dialogService.showDialog(
+    //   title: 'Error',
+    //   description: message,
+    //   buttonTitle: 'OK',
+    // );
+
+    print('ERROR: $message'); // For now, just print
   }
 
   void _init() async {

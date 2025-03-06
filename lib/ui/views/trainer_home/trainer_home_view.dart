@@ -1,4 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/ui/common/utils/tech_stack_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
@@ -79,9 +80,6 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                       const SizedBox(height: 32),
                       _buildCodingLanguages(
                           viewModel, theme, headingStyle, codeStyle),
-                      const SizedBox(height: 32),
-                      _buildCodeChallenges(
-                          theme, headingStyle, bodyStyle, codeStyle, viewModel),
                       const SizedBox(height: 32),
                       _buildUpcomingSessions(viewModel),
                       const SizedBox(height: 32),
@@ -927,229 +925,54 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     );
   }
 
-  Widget _buildCodeChallenges(
-      ThemeData theme,
-      TextStyle headingStyle,
-      TextStyle bodyStyle,
-      TextStyle codeStyle,
-      TrainerHomeViewModel viewModel) {
-    final isDark = theme.brightness == Brightness.dark;
-    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+  // Widget _buildFeatureCourses(
+  //     TrainerHomeViewModel viewModel, ThemeData theme, TextStyle bodyStyle) {
+  //   if (viewModel.isLoading) {
+  //     return CustomCard(
+  //       text: '',
+  //       onPressed: () {},
+  //       isHorizontalCard: true,
+  //       isLoading: true,
+  //       itemCount: 3,
+  //     );
+  //   }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text("Code Challenges", style: headingStyle),
-            TextButton(
-              onPressed: () => viewModel.viewAllChallenges(),
-              child: Text(
-                "View All",
-                style: bodyStyle.copyWith(
-                  color: theme.primaryColor,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                offset: const Offset(0, 4),
-                blurRadius: 12,
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: viewModel.isLoading
-              ? _buildChallengesSkeleton()
-              : Column(
-                  children: [
-                    _buildChallengeItem(
-                      "Algorithm Challenge",
-                      "Array Manipulation",
-                      "Intermediate",
-                      Colors.orange,
-                      isDark,
-                      bodyStyle,
-                      codeStyle,
-                      () => viewModel.openChallenge("Algorithm Challenge"),
-                    ),
-                    const Divider(height: 24),
-                    _buildChallengeItem(
-                      "Project Challenge",
-                      "Build a REST API",
-                      "Advanced",
-                      Colors.red,
-                      isDark,
-                      bodyStyle,
-                      codeStyle,
-                      () => viewModel.openChallenge("Project Challenge"),
-                    ),
-                    const Divider(height: 24),
-                    _buildChallengeItem(
-                      "Bug Fix Challenge",
-                      "Debug React Components",
-                      "Beginner",
-                      Colors.green,
-                      isDark,
-                      bodyStyle,
-                      codeStyle,
-                      () => viewModel.openChallenge("Bug Fix Challenge"),
-                    ),
-                  ],
-                ),
-        ),
-      ],
-    );
-  }
+  //   final isDark = theme.brightness == Brightness.dark;
+  //   final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
 
-  Widget _buildChallengesSkeleton() {
-    return Shimmer.fromColors(
-      period: const Duration(milliseconds: 2000),
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      direction: ShimmerDirection.ltr,
-      enabled: true,
-      child: Column(
-        children: List.generate(
-          3,
-          (index) => Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 140,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          width: 100,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: 80,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ],
-              ),
-              if (index < 2) const Divider(height: 24),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChallengeItem(
-      String title,
-      String subtitle,
-      String level,
-      Color levelColor,
-      bool isDark,
-      TextStyle bodyStyle,
-      TextStyle codeStyle,
-      VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey[800] : Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.code,
-                  color: isDark ? Colors.white70 : Colors.grey[700],
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: bodyStyle.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: codeStyle.copyWith(
-                      fontSize: 12,
-                      color: isDark ? Colors.grey[400] : Colors.grey[700],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: levelColor.withOpacity(isDark ? 0.2 : 0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                level,
-                style: bodyStyle.copyWith(
-                  fontSize: 12,
-                  color: levelColor,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  //   return CarouselSlider(
+  //     options: CarouselOptions(
+  //       height: 200,
+  //       viewportFraction: 0.6,
+  //       enableInfiniteScroll: false,
+  //       padEnds: false,
+  //     ),
+  //     items: viewModel.courseList.map((course) {
+  //       return Builder(
+  //         builder: (BuildContext context) {
+  //           return GestureDetector(
+  //             onTap: () => viewModel.openCourse(course.id),
+  //             child: CustomCard(
+  //               text: course.title,
+  //               onPressed: () => viewModel.openCourse(course.id),
+  //               isHorizontalCard: true,
+  //               isLoading: false,
+  //               backgroundColor: cardColor,
+  //               height: 200,
+  //               width: 260,
+  //               imageUrl: course.thumbnail,
+  //               lessons: course.lessons,
+  //               rating: course.rating,
+  //               reviews: course.reviews,
+  //               price: '\$${course.price}',
+  //               instructorName: 'Sample',
+  //             ),
+  //           );
+  //         },
+  //       );
+  //     }).toList(),
+  //   );
+  // }
   Widget _buildFeatureCourses(
       TrainerHomeViewModel viewModel, ThemeData theme, TextStyle bodyStyle) {
     if (viewModel.isLoading) {
@@ -1161,7 +984,6 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
         itemCount: 3,
       );
     }
-
     final isDark = theme.brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
 
@@ -1177,20 +999,122 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
           builder: (BuildContext context) {
             return GestureDetector(
               onTap: () => viewModel.openCourse(course.id),
-              child: CustomCard(
-                text: course.title,
-                onPressed: () => viewModel.openCourse(course.id),
-                isHorizontalCard: true,
-                isLoading: false,
-                backgroundColor: cardColor,
-                height: 200,
-                width: 260,
-                imageUrl: course.imageUrl,
-                lessons: course.lessons,
-                rating: course.rating,
-                reviews: course.reviews,
-                price: '\$${course.price}',
-                instructorName: 'Sample',
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 6.0),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      offset: const Offset(0, 4),
+                      blurRadius: 8,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12),
+                          ),
+                          child: AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: _buildCourseImage(viewModel, course),
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          left: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.play_circle_outline,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  //TODO temporary for lesson count
+                                  "${course.id} Lessons",
+                                  style: bodyStyle.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            course.title,
+                            style: GoogleFonts.figtree(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(
+                                '\$${course.price}',
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.primaryColor,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const Spacer(),
+                              const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 15,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${course.rating}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                ' (${course.rating})',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
