@@ -1,6 +1,7 @@
 import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
@@ -168,5 +169,13 @@ class AvailableCoursesViewModel extends BaseViewModel {
 
   void navigateToMyCourses() {
     // Implement navigation to enrolled courses
+  }
+  void navigateToCourseDetails(BuildContext context, Course course) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CourseDetailsView(course: course),
+      ),
+    );
   }
 }

@@ -662,9 +662,12 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
           const SizedBox(height: 6),
           value == null
               ? Shimmer.fromColors(
+                  period: const Duration(milliseconds: 2000),
                   baseColor: isDark ? Colors.grey[700]! : Colors.grey[300]!,
                   highlightColor:
                       isDark ? Colors.grey[600]! : Colors.grey[100]!,
+                  direction: ShimmerDirection.ltr,
+                  enabled: true,
                   child: Container(
                     width: 50,
                     height: 18,
@@ -764,8 +767,11 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
 
   Widget _buildProgressSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 2000), // Increased duration
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr, // Added direction
+      enabled: true, // Explicitly enable shimmer
       child: Column(
         children: List.generate(
           3,
@@ -899,8 +905,11 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
 
   Widget _buildTopicsSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 2000),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
+      enabled: true,
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -1005,8 +1014,11 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
 
   Widget _buildChallengesSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 2000),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
+      enabled: true,
       child: Column(
         children: List.generate(
           3,
@@ -1253,8 +1265,11 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
 
   Widget _buildActivitySkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 2000),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
+      enabled: true,
       child: ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),

@@ -211,25 +211,32 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   }
 
   // Data management
-  Future<void> refreshData() async {
-    setLoading(true);
-
-    // Load mock appointments
-    _upcomingAppointments = AppointmentModel.getMockAppointments();
-
-    setLoading(false);
-    notifyListeners(); // Make sure UI updates
-  }
-
   void setLoading(bool value) {
     isLoading = value;
     notifyListeners();
   }
 
+  Future<void> refreshData() async {
+    isLoading = true; // Changed from setLoading(true)
+    notifyListeners();
+
+    await Future.delayed(const Duration(seconds: 2));
+
+    try {
+      _upcomingAppointments = AppointmentModel.getMockAppointments();
+      await Future.delayed(const Duration(milliseconds: 500));
+    } catch (e) {
+      debugPrint('Error refreshing data: $e');
+    } finally {
+      isLoading = false; // Changed from setLoading(false)
+      notifyListeners();
+    }
+  }
+
   void _init() async {
-    // Initialize with current month
-    _selectedDate = DateTime.now();
-    // Load data immediately instead of waiting
+    isLoading = true; // Changed from setLoading(true)
+    notifyListeners();
+    await Future.delayed(const Duration(seconds: 2));
     await refreshData();
   }
 }

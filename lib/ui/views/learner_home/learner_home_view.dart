@@ -223,8 +223,10 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
 
   Widget _buildTechStackSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 1500),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -306,29 +308,31 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
           ),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 220, // Reduced from 280
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: viewModel.topRatedCourses.length,
-            itemBuilder: (context, index) {
-              final course = viewModel.topRatedCourses[index];
-              return CustomCard(
-                text: course.title,
-                onPressed: () => (), // Fixed empty callback
-                isHorizontalCard: true,
-                width: 180, // Reduced from 200
-                height: 200, // Adjusted to match container height
-                imageUrl: course.imageUrl,
-                lessons: course.totalLessons,
-                rating: course.rating,
-                reviews: course.reviews,
-                price: '\$${course.price}',
-                instructorName: course.instructorName,
-              );
-            },
-          ),
-        ),
+        viewModel.isLoading
+            ? _buildHorizontalCardsShimmer()
+            : SizedBox(
+                height: 220, // Reduced from 280
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: viewModel.topRatedCourses.length,
+                  itemBuilder: (context, index) {
+                    final course = viewModel.topRatedCourses[index];
+                    return CustomCard(
+                      text: course.title,
+                      onPressed: () => (), // Fixed empty callback
+                      isHorizontalCard: true,
+                      width: 180, // Reduced from 200
+                      height: 200, // Adjusted to match container height
+                      imageUrl: course.imageUrl,
+                      lessons: course.totalLessons,
+                      rating: course.rating,
+                      reviews: course.reviews,
+                      price: '\$${course.price}',
+                      instructorName: course.instructorName,
+                    );
+                  },
+                ),
+              ),
       ],
     );
   }
@@ -350,24 +354,55 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
           style: TextStyle(color: Colors.grey[600], fontSize: 14),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 220,
-          child: CarouselSlider.builder(
-            itemCount: viewModel.topRatedCourses.length,
-            itemBuilder: (context, index, realIndex) {
-              final course = viewModel.topRatedCourses[index];
-              return _buildPopularCourseCard(course);
-            },
-            options: CarouselOptions(
-              height: 220,
-              viewportFraction: 0.85,
-              enlargeCenterPage: true,
-              enableInfiniteScroll: false,
-              padEnds: true,
-            ),
+        viewModel.isLoading
+            ? _buildPopularCoursesShimmer()
+            : SizedBox(
+                height: 220,
+                child: CarouselSlider.builder(
+                  itemCount: viewModel.topRatedCourses.length,
+                  itemBuilder: (context, index, realIndex) {
+                    final course = viewModel.topRatedCourses[index];
+                    return _buildPopularCourseCard(course);
+                  },
+                  options: CarouselOptions(
+                    height: 220,
+                    viewportFraction: 0.85,
+                    enlargeCenterPage: true,
+                    enableInfiniteScroll: false,
+                    padEnds: true,
+                  ),
+                ),
+              ),
+      ],
+    );
+  }
+
+  Widget _buildPopularCoursesShimmer() {
+    return SizedBox(
+      height: 220,
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: CarouselSlider.builder(
+          itemCount: 3,
+          itemBuilder: (context, index, realIndex) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            );
+          },
+          options: CarouselOptions(
+            height: 220,
+            viewportFraction: 0.85,
+            enlargeCenterPage: true,
+            enableInfiniteScroll: false,
+            padEnds: true,
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -544,7 +579,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
         ),
         const SizedBox(height: 16),
         viewModel.isLoading
-            ? _buildCoursesListSkeleton()
+            ? _buildVerticalListShimmer()
             : ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -643,18 +678,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
         ),
         const SizedBox(height: 16),
         viewModel.isLoading
-            ? ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: 2,
-                itemBuilder: (context, index) => CustomAppointmentList(
-                  contextDetails: 'Loading...',
-                  startAt: '2023-12-25 09:00:00',
-                  endAt: '2023-12-25 10:30:00',
-                  onTap: () {},
-                  isLoading: true,
-                ),
-              )
+            ? _buildUpcomingSessionsShimmer()
             : ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -672,6 +696,28 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                 },
               ),
       ],
+    );
+  }
+
+  Widget _buildUpcomingSessionsShimmer() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 2,
+        itemBuilder: (context, index) {
+          return Container(
+            height: 80,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -806,8 +852,10 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
 
   Widget _buildCoursesCarouselSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 1500), // Added shimmer duration
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr, // Added direction
       child: CarouselSlider(
         options: CarouselOptions(
           height: 180,
@@ -831,8 +879,10 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
 
   Widget _buildCoursesListSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 1500),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
       child: ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -853,8 +903,10 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
 
   Widget _buildSessionsSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 1500),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
       child: ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -1120,30 +1172,78 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
           style: TextStyle(color: Colors.grey[600], fontSize: 14),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 220, // Reduced from 320
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: viewModel.recommendedCourses.length,
-            itemBuilder: (context, index) {
-              final course = viewModel.recommendedCourses[index];
-              return CustomCard(
-                text: course.title,
-                onPressed: () => (), // Fixed empty callback
-                isHorizontalCard: true,
-                width: 220, // Reduced from 280
-                height: 220, // Adjusted to match container height
-                imageUrl: course.imageUrl,
-                lessons: course.totalLessons,
-                rating: course.rating,
-                reviews: course.reviews,
-                price: '\$${course.price}',
-                instructorName: course.instructorName,
-              );
-            },
-          ),
-        ),
+        viewModel.isLoading
+            ? _buildHorizontalCardsShimmer()
+            : SizedBox(
+                height: 220, // Reduced from 320
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: viewModel.recommendedCourses.length,
+                  itemBuilder: (context, index) {
+                    final course = viewModel.recommendedCourses[index];
+                    return CustomCard(
+                      text: course.title,
+                      onPressed: () => (), // Fixed empty callback
+                      isHorizontalCard: true,
+                      width: 220, // Reduced from 280
+                      height: 220, // Adjusted to match container height
+                      imageUrl: course.imageUrl,
+                      lessons: course.totalLessons,
+                      rating: course.rating,
+                      reviews: course.reviews,
+                      price: '\$${course.price}',
+                      instructorName: course.instructorName,
+                    );
+                  },
+                ),
+              ),
       ],
+    );
+  }
+
+  Widget _buildHorizontalCardsShimmer() {
+    return SizedBox(
+      height: 220,
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: 3,
+          itemBuilder: (context, index) {
+            return Container(
+              margin: const EdgeInsets.only(right: 16),
+              width: 220,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVerticalListShimmer() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return Container(
+            height: 100,
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          );
+        },
+      ),
     );
   }
 

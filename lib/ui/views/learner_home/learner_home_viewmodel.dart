@@ -111,9 +111,11 @@ class LearnerHomeViewModel extends AppBaseViewModel {
   }
 
   void _init() {
+    isLoading = true;
+    notifyListeners();
+    // Initial load delay
     Future.delayed(const Duration(seconds: 2), () {
-      isLoading = false;
-      notifyListeners();
+      refreshData();
     });
   }
 
@@ -200,12 +202,18 @@ class LearnerHomeViewModel extends AppBaseViewModel {
     isLoading = true;
     notifyListeners();
 
+    // Force minimum loading time for shimmer to be visible
     await Future.delayed(const Duration(seconds: 2));
-    _loadCourses();
-    _loadSessions(); // Add this line to reload sessions
 
-    isLoading = false;
-    notifyListeners();
+    try {
+      _loadCourses();
+      _loadSessions();
+    } catch (e) {
+      debugPrint('Error refreshing data: $e');
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
   void openSession(String sessionId) {

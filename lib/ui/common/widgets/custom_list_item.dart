@@ -150,8 +150,14 @@ class CustomListItem extends StatelessWidget {
 
   Widget _buildLoadingSkeleton(bool isDark) {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      period: const Duration(milliseconds: 2000), // Increased duration
+      baseColor:
+          isDark ? Colors.grey[800]! : Colors.grey[300]!, // Updated base color
+      highlightColor: isDark
+          ? Colors.grey[700]!
+          : Colors.grey[100]!, // Updated highlight color
+      direction: ShimmerDirection.ltr,
+      enabled: true, // Explicitly enable shimmer
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
         child: Row(

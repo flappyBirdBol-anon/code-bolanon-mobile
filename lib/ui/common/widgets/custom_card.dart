@@ -132,8 +132,11 @@ class CustomCard extends StatelessWidget {
     return SizedBox(
       height: 200,
       child: Shimmer.fromColors(
+        period: const Duration(milliseconds: 1500),
         baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
         highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
+        direction: ShimmerDirection.ltr,
+        enabled: true,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: itemCount,
@@ -142,7 +145,7 @@ class CustomCard extends StatelessWidget {
               width: 260,
               margin: const EdgeInsets.only(right: 12.0),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? Colors.grey[800] : Colors.white,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -151,7 +154,7 @@ class CustomCard extends StatelessWidget {
                   Container(
                     height: 120,
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
+                      color: isDark ? Colors.grey[700] : Colors.grey[200],
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(12),
                       ),
@@ -163,25 +166,21 @@ class CustomCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          width: 180,
+                          width: double.infinity,
                           height: 16,
-                          color: Colors.grey[200],
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey[700] : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              width: 60,
-                              height: 14,
-                              color: Colors.grey[200],
-                            ),
-                            Container(
-                              width: 80,
-                              height: 14,
-                              color: Colors.grey[200],
-                            ),
-                          ],
+                        Container(
+                          width: 100,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey[700] : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                       ],
                     ),
