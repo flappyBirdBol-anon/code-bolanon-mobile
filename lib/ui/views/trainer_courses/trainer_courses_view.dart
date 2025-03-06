@@ -112,6 +112,8 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
             onEdit: () => viewModel.showEditCourseDialog(context, course),
             onToggleStatus: () => viewModel.toggleCourseStatus(course.id),
             viewModel: viewModel,
+            showStatus: true,
+            showControls: true,
           );
         },
       );

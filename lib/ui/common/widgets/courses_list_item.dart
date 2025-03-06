@@ -1,20 +1,23 @@
 import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
-import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_viewmodel.dart';
 import 'package:flutter/material.dart';
 
 class CoursesListItem extends StatelessWidget {
   final Course course;
-  final VoidCallback onEdit;
-  final VoidCallback onToggleStatus;
-  final TrainerCoursesViewModel viewModel;
+  final VoidCallback? onEdit;
+  final VoidCallback? onToggleStatus;
+  final dynamic viewModel;
+  final bool showControls;
+  final bool? showStatus; // Add this property
 
   const CoursesListItem({
     super.key,
     required this.course,
-    required this.onEdit,
-    required this.onToggleStatus,
+    this.onEdit,
+    this.onToggleStatus,
     required this.viewModel,
+    this.showControls = false,
+    this.showStatus = false, // Add this parameter
   });
 
   @override
@@ -50,11 +53,12 @@ class CoursesListItem extends StatelessWidget {
           aspectRatio: 16 / 9,
           child: _buildCourseImage(),
         ),
-        Positioned(
-          top: 8,
-          right: 8,
-          child: _buildStatusBadge(),
-        ),
+        if (showStatus ?? true) // Only show if showStatus is true or null
+          Positioned(
+            top: 8,
+            right: 8,
+            child: _buildStatusBadge(),
+          ),
       ],
     );
   }
@@ -151,28 +155,32 @@ class CoursesListItem extends StatelessWidget {
   }
 
   Widget _buildActionRow() {
+    if (!showControls) return const SizedBox.shrink();
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        IconButton(
-          icon: const Icon(Icons.edit_outlined, size: 18),
-          onPressed: onEdit,
-          color: AppColors.primary,
-          padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
-          constraints: const BoxConstraints(
-            minWidth: 32,
-            minHeight: 32,
+        if (onEdit != null)
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            onPressed: onEdit,
+            color: AppColors.primary,
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints(
+              minWidth: 32,
+              minHeight: 32,
+            ),
           ),
-        ),
-        Transform.scale(
-          scale: 0.7,
-          child: Switch.adaptive(
-            value: course.isActive,
-            onChanged: (_) => onToggleStatus(),
-            activeColor: AppColors.primary,
+        if (onToggleStatus != null)
+          Transform.scale(
+            scale: 0.7,
+            child: Switch.adaptive(
+              value: course.isActive,
+              onChanged: (_) => onToggleStatus?.call(),
+              activeColor: AppColors.primary,
+            ),
           ),
-        ),
       ],
     );
   }

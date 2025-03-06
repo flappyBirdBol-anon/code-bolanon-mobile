@@ -1,34 +1,13 @@
+import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/services/course_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
+import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
-class Course {
-  final String id;
-  final String title;
-  final String description;
-  final String thumbnailUrl;
-  final String instructorName;
-  final String instructorAvatar;
-  final double rating;
-  final int reviewsCount;
-  final int enrolledCount;
-  final double price;
-  final List<String> categories;
-
-  Course({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.thumbnailUrl,
-    required this.instructorName,
-    required this.instructorAvatar,
-    required this.rating,
-    required this.reviewsCount,
-    required this.enrolledCount,
-    required this.price,
-    required this.categories,
-  });
-}
-
 class AvailableCoursesViewModel extends BaseViewModel {
+  final CourseService _courseService;
+  final ImageService _imageService;
+
   List<Course> _allCourses = [];
   List<Course> _filteredCourses = [];
   final Set<String> _activeFilters = {};
@@ -36,6 +15,8 @@ class AvailableCoursesViewModel extends BaseViewModel {
 
   List<Course> get filteredCourses => _filteredCourses;
   Set<String> get activeFilters => _activeFilters;
+  ImageService get imageService => _imageService;
+
   List<String> get availableFilters => [
         'Free',
         'Premium',
@@ -47,44 +28,39 @@ class AvailableCoursesViewModel extends BaseViewModel {
         'Highest Rated',
       ];
 
-  AvailableCoursesViewModel() {
+  AvailableCoursesViewModel({
+    required CourseService courseService,
+    required ImageService imageService,
+  })  : _courseService = courseService,
+        _imageService = imageService {
     _loadInitialData();
   }
 
   void _loadInitialData() {
-    _allCourses = [
-      Course(
-        id: '1',
-        title: 'Flutter Complete Development Course',
-        description:
-            'Learn Flutter from basics to advanced. Build real-world applications with clean architecture.',
-        thumbnailUrl: 'assets/images/1.jpg',
-        instructorName: 'John Doe',
-        instructorAvatar: 'assets/images/profile.jpg',
-        rating: 4.8,
-        reviewsCount: 1250,
-        enrolledCount: 15000,
-        price: 89.99,
-        categories: ['Programming', 'Premium'],
-      ),
-      Course(
-        id: '2',
-        title: 'UI/UX Design Fundamentals',
-        description:
-            'Master the principles of modern UI/UX design with practical projects.',
-        thumbnailUrl: 'assets/images/2.jpg',
-        instructorName: 'Jane Smith',
-        instructorAvatar: 'assets/images/profile.jpg',
-        rating: 4.9,
-        reviewsCount: 850,
-        enrolledCount: 8500,
-        price: 0,
-        categories: ['Design', 'Free'],
-      ),
-      // Add more sample courses as needed
-    ];
-    _filteredCourses = List.from(_allCourses);
+    setBusy(true);
+    _allCourses = [];
+    _filteredCourses = [];
+    setBusy(false);
     notifyListeners();
+  }
+
+  Future<void> init() async {
+    await refreshCourses();
+  }
+
+  Future<void> refreshCourses() async {
+    setBusy(true);
+    try {
+      _allCourses = await _courseService.getCourses();
+      _filteredCourses = List.from(_allCourses);
+      _applyFilters();
+    } catch (e) {
+      debugPrint('Error refreshing courses: $e');
+      _allCourses = [];
+      _filteredCourses = [];
+    } finally {
+      setBusy(false);
+    }
   }
 
   void onSearchChanged(String query) {
@@ -121,10 +97,9 @@ class AvailableCoursesViewModel extends BaseViewModel {
 
       // Apply category filters
       if (_activeFilters.isNotEmpty) {
-        return course.categories
-                .any((category) => _activeFilters.contains(category)) ||
-            (_activeFilters.contains('Free') && course.price == 0) ||
-            (_activeFilters.contains('Premium') && course.price > 0);
+        if (_activeFilters.contains('Free') && course.price > 0) return false;
+        if (_activeFilters.contains('Premium') && course.price == 0)
+          return false;
       }
 
       return true;
@@ -133,7 +108,7 @@ class AvailableCoursesViewModel extends BaseViewModel {
     // Apply sorting
     if (_activeFilters.contains('Most Popular')) {
       _filteredCourses
-          .sort((a, b) => b.enrolledCount.compareTo(a.enrolledCount));
+          .sort((a, b) => b.studentsEnrolled.compareTo(a.studentsEnrolled));
     } else if (_activeFilters.contains('Highest Rated')) {
       _filteredCourses.sort((a, b) => b.rating.compareTo(a.rating));
     }
@@ -141,13 +116,57 @@ class AvailableCoursesViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  Future<void> refreshCourses() async {
-    // Implement actual API call here
-    await Future.delayed(const Duration(seconds: 1));
-    _loadInitialData();
+  Widget getCourseImageWidget({
+    required Course course,
+    double? width,
+    double? height,
+    BoxFit fit = BoxFit.cover,
+    Widget? placeholder,
+    Widget? errorWidget,
+  }) {
+    // Handle local assets differently
+    if (course.thumbnail.startsWith('assets/')) {
+      return Image.asset(
+        course.thumbnail,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return errorWidget ?? _buildDefaultErrorWidget(width, height);
+        },
+      );
+    }
+
+    // If it's a remote image, use the ImageService
+    if (course.thumbnail.isNotEmpty) {
+      final imageUrl =
+          _imageService.getCourseThumbnailFromPath(course.thumbnail);
+
+      return _imageService.loadImage(
+        imageUrl: imageUrl,
+        courseId: course.id,
+        width: width,
+        height: height,
+        fit: fit,
+        placeholder: placeholder,
+        errorWidget: errorWidget,
+      );
+    }
+
+    // If no image path, return error widget
+    return errorWidget ?? _buildDefaultErrorWidget(width, height);
+  }
+
+  Widget _buildDefaultErrorWidget(double? width, double? height) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.grey[300],
+      child: Icon(Icons.image_not_supported, color: Colors.grey[600]),
+    );
   }
 
   void navigateToMyCourses() {
-    // Implement navigation to my courses
+    // Implement navigation to enrolled courses
   }
 }
