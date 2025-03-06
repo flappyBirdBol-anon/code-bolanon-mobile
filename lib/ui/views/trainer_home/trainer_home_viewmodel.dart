@@ -1,4 +1,5 @@
 import 'package:code_bolanon/app/app_base_view_model.dart';
+import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:flutter/material.dart';
 
@@ -19,9 +20,11 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   int totalCourses = 12;
   double totalRevenue = 15000;
 
+  List<AppointmentModel> _upcomingAppointments = [];
+  List<AppointmentModel> get upcomingAppointments => _upcomingAppointments;
+
   TrainerHomeViewModel() {
     _init();
-    print(userName);
   }
 
   List<RecentActivity> recentActivities = [
@@ -190,6 +193,11 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     // Navigate to code review session
   }
 
+  void openSession(String sessionId) {
+    // Implementation for opening a session
+    print('Opening session: $sessionId');
+  }
+
   // Activity related actions
   void openActivity(String id) {
     debugPrint('Opening activity with ID: $id');
@@ -203,31 +211,33 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   }
 
   // Data management
-  Future<void> refreshData() async {
-    setLoading(true);
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    // Refresh data
-    activeStudents = 165; // Updated values after refresh
-    totalCourses = 14;
-    totalRevenue = 16500;
-
-    setLoading(false);
-  }
-
   void setLoading(bool value) {
     isLoading = value;
     notifyListeners();
   }
 
-  void _init() {
-    // Initialize with current month
-    _selectedDate = DateTime.now();
+  Future<void> refreshData() async {
+    isLoading = true; // Changed from setLoading(true)
+    notifyListeners();
 
-    Future.delayed(const Duration(seconds: 3), () {
-      setLoading(false);
-    });
+    await Future.delayed(const Duration(seconds: 2));
+
+    try {
+      _upcomingAppointments = AppointmentModel.getMockAppointments();
+      await Future.delayed(const Duration(milliseconds: 500));
+    } catch (e) {
+      debugPrint('Error refreshing data: $e');
+    } finally {
+      isLoading = false; // Changed from setLoading(false)
+      notifyListeners();
+    }
+  }
+
+  void _init() async {
+    isLoading = true; // Changed from setLoading(true)
+    notifyListeners();
+    await Future.delayed(const Duration(seconds: 2));
+    await refreshData();
   }
 }
 

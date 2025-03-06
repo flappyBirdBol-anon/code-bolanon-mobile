@@ -1,3 +1,10 @@
+import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/services/api_service.dart';
+import 'package:code_bolanon/services/course_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/ui/common/app_colors.dart';
+import 'package:code_bolanon/ui/common/widgets/courses_list_item.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
@@ -7,18 +14,39 @@ class AvailableCoursesView extends StackedView<AvailableCoursesViewModel> {
   const AvailableCoursesView({Key? key}) : super(key: key);
 
   @override
-  Widget builder(BuildContext context, AvailableCoursesViewModel viewModel,
-      Widget? child) {
+  Widget builder(
+    BuildContext context,
+    AvailableCoursesViewModel viewModel,
+    Widget? child,
+  ) {
     return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: CustomAppBar(
+        title: 'Available Courses',
+        showSearchButton: true,
+        showNotificationButton: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () => _showFilterOptions(context, viewModel),
+          ),
+          IconButton(
+            icon: const Icon(Icons.book),
+            onPressed: viewModel.navigateToMyCourses,
+          ),
+        ],
+        onSearchTap: () => (),
+        onNotificationTap: () => (),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(context, viewModel),
+            if (viewModel.activeFilters.isNotEmpty)
+              _buildActiveFilters(viewModel),
             Expanded(
-              child: RefreshIndicator(
-                onRefresh: () async => viewModel.refreshCourses(),
-                child: _buildCoursesList(viewModel),
-              ),
+              child: viewModel.isBusy
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildCourseGrid(viewModel),
             ),
           ],
         ),
@@ -26,83 +54,63 @@ class AvailableCoursesView extends StackedView<AvailableCoursesViewModel> {
     );
   }
 
-  Widget _buildHeader(
-      BuildContext context, AvailableCoursesViewModel viewModel) {
+  Widget _buildActiveFilters(AvailableCoursesViewModel viewModel) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  onChanged: viewModel.onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: 'Search courses...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                  ),
-                ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: viewModel.activeFilters.map((filter) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Chip(
+                label: Text(filter),
+                onDeleted: () => viewModel.removeFilter(filter),
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.filter_list),
-                onPressed: () => _showFilterOptions(context, viewModel),
-              ),
-              IconButton(
-                icon: const Icon(Icons.book),
-                onPressed: viewModel.navigateToMyCourses,
-              ),
-            ],
-          ),
-          if (viewModel.activeFilters.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: SizedBox(
-                height: 32,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: viewModel.activeFilters.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Chip(
-                        label: Text(viewModel.activeFilters.toList()[index]),
-                        onDeleted: () => viewModel.removeFilter(
-                            viewModel.activeFilters.toList()[index]),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-        ],
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
-  Widget _buildCoursesList(AvailableCoursesViewModel viewModel) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      itemCount: viewModel.filteredCourses.length,
-      itemBuilder: (context, index) {
-        return CourseCard(course: viewModel.filteredCourses[index]);
-      },
+  Widget _buildCourseGrid(AvailableCoursesViewModel viewModel) {
+    return RefreshIndicator(
+      onRefresh: () async => viewModel.refreshCourses(),
+      child: LayoutBuilder(builder: (context, constraints) {
+        final double width = constraints.maxWidth;
+        final int crossAxisCount = width > 600 ? 3 : 2;
+        final double aspectRatio = width > 600 ? 0.9 : 0.9;
+
+        if (viewModel.filteredCourses.isEmpty) {
+          return const Center(
+            child: Text(
+              'No courses found',
+              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+            ),
+          );
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(12),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: aspectRatio,
+          ),
+          itemCount: viewModel.filteredCourses.length,
+          itemBuilder: (context, index) {
+            final course = viewModel.filteredCourses[index];
+            return CoursesListItem(
+              course: course,
+              viewModel: viewModel,
+              showControls: false, // Hide controls for learners
+              showStatus: false, // Add this to hide status badge
+            );
+          },
+        );
+      }),
     );
   }
 
@@ -141,117 +149,14 @@ class AvailableCoursesView extends StackedView<AvailableCoursesViewModel> {
   }
 
   @override
-  AvailableCoursesViewModel viewModelBuilder(BuildContext context) =>
-      AvailableCoursesViewModel();
-}
+  AvailableCoursesViewModel viewModelBuilder(BuildContext context) {
+    final apiService = locator<ApiService>();
+    final imageService = locator<ImageService>();
+    final courseService = CourseService(apiService, imageService);
 
-class CourseCard extends StatelessWidget {
-  final Course course;
-  const CourseCard({Key? key, required this.course}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 4,
-      shadowColor: Colors.black.withOpacity(0.2),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: SizedBox(
-        height: 140,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
-              ),
-              child: Image.asset(
-                course.thumbnailUrl,
-                width: 140,
-                height: 140,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      course.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 12,
-                          backgroundImage: AssetImage(course.instructorAvatar),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            course.instructorName,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[600],
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.star,
-                                color: Colors.amber, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              course.rating.toString(),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              ' (${course.reviewsCount})',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          course.price == 0 ? 'Free' : '\$${course.price}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return AvailableCoursesViewModel(
+      courseService: courseService,
+      imageService: imageService,
+    )..init(); // Initialize immediately
   }
 }

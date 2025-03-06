@@ -1,7 +1,9 @@
-import 'dart:io';
+import 'package:code_bolanon/ui/common/widgets/custom_image_field.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../app_colors.dart';
+import 'custom_text_field.dart';
 
 class CourseDialog extends StatefulWidget {
   final String title;
@@ -81,7 +83,8 @@ class _CourseDialogState extends State<CourseDialog>
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(Icons.school, color: AppColors.primary),
+                        child:
+                            const Icon(Icons.school, color: AppColors.primary),
                       ),
                       const SizedBox(width: 16),
                       Text(
@@ -199,97 +202,14 @@ class _CourseDialogState extends State<CourseDialog>
   }
 
   Widget _buildImageSection() {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Container(
-        height: 180,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[300]!),
-        ),
-        child: selectedImage != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Image.file(
-                        File(selectedImage!.path),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 12),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [
-                              Colors.black.withOpacity(0.7),
-                              Colors.transparent
-                            ],
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                selectedImage!.name,
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 12),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.edit,
-                                  color: Colors.white, size: 18),
-                              onPressed: _pickImage,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.image_outlined,
-                    size: 56,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Add course thumbnail',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Click to browse',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-      ),
+    return CustomImageField(
+      selectedImage: selectedImage,
+      onImageSelected: (image) {
+        setState(() {
+          selectedImage = image;
+        });
+      },
+      placeholder: 'Add course thumbnail',
     );
   }
 
@@ -302,36 +222,17 @@ class _CourseDialogState extends State<CourseDialog>
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
+    return CustomTextField(
       controller: controller,
+      labelText: labelText,
+      hintText: hintText,
+      prefixIcon: prefixIcon,
       maxLines: maxLines,
       keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        prefixIcon: Icon(prefixIcon, color: AppColors.primary.withOpacity(0.7)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
       validator: validator,
+      fillColor: Colors.grey[50],
+      borderColor: Colors.grey[300],
+      focusedBorderColor: AppColors.primary,
     );
   }
 

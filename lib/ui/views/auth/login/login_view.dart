@@ -1,10 +1,7 @@
 import 'package:code_bolanon/ui/common/widgets/custom_text_field.dart';
-import 'package:code_bolanon/ui/views/auth/widgets/social_button_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:stacked/stacked.dart';
 
-import '../widgets/divider_widget.dart';
 import 'login_viewmodel.dart';
 
 class LoginView extends StackedView<LoginViewModel> {
@@ -19,6 +16,7 @@ class LoginView extends StackedView<LoginViewModel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SizedBox(height: 10),
             CustomTextField(
               controller: viewModel.emailController,
               labelText: 'Enter your email',
@@ -29,6 +27,7 @@ class LoginView extends StackedView<LoginViewModel> {
                 }
                 return null;
               },
+              keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 16),
             CustomTextField(

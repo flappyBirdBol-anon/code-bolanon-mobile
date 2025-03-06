@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/widgets/custom_image_field.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_text_field.dart';
 import 'package:code_bolanon/ui/views/profile/profile_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -23,8 +24,11 @@ class _EditProfileModalState extends State<EditProfileModal> {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       contentPadding: const EdgeInsets.all(20),
-      content: SizedBox(
+      content: Container(
         width: 400,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -40,33 +44,39 @@ class _EditProfileModalState extends State<EditProfileModal> {
                     Center(
                       child: Stack(
                         children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.grey[200],
-                            backgroundImage: widget.viewModel
-                                    .formattedProfilePictureUrl.isNotEmpty
-                                ? NetworkImage(
-                                    widget.viewModel.formattedProfilePictureUrl)
-                                : null,
-                            child: widget.viewModel.formattedProfilePictureUrl
-                                    .isEmpty
-                                ? const Icon(Icons.person,
-                                    size: 50, color: Colors.grey)
-                                : null,
+                          CustomImageField(
+                            height: 100,
+                            width: 100,
+                            isCircular: true,
+                            imageUrl:
+                                widget.viewModel.formattedProfilePictureUrl,
+                            selectedImage:
+                                widget.viewModel.selectedProfileImage,
+                            placeholder: 'Add photo',
+                            onImageSelected: (image) {
+                              setState(() {
+                                widget.viewModel
+                                    .handleProfilePictureSelection(image);
+                              });
+                            },
                           ),
                           Positioned(
                             bottom: 0,
                             right: 0,
                             child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.blue,
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).primaryColor,
                                 shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
                               ),
                               child: const Icon(
-                                Icons.camera_alt,
+                                Icons.edit,
                                 color: Colors.white,
-                                size: 20,
+                                size: 14,
                               ),
                             ),
                           ),
@@ -78,12 +88,18 @@ class _EditProfileModalState extends State<EditProfileModal> {
                       controller: widget.viewModel.firstNameController,
                       labelText: 'First name',
                       prefixIcon: Icons.person,
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Please enter your first name'
+                          : null,
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(height: 16), // Add vertical spacing
                     CustomTextField(
                       controller: widget.viewModel.lastNameController,
                       labelText: 'Last name',
                       prefixIcon: Icons.person,
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Please enter your last name'
+                          : null,
                     ),
                     if (widget.viewModel.role == 'trainer')
                       _buildTrainerFields(widget.viewModel, context),
@@ -123,17 +139,22 @@ class _EditProfileModalState extends State<EditProfileModal> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         CustomTextField(
           controller: viewModel.organizationController,
           labelText: 'Organization',
           prefixIcon: Icons.school,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Please enter your organization' : null,
         ),
         const SizedBox(height: 16),
         CustomTextField(
           controller: viewModel.specializationController,
           labelText: 'Specialization',
           prefixIcon: Icons.work,
+          validator: (value) => value?.isEmpty ?? true
+              ? 'Please enter your specialization'
+              : null,
         ),
       ],
     );

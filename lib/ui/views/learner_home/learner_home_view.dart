@@ -1,4 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
@@ -221,8 +223,10 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
 
   Widget _buildTechStackSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 1500),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -304,123 +308,32 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
           ),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 280,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: viewModel.topRatedCourses.length,
-            itemBuilder: (context, index) {
-              final course = viewModel.topRatedCourses[index];
-              return _buildTopRatedCourseCard(course);
-            },
-          ),
-        ),
+        viewModel.isLoading
+            ? _buildHorizontalCardsShimmer()
+            : SizedBox(
+                height: 220, // Reduced from 280
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: viewModel.topRatedCourses.length,
+                  itemBuilder: (context, index) {
+                    final course = viewModel.topRatedCourses[index];
+                    return CustomCard(
+                      text: course.title,
+                      onPressed: () => (), // Fixed empty callback
+                      isHorizontalCard: true,
+                      width: 180, // Reduced from 200
+                      height: 200, // Adjusted to match container height
+                      imageUrl: course.imageUrl,
+                      lessons: course.totalLessons,
+                      rating: course.rating,
+                      reviews: course.reviews,
+                      price: '\$${course.price}',
+                      instructorName: course.instructorName,
+                    );
+                  },
+                ),
+              ),
       ],
-    );
-  }
-
-  Widget _buildTopRatedCourseCard(CourseModel course) {
-    return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: Image.asset(
-              course.imageUrl,
-              height: 120,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  course.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'By ${course.instructorName}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      course.rating.toString(),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      ' (${course.reviews})',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '\$${course.price}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.indigo,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.indigo.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${course.totalLessons} lessons',
-                        style: const TextStyle(
-                          color: Colors.indigo,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -441,24 +354,55 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
           style: TextStyle(color: Colors.grey[600], fontSize: 14),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 220,
-          child: CarouselSlider.builder(
-            itemCount: viewModel.topRatedCourses.length,
-            itemBuilder: (context, index, realIndex) {
-              final course = viewModel.topRatedCourses[index];
-              return _buildPopularCourseCard(course);
-            },
-            options: CarouselOptions(
-              height: 220,
-              viewportFraction: 0.85,
-              enlargeCenterPage: true,
-              enableInfiniteScroll: false,
-              padEnds: true,
-            ),
+        viewModel.isLoading
+            ? _buildPopularCoursesShimmer()
+            : SizedBox(
+                height: 220,
+                child: CarouselSlider.builder(
+                  itemCount: viewModel.topRatedCourses.length,
+                  itemBuilder: (context, index, realIndex) {
+                    final course = viewModel.topRatedCourses[index];
+                    return _buildPopularCourseCard(course);
+                  },
+                  options: CarouselOptions(
+                    height: 220,
+                    viewportFraction: 0.85,
+                    enlargeCenterPage: true,
+                    enableInfiniteScroll: false,
+                    padEnds: true,
+                  ),
+                ),
+              ),
+      ],
+    );
+  }
+
+  Widget _buildPopularCoursesShimmer() {
+    return SizedBox(
+      height: 220,
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: CarouselSlider.builder(
+          itemCount: 3,
+          itemBuilder: (context, index, realIndex) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            );
+          },
+          options: CarouselOptions(
+            height: 220,
+            viewportFraction: 0.85,
+            enlargeCenterPage: true,
+            enableInfiniteScroll: false,
+            padEnds: true,
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -635,7 +579,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
         ),
         const SizedBox(height: 16),
         viewModel.isLoading
-            ? _buildCoursesListSkeleton()
+            ? _buildVerticalListShimmer()
             : ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -734,158 +678,45 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
         ),
         const SizedBox(height: 16),
         viewModel.isLoading
-            ? _buildSessionsSkeleton()
+            ? _buildUpcomingSessionsShimmer()
             : ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: viewModel.upcomingSessions.length,
                 itemBuilder: (context, index) {
-                  final session = viewModel.upcomingSessions[index];
-                  return _buildSessionCard(session);
+                  final appointment = viewModel.upcomingSessions[index];
+                  return CustomAppointmentList(
+                    contextDetails: appointment.contextDetails,
+                    startAt: appointment.availability?.startAt ?? '',
+                    endAt: appointment.availability?.endAt ?? '',
+                    onTap: () =>
+                        viewModel.openSession(appointment.id.toString()),
+                    isTrainerView: false,
+                  );
                 },
               ),
       ],
     );
   }
 
-  Widget _buildSessionCard(SessionModel session) {
-    Color cardColor;
-    switch (session.type) {
-      case 'Live Class':
-        cardColor = Colors.indigo;
-        break;
-      case 'Workshop':
-        cardColor = Colors.teal;
-        break;
-      case 'Q&A':
-        cardColor = Colors.amber;
-        break;
-      default:
-        cardColor = Colors.purple;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [cardColor, cardColor.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: cardColor.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    session.type == 'Live Class'
-                        ? Icons.video_camera_front
-                        : session.type == 'Workshop'
-                            ? Icons.build
-                            : Icons.question_answer,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          session.type,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        session.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            color: Colors.white.withOpacity(0.9),
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            session.date,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Icon(
-                            Icons.access_time,
-                            color: Colors.white.withOpacity(0.9),
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            session.time,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward,
-                    color: Colors.white.withOpacity(0.9),
-                    size: 20,
-                  ),
-                ),
-              ],
+  Widget _buildUpcomingSessionsShimmer() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 2,
+        itemBuilder: (context, index) {
+          return Container(
+            height: 80,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -1021,8 +852,10 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
 
   Widget _buildCoursesCarouselSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 1500), // Added shimmer duration
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr, // Added direction
       child: CarouselSlider(
         options: CarouselOptions(
           height: 180,
@@ -1046,8 +879,10 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
 
   Widget _buildCoursesListSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 1500),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
       child: ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -1068,8 +903,10 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
 
   Widget _buildSessionsSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 1500),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
       child: ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -1335,175 +1172,77 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
           style: TextStyle(color: Colors.grey[600], fontSize: 14),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 320,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: viewModel.recommendedCourses.length,
-            itemBuilder: (context, index) {
-              final course = viewModel.recommendedCourses[index];
-              return ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 280),
-                child: _buildRecommendedCourseCard(course),
-              );
-            },
-          ),
-        ),
+        viewModel.isLoading
+            ? _buildHorizontalCardsShimmer()
+            : SizedBox(
+                height: 220, // Reduced from 320
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: viewModel.recommendedCourses.length,
+                  itemBuilder: (context, index) {
+                    final course = viewModel.recommendedCourses[index];
+                    return CustomCard(
+                      text: course.title,
+                      onPressed: () => (), // Fixed empty callback
+                      isHorizontalCard: true,
+                      width: 220, // Reduced from 280
+                      height: 220, // Adjusted to match container height
+                      imageUrl: course.imageUrl,
+                      lessons: course.totalLessons,
+                      rating: course.rating,
+                      reviews: course.reviews,
+                      price: '\$${course.price}',
+                      instructorName: course.instructorName,
+                    );
+                  },
+                ),
+              ),
       ],
     );
   }
 
-  Widget _buildRecommendedCourseCard(CourseModel course) {
-    return Container(
-      width: 280,
-      margin: const EdgeInsets.only(right: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+  Widget _buildHorizontalCardsShimmer() {
+    return SizedBox(
+      height: 220,
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: 3,
+          itemBuilder: (context, index) {
+            return Container(
+              margin: const EdgeInsets.only(right: 16),
+              width: 220,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            );
+          },
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.asset(
-                  course.imageUrl,
-                  height: 160,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        course.rating.toString(),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: course.tags.map((tag) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.indigo.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        tag,
-                        style: const TextStyle(
-                          color: Colors.indigo,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  course.title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 16,
-                      backgroundImage: AssetImage('assets/images/profile.jpg'),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            course.instructorName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            'Instructor',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.indigo,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '\$${course.price}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+    );
+  }
+
+  Widget _buildVerticalListShimmer() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return Container(
+            height: 100,
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

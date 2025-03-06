@@ -1,12 +1,17 @@
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:code_bolanon/ui/common/utils/tech_stack_colors.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_list_item.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_stack_chip.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:code_bolanon/ui/views/trainer_home/trainer_home_viewmodel.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:stacked/stacked.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:stacked/stacked.dart';
 
 class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
   const TrainerHomeView({Key? key}) : super(key: key);
@@ -78,8 +83,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                       _buildCodeChallenges(
                           theme, headingStyle, bodyStyle, codeStyle, viewModel),
                       const SizedBox(height: 32),
-                      _buildUpcomingSessions(
-                          viewModel, theme, headingStyle, bodyStyle),
+                      _buildUpcomingSessions(viewModel),
                       const SizedBox(height: 32),
                       _buildRecentActivity(
                           viewModel, theme, headingStyle, bodyStyle),
@@ -463,7 +467,8 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: isDark ? Color(0xFF0F172A) : Colors.grey[100],
+                        color:
+                            isDark ? const Color(0xFF0F172A) : Colors.grey[100],
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -487,7 +492,9 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: isDark ? Color(0xFF1E293B) : Colors.white,
+                              color: isDark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white,
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
@@ -553,7 +560,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                               color: isSelected
                                   ? theme.primaryColor
                                   : isDark
-                                      ? Color(0xFF0F172A)
+                                      ? const Color(0xFF0F172A)
                                       : Colors.grey[100],
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
@@ -655,9 +662,12 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
           const SizedBox(height: 6),
           value == null
               ? Shimmer.fromColors(
+                  period: const Duration(milliseconds: 2000),
                   baseColor: isDark ? Colors.grey[700]! : Colors.grey[300]!,
                   highlightColor:
                       isDark ? Colors.grey[600]! : Colors.grey[100]!,
+                  direction: ShimmerDirection.ltr,
+                  enabled: true,
                   child: Container(
                     width: 50,
                     height: 18,
@@ -757,8 +767,11 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
 
   Widget _buildProgressSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 2000), // Increased duration
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr, // Added direction
+      enabled: true, // Explicitly enable shimmer
       child: Column(
         children: List.generate(
           3,
@@ -877,81 +890,26 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
   Widget _buildLanguageChip(
       String language, ThemeData theme, TextStyle codeStyle) {
     final isDark = theme.brightness == Brightness.dark;
+    final color = TechStackColors.getColorForTech(language, theme);
 
-    // Language-specific colors
-    final Map<String, Color> languageColors = {
-      'JavaScript': Colors.yellow[700]!,
-      'Python': Colors.blue[700]!,
-      'Java': Colors.orange[800]!,
-      'Ruby': Colors.red[700]!,
-      'C#': Colors.purple[700]!,
-      'PHP': Colors.indigo[600]!,
-      'Swift': Colors.orange[600]!,
-      'Kotlin': Colors.purple[600]!,
-      'Go': Colors.cyan[700]!,
-      'TypeScript': Colors.blue[600]!,
-      'C++': Colors.blue[800]!,
-      'Rust': Colors.deepOrange[800]!,
-      'Development': Colors.teal[700]!,
-      'Design': Colors.pink[600]!,
-      'Tech': Colors.indigo[500]!,
-      'Marketing': Colors.green[700]!,
-      'Business': Colors.amber[800]!,
-      'Sports': Colors.lightBlue[700]!,
-      'IT Software': Colors.deepPurple[600]!,
-    };
-
-    final color = languageColors[language] ?? theme.primaryColor;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark ? color.withOpacity(0.2) : color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: color.withOpacity(isDark ? 0.5 : 0.3),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.1),
-                offset: const Offset(0, 2),
-                blurRadius: 4,
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.code,
-                size: 16,
-                color: isDark ? color.withOpacity(0.9) : color,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                language,
-                style: codeStyle.copyWith(
-                  color: isDark ? color.withOpacity(0.9) : color,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return CustomStackChip(
+      label: language,
+      selected: true,
+      isDark: isDark,
+      icon: Icons.code,
+      color: color,
+      textStyle: codeStyle,
+      onTap: () {},
     );
   }
 
   Widget _buildTopicsSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 2000),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
+      enabled: true,
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -1056,8 +1014,11 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
 
   Widget _buildChallengesSkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 2000),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
+      enabled: true,
       child: Column(
         children: List.generate(
           3,
@@ -1192,7 +1153,13 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
   Widget _buildFeatureCourses(
       TrainerHomeViewModel viewModel, ThemeData theme, TextStyle bodyStyle) {
     if (viewModel.isLoading) {
-      return _buildCoursesCarouselSkeleton();
+      return CustomCard(
+        text: '',
+        onPressed: () {},
+        isHorizontalCard: true,
+        isLoading: true,
+        itemCount: 3,
+      );
     }
 
     final isDark = theme.brightness == Brightness.dark;
@@ -1210,152 +1177,25 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
           builder: (BuildContext context) {
             return GestureDetector(
               onTap: () => viewModel.openCourse(course.id),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 6.0),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      offset: const Offset(0, 4),
-                      blurRadius: 8,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12),
-                          ),
-                          child: Image.asset(
-                            course.imageUrl,
-                            height: 120,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Positioned(
-                          top: 10,
-                          left: 10,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.7),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.play_circle_outline,
-                                  color: Colors.white,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "${course.lessons} Lessons",
-                                  style: bodyStyle.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            course.title,
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Text(
-                                '\$${course.price}',
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.primaryColor,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const Spacer(),
-                              const Icon(
-                                Icons.star,
-                                color: Colors.amber,
-                                size: 15,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${course.rating}',
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                ' (${course.reviews})',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              child: CustomCard(
+                text: course.title,
+                onPressed: () => viewModel.openCourse(course.id),
+                isHorizontalCard: true,
+                isLoading: false,
+                backgroundColor: cardColor,
+                height: 200,
+                width: 260,
+                imageUrl: course.imageUrl,
+                lessons: course.lessons,
+                rating: course.rating,
+                reviews: course.reviews,
+                price: '\$${course.price}',
+                instructorName: 'Sample',
               ),
             );
           },
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildCoursesCarouselSkeleton() {
-    return SizedBox(
-      height: 200,
-      child: Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: 3,
-          itemBuilder: (context, index) {
-            return Container(
-              width: 260,
-              margin: const EdgeInsets.only(right: 12.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-            );
-          },
-        ),
-      ),
     );
   }
 
@@ -1382,66 +1222,42 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
               ),
             ],
           ),
-          child: viewModel.isLoading
-              ? _buildActivitySkeleton()
-              : ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: viewModel.recentActivities.length,
-                  separatorBuilder: (context, index) => Divider(
-                    height: 1,
-                    color: isDark ? Colors.grey[700] : Colors.grey[200],
-                    indent: 60,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: viewModel.isLoading
+                ? ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 3,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      return CustomListItem(
+                        text: '',
+                        onPressed: () {},
+                        isLoading: true,
+                        useTileStyle: true,
+                      );
+                    },
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: viewModel.recentActivities.length,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final activity = viewModel.recentActivities[index];
+                      return CustomListItem(
+                        text: activity.title,
+                        subtitle: activity.timestamp,
+                        leadingIcon: activity.icon,
+                        onPressed: () => viewModel.openActivity(activity.id),
+                        useTileStyle: true,
+                      );
+                    },
                   ),
-                  itemBuilder: (context, index) {
-                    final activity = viewModel.recentActivities[index];
-                    return ListTile(
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.primaryColor.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          activity.icon,
-                          color: theme.primaryColor,
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(
-                        activity.title,
-                        style: bodyStyle.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      subtitle: Text(
-                        activity.timestamp,
-                        style: bodyStyle.copyWith(
-                          fontSize: 12,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                      ),
-                      trailing: Container(
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[800] : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.chevron_right,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
-                            size: 20,
-                          ),
-                          constraints: const BoxConstraints(),
-                          padding: const EdgeInsets.all(8),
-                          onPressed: () => viewModel.openActivity(activity.id),
-                        ),
-                      ),
-                      onTap: () => viewModel.openActivity(activity.id),
-                    );
-                  },
-                ),
+          ),
         ),
       ],
     );
@@ -1449,8 +1265,11 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
 
   Widget _buildActivitySkeleton() {
     return Shimmer.fromColors(
+      period: const Duration(milliseconds: 2000),
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
+      enabled: true,
       child: ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -1511,190 +1330,49 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     );
   }
 
-  Widget _buildUpcomingSessions(TrainerHomeViewModel viewModel, ThemeData theme,
-      TextStyle headingStyle, TextStyle bodyStyle) {
-    final isDark = theme.brightness == Brightness.dark;
-
+  Widget _buildUpcomingSessions(TrainerHomeViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Upcoming Sessions", style: headingStyle),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF312E81) : const Color(0xFFE0E7FF),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.indigo.withOpacity(isDark ? 0.3 : 0.2),
-                offset: const Offset(0, 4),
-                blurRadius: 12,
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.15)
-                          : Colors.white.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          offset: const Offset(0, 2),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.video_camera_front_outlined,
-                      color: isDark ? Colors.white : Colors.indigo[700],
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Advanced JavaScript Workshop',
-                          style: GoogleFonts.inter(
-                            color: isDark ? Colors.white : Colors.indigo[800],
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Today at 2:00 PM • 90 minutes',
-                          style: GoogleFonts.inter(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.8)
-                                : Colors.indigo[700],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  _buildAttendeeIndicator(),
-                  const SizedBox(width: 8),
-                  Text(
-                    '24 students enrolled',
-                    style: bodyStyle.copyWith(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.8)
-                          : Colors.indigo[700],
-                      fontSize: 13,
-                    ),
-                  ),
-                  const Spacer(),
-                  ElevatedButton(
-                    onPressed: () => viewModel.startSession(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          isDark ? Colors.white.withOpacity(0.2) : Colors.white,
-                      foregroundColor:
-                          isDark ? Colors.white : Colors.indigo[700],
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      'Start Session',
-                      style: bodyStyle.copyWith(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+        const Text(
+          "Upcoming Sessions",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
-              width: 1,
-            ),
-          ),
-          child: InkWell(
-            onTap: () => viewModel.openReviewSession(),
-            borderRadius: BorderRadius.circular(12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[800] : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.event_note_outlined,
-                    color: isDark ? Colors.grey[400] : Colors.grey[700],
-                    size: 24,
-                  ),
+        viewModel.isLoading
+            ? ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 2,
+                itemBuilder: (context, index) => CustomAppointmentList(
+                  contextDetails: 'Flutter Debugging',
+                  startAt: 'Today at 3:00 PM',
+                  endAt: '4:00 PM',
+                  studentsEnrolled: 5,
+                  onTap: () {}, // Fixed null callback
+                  isLoading: true,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Code Review Session',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tomorrow at 10:00 AM',
-                        style: GoogleFonts.inter(
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[800] : Colors.grey[200],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: isDark ? Colors.grey[400] : Colors.grey[700],
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+              )
+            : ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: viewModel.upcomingAppointments.length,
+                itemBuilder: (context, index) {
+                  final appointment = viewModel.upcomingAppointments[index];
+                  return CustomAppointmentList(
+                    contextDetails: appointment.contextDetails,
+                    startAt: appointment.availability?.startAt ?? '',
+                    endAt: appointment.availability?.endAt ?? '',
+                    studentsEnrolled: 23, // Get actual data from your model
+                    isTrainerView: true, // Specify trainer view
+                    onTap: () =>
+                        viewModel.openSession(appointment.id.toString()),
+                  );
+                },
+              ),
       ],
     );
   }

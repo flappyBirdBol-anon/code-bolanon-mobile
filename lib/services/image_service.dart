@@ -1,12 +1,11 @@
 // lib/services/image_service.dart
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 class ImageService {
@@ -76,8 +75,8 @@ class ImageService {
       final futures = <Future>[];
 
       for (final course in courses) {
-        if (course.thumbnail != null && course.thumbnail!.isNotEmpty) {
-          final imageUrl = getCourseThumbnailFromPath(course.thumbnail!);
+        if (course.thumbnail.isNotEmpty) {
+          final imageUrl = getCourseThumbnailFromPath(course.thumbnail);
           futures.add(prefetchImage(imageUrl, courseId: course.id));
         }
       }
@@ -141,9 +140,9 @@ class ImageService {
 
   /// Handles caching for a newly created or updated course
   Future<void> handleCourseCacheUpdate(Course course) async {
-    if (course.thumbnail == null || course.thumbnail!.isEmpty) return;
+    if (course.thumbnail.isEmpty) return;
 
-    final imageUrl = getCourseThumbnailFromPath(course.thumbnail!);
+    final imageUrl = getCourseThumbnailFromPath(course.thumbnail);
 
     // Force refresh the cache for this course
     await _cacheManager.removeFile(imageUrl);
@@ -155,9 +154,9 @@ class ImageService {
 
   /// Gets cached image bytes for a course
   Future<Uint8List?> getCourseImageBytes(Course course) async {
-    if (course.thumbnail == null || course.thumbnail!.isEmpty) return null;
+    if (course.thumbnail.isEmpty) return null;
 
-    final imageUrl = getCourseThumbnailFromPath(course.thumbnail!);
+    final imageUrl = getCourseThumbnailFromPath(course.thumbnail);
     final cacheKey = 'course_${course.id}_image';
 
     // Check memory cache first
@@ -250,7 +249,7 @@ class ImageService {
                 child: SizedBox(
                   width: width != null ? width * 0.3 : 30,
                   height: width != null ? width * 0.3 : 30,
-                  child: CircularProgressIndicator(),
+                  child: const CircularProgressIndicator(),
                 ),
               );
         } else if (snapshot.hasError || !snapshot.hasData) {

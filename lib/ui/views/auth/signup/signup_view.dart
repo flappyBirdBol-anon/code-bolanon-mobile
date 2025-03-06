@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/widgets/custom_stack_chip.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_text_field.dart';
 import 'package:code_bolanon/ui/common/widgets/password_validation_list.dart';
 import 'package:flutter/gestures.dart';
@@ -18,7 +19,7 @@ class SignupView extends StackedView<SignupViewModel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
             _buildCommonFields(viewModel, context),
             const SizedBox(height: 16),
             if (viewModel.selectedRole == 'trainer')
@@ -39,19 +40,23 @@ class SignupView extends StackedView<SignupViewModel> {
           children: [
             Expanded(
               child: CustomTextField(
-                controller: viewModel
-                    .firstNameController, // You'll need to add this controller
+                controller: viewModel.firstNameController,
                 labelText: 'First name',
                 prefixIcon: Icons.person,
+                validator: (value) => value?.isEmpty ?? true
+                    ? 'Please enter your first name'
+                    : null,
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: CustomTextField(
-                controller: viewModel
-                    .lastNameController, // You'll need to add this controller
+                controller: viewModel.lastNameController,
                 labelText: 'Last name',
                 prefixIcon: Icons.person,
+                validator: (value) => value?.isEmpty ?? true
+                    ? 'Please enter your last name'
+                    : null,
               ),
             ),
           ],
@@ -61,6 +66,9 @@ class SignupView extends StackedView<SignupViewModel> {
           controller: viewModel.emailController,
           labelText: 'Enter your email',
           prefixIcon: Icons.email,
+          keyboardType: TextInputType.emailAddress,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Please enter your email' : null,
         ),
         const SizedBox(height: 16),
         CustomTextField(
@@ -126,10 +134,6 @@ class SignupView extends StackedView<SignupViewModel> {
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          // decoration: BoxDecoration(
-          //   borderRadius: BorderRadius.circular(12),
-          //   // border: Border.all(color: const Color.fromARGB(255, 255, 255, 255)),
-          // ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -146,39 +150,15 @@ class SignupView extends StackedView<SignupViewModel> {
               ],
               Wrap(
                 spacing: 8.0,
-                runSpacing: 4.0,
+                runSpacing: 8.0,
                 children: [
                   for (String stack in viewModel.availableTechStacks)
-                    FilterChip(
-                      label: Text(stack),
+                    CustomStackChip(
+                      label: stack,
                       selected: viewModel.selectedTechStacks.contains(stack),
-                      onSelected: (bool selected) {
-                        viewModel.toggleTechStack(stack);
-                      },
-                      selectedColor:
-                          Theme.of(context).primaryColor.withOpacity(0.2),
-                      checkmarkColor: Theme.of(context).primaryColor,
-                      labelStyle: TextStyle(
-                        fontWeight: viewModel.selectedTechStacks.contains(stack)
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                        color: viewModel.selectedTechStacks.contains(stack)
-                            ? Theme.of(context).primaryColor
-                            : Colors.black87,
-                      ),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      elevation: 1.5,
-                      pressElevation: 2.5,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(
-                          color: viewModel.selectedTechStacks.contains(stack)
-                              ? Theme.of(context).primaryColor
-                              : Colors.grey.shade400,
-                        ),
-                      ),
+                      onTap: () => viewModel.toggleTechStack(stack),
+                      icon: Icons.code,
+                      isOutlined: true,
                     ),
                 ],
               ),
@@ -205,12 +185,17 @@ class SignupView extends StackedView<SignupViewModel> {
           controller: viewModel.organizationController,
           labelText: 'Organization',
           prefixIcon: Icons.school,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Please enter your organization' : null,
         ),
         const SizedBox(height: 16),
         CustomTextField(
           controller: viewModel.specializationController,
           labelText: 'Specialization',
           prefixIcon: Icons.work,
+          validator: (value) => value?.isEmpty ?? true
+              ? 'Please enter your specialization'
+              : null,
         ),
         const SizedBox(height: 24),
       ],

@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
@@ -14,30 +15,10 @@ class MenuView extends StackedView<MenuViewModel> {
   ) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        elevation: 0,
+      appBar: const CustomAppBar(
+        title: 'Menu',
+        showNotificationButton: true,
         backgroundColor: Colors.white,
-        title: const Text(
-          'Menu',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications,
-                color: Colors.black), // Notification icon
-            onPressed: () {
-              // Handle notification icon tap
-              print('Notification icon tapped!');
-            },
-          ),
-          const SizedBox(
-              width:
-                  20), // Optional: Add some space between the icon and the edge
-        ],
       ),
       body: ListView(
         children: [
