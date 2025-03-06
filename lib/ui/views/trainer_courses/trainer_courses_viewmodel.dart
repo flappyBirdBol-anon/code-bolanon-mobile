@@ -183,7 +183,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
       final newCourse = await _courseService.addCourse(
         title: title,
         description: description,
-        price: price.toInt(),
+        price: price.toDouble(),
         image: image,
       );
 
@@ -208,7 +208,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
           isActive: true,
           studentsEnrolled: 0,
           rating: 0,
-          price: price.toInt(),
+          price: price.toDouble(),
         );
 
         _courses.add(newCourse);
@@ -264,7 +264,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
           isActive: course.isActive,
           studentsEnrolled: course.studentsEnrolled,
           rating: course.rating,
-          price: (price ?? course.price).toInt(),
+          price: (price ?? course.price).toDouble(),
         );
       }
     } finally {

@@ -43,7 +43,10 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => viewModel.showAddCourseDialog(context),
         backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -126,7 +129,7 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
     // In a real app, you would use a proper DI framework
     final apiService = locator<ApiService>();
     final imageService = locator<ImageService>();
-    final courseService = CourseService(apiService, imageService);
+    final courseService = CourseService();
 
     return TrainerCoursesViewModel(
       courseService: courseService,

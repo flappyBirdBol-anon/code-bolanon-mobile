@@ -1172,7 +1172,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
         enableInfiniteScroll: false,
         padEnds: false,
       ),
-      items: viewModel.featureCourses.map((course) {
+      items: viewModel.courseList.map((course) {
         return Builder(
           builder: (BuildContext context) {
             return GestureDetector(
@@ -1430,7 +1430,35 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     );
   }
 
+  Widget _buildCourseImage(TrainerHomeViewModel viewModel, Course course) {
+    return viewModel.getCourseImageWidget(
+      course: course,
+      fit: BoxFit.cover,
+      placeholder: Container(
+        color: Colors.grey[200],
+        child: const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+          ),
+        ),
+      ),
+      errorWidget: Container(
+        color: Colors.grey[300],
+        child: const Center(
+          child: Icon(
+            Icons.image_not_supported,
+            size: 40,
+            color: Colors.grey,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   TrainerHomeViewModel viewModelBuilder(BuildContext context) =>
       TrainerHomeViewModel();
+
+  @override
+  void onViewModelReady(TrainerHomeViewModel viewModel) => viewModel.init();
 }

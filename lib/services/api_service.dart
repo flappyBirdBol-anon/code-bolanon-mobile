@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 
 class ApiService {
   static ApiService? _instance;
@@ -166,6 +167,69 @@ class ApiService {
             contentType: _getContentType(fileName),
           ),
         ));
+      }
+
+      // If method spoofing is needed (for PUT/PATCH/DELETE with file uploads)
+      if (method != 'POST' && !fields.containsKey('_method')) {
+        formData.fields.add(MapEntry('_method', method));
+      }
+
+      final response = await _dio.post(
+        path,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+          method: 'POST', // Always use POST for multipart
+        ),
+      );
+
+      return response;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Response> uploadLessonFile(
+    String path, {
+    required Map<String, dynamic> fields,
+    required Map<String, PlatformFile> files,
+    String method = 'POST',
+  }) async {
+    try {
+      // Create form data
+      FormData formData = FormData();
+
+      // Add all text fields
+      fields.forEach((key, value) {
+        formData.fields.add(MapEntry(key, value.toString()));
+      });
+
+      // Add all files
+      for (var entry in files.entries) {
+        String fileName = entry.value.name;
+
+        // Check if the file has bytes or a path
+        if (entry.value.bytes != null) {
+          // Use bytes if available
+          formData.files.add(MapEntry(
+            entry.key,
+            MultipartFile.fromBytes(
+              entry.value.bytes!,
+              filename: fileName,
+              contentType: _getContentType(fileName),
+            ),
+          ));
+        } else if (entry.value.path != null) {
+          // Use path as fallback
+          formData.files.add(MapEntry(
+            entry.key,
+            await MultipartFile.fromFile(
+              entry.value.path!,
+              filename: fileName,
+              contentType: _getContentType(fileName),
+            ),
+          ));
+        }
       }
 
       // If method spoofing is needed (for PUT/PATCH/DELETE with file uploads)

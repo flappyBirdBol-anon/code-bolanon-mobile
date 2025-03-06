@@ -1,9 +1,14 @@
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/auth_service.dart';
+import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/theme_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/bottom_sheets/notice/notice_sheet.dart';
+import 'package:code_bolanon/ui/dialogs/basic/basic_dialog.dart';
+import 'package:code_bolanon/ui/dialogs/error/error_dialog.dart';
 import 'package:code_bolanon/ui/dialogs/info_alert/info_alert_dialog.dart';
+import 'package:code_bolanon/ui/dialogs/success/success_dialog.dart';
+import 'package:code_bolanon/ui/dialogs/warning/warning_dialog.dart';
 import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart';
 import 'package:code_bolanon/ui/views/auth/auth_view.dart';
 import 'package:code_bolanon/ui/views/available_courses/available_courses_view.dart';
@@ -20,6 +25,9 @@ import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/ui/views/lesson_details/lesson_details_view.dart';
+import 'package:code_bolanon/ui/views/lessons_full/lessons_full_view.dart';
+import 'package:code_bolanon/services/file_service.dart';
 // @stacked-import
 
 @StackedApp(
@@ -36,6 +44,8 @@ import 'package:code_bolanon/services/image_service.dart';
     MaterialRoute(page: CourseDetailsView),
     MaterialRoute(page: AddLessonView),
     MaterialRoute(page: AvailableCoursesView),
+    MaterialRoute(page: LessonDetailsView),
+    MaterialRoute(page: LessonsFullView),
 // @stacked-route
   ],
   dependencies: [
@@ -49,6 +59,9 @@ import 'package:code_bolanon/services/image_service.dart';
     LazySingleton(classType: CourseService),
     LazySingleton(classType: ImageService),
     LazySingleton(classType: UserService),
+    LazySingleton(classType: LessonsService),
+
+    LazySingleton(classType: FileService),
 // @stacked-service
   ],
   bottomsheets: [
@@ -57,6 +70,10 @@ import 'package:code_bolanon/services/image_service.dart';
   ],
   dialogs: [
     StackedDialog(classType: InfoAlertDialog),
+    StackedDialog(classType: BasicDialog),
+    StackedDialog(classType: SuccessDialog),
+    StackedDialog(classType: ErrorDialog),
+    StackedDialog(classType: WarningDialog),
     // @stacked-dialog
   ],
 )

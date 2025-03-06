@@ -1,6 +1,7 @@
 // lib/services/image_service.dart
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:code_bolanon/app/app.locator.dart';
 
 import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/services/api_service.dart';
@@ -9,9 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 class ImageService {
-  final String _baseUrl;
+  final String baseUrl;
   final Dio dio;
-  final ApiService _apiService;
+  final ApiService apiService;
 
   // Memory cache for faster access to frequently used images
   final Map<String, Uint8List> _memoryCache = {};
@@ -27,14 +28,13 @@ class ImageService {
   bool _isBatchCaching = false;
 
   ImageService({
-    required String baseUrl,
-    required ApiService apiService,
-    required Dio dioo,
+    this.baseUrl = 'http://143.198.197.240/api',
+    ApiService? apiService,
+    Dio? dioo,
     this.enableCache = true,
-    this.cacheDuration = const Duration(days: 7),
-  })  : _baseUrl = baseUrl,
-        _apiService = apiService,
-        dio = dioo;
+    this.cacheDuration = const Duration(hours: 12),
+  })  : apiService = apiService ?? locator<ApiService>(),
+        dio = dioo ?? locator<ApiService>().dio;
 
   /// Constructs the full image URL from a relative path
   String getImageUrl(String imagePath) {
@@ -44,7 +44,7 @@ class ImageService {
     // Ensure path has no leading slash
     final cleanPath =
         imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
-    return '$_baseUrl/$cleanPath';
+    return '$baseUrl/$cleanPath';
   }
 
   /// Gets the course thumbnail URL from a path
@@ -56,12 +56,12 @@ class ImageService {
     final cleanPath = thumbnailPath.startsWith('/')
         ? thumbnailPath.substring(1)
         : thumbnailPath;
-    return '$_baseUrl/$cleanPath';
+    return '$baseUrl/$cleanPath';
   }
 
   /// Gets the course thumbnail URL by course ID
   String getCourseThumbnailUrl(String courseId) {
-    return '$_baseUrl/course-thumbnail/$courseId';
+    return '$baseUrl/course-thumbnail/$courseId';
   }
 
   /// Prefetches and caches images for a list of courses
@@ -114,10 +114,10 @@ class ImageService {
       }
 
       // Fetch the image with authentication
-      final response = await _apiService.dio.get(
+      final response = await apiService.dio.get(
         imageUrl,
         options: Options(
-          headers: _apiService.dio.options.headers,
+          headers: apiService.dio.options.headers,
           responseType: ResponseType.bytes,
         ),
       );
@@ -194,10 +194,10 @@ class ImageService {
       }
 
       // If not cached, download and cache
-      final response = await _apiService.dio.get(
+      final response = await apiService.dio.get(
         imageUrl,
         options: Options(
-          headers: _apiService.dio.options.headers,
+          headers: apiService.dio.options.headers,
           responseType: ResponseType.bytes,
         ),
       );
