@@ -1,13 +1,12 @@
-import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/models/course_model.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:lottie/lottie.dart'; // Add this package for animations
 
 import 'add_lesson_viewmodel.dart';
 
 class AddLessonView extends StackedView<AddLessonViewModel> {
-  final Course? course;
+  final CourseModel? course;
   const AddLessonView({Key? key, this.course}) : super(key: key);
 
   @override
@@ -347,7 +346,7 @@ class AddLessonView extends StackedView<AddLessonViewModel> {
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(

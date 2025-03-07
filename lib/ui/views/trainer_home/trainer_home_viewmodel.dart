@@ -2,7 +2,6 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
-import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
@@ -70,8 +69,8 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     'IT Software',
   ];
 
-  List<Course> _courses = [];
-  List<Course> get courseList => _courses;
+  List<CourseModel> _courses = [];
+  List<CourseModel> get courseList => _courses;
 
   // List<CourseModel> featureCourses = [
   //   CourseModel(
@@ -157,7 +156,7 @@ class TrainerHomeViewModel extends AppBaseViewModel {
 
   // Get a widget to display a course image
   Widget getCourseImageWidget({
-    required Course course,
+    required CourseModel course,
     double? width,
     double? height,
     BoxFit fit = BoxFit.cover,
@@ -165,9 +164,9 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     Widget? errorWidget,
   }) {
     // Handle local assets differently
-    if (course.thumbnail != null && course.thumbnail!.startsWith('assets/')) {
+    if (course.thumbnail.startsWith('assets/')) {
       return Image.asset(
-        course.thumbnail!,
+        course.thumbnail,
         width: width,
         height: height,
         fit: fit,
@@ -178,9 +177,9 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     }
 
     // If it's a remote image, use the ImageService
-    if (course.thumbnail != null && course.thumbnail!.isNotEmpty) {
+    if (course.thumbnail.isNotEmpty) {
       final imageUrl =
-          _imageService.getCourseThumbnailFromPath(course.thumbnail!);
+          _imageService.getCourseThumbnailFromPath(course.thumbnail);
 
       return _imageService.loadImage(
         imageUrl: imageUrl,

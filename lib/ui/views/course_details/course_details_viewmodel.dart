@@ -1,7 +1,7 @@
 // lib/views/course_details/course_details_viewmodel.dart
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
-import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
 
 import 'package:code_bolanon/services/image_service.dart';
@@ -33,10 +33,11 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   String get userName => _userService.currentUser?.fullName ?? 'User';
   bool _isLoading = true;
   bool get isLoading => _isLoading;
+  @override
   notifyListeners();
   // Reference to the course
-  Course? _course;
-  Course? get course => _course;
+  CourseModel? _course;
+  CourseModel? get course => _course;
 
   // Lessons for the course
   List<Lesson> _lessons = [];
@@ -46,11 +47,11 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   bool _showAllLessons = false;
   bool get showAllLessons => _showAllLessons;
   // Initialize with a course
-  Future<void> initialize(Course? course) async {
+  Future<void> initialize(CourseModel? course) async {
     _course = course;
     setBusy(true);
 
-    if (_course != null && _course!.thumbnail != null) {
+    if (_course != null) {
       // Prefetch the course image to ensure it's cached
       final imageUrl =
           _imageService.getCourseThumbnailFromPath(_course!.thumbnail);
@@ -94,12 +95,12 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     Widget? placeholder,
     Widget? errorWidget,
   }) {
-    if (_course == null || _course!.thumbnail == null) {
+    if (_course == null) {
       return errorWidget ?? _buildDefaultErrorWidget(width, height);
     }
 
     // Handle local assets differently
-    if (_course!.thumbnail!.startsWith('assets/')) {
+    if (_course!.thumbnail.startsWith('assets/')) {
       return Image.asset(
         _course!.thumbnail,
         width: width,
@@ -149,8 +150,8 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     notifyListeners();
   }
 
-  void navigateToAddLesson(Course course) {
-    _navigationService.navigateToAddLessonView(course: course);
+  void navigateToAddLesson(CourseModel course) {
+    _navigationService.navigateTo(Routes.addLessonView, arguments: course);
   }
 
   void navigateToLessonsFullView() {

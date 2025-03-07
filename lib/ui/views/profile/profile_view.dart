@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_stack_chip.dart';
 import 'package:flutter/material.dart';
@@ -20,11 +21,9 @@ class ProfileView extends StackedView<ProfileViewModel> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8F9FA),
-      appBar: CustomAppBar(
+      backgroundColor: isDark ? const Color(0xFF0F172A) : AppColors.background,
+      appBar: const CustomAppBar(
         title: 'Profile',
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       ),
       body: RefreshIndicator(
         color: theme.primaryColor,

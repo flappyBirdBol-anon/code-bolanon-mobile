@@ -1,9 +1,9 @@
 // lib/services/image_service.dart
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:code_bolanon/app/app.locator.dart';
 
-import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -65,7 +65,7 @@ class ImageService {
   }
 
   /// Prefetches and caches images for a list of courses
-  Future<void> prefetchCourseImages(List<Course> courses) async {
+  Future<void> prefetchCourseImages(List<CourseModel> courses) async {
     if (!enableCache || courses.isEmpty) return;
 
     try {
@@ -139,7 +139,7 @@ class ImageService {
   }
 
   /// Handles caching for a newly created or updated course
-  Future<void> handleCourseCacheUpdate(Course course) async {
+  Future<void> handleCourseCacheUpdate(CourseModel course) async {
     if (course.thumbnail.isEmpty) return;
 
     final imageUrl = getCourseThumbnailFromPath(course.thumbnail);
@@ -153,7 +153,7 @@ class ImageService {
   }
 
   /// Gets cached image bytes for a course
-  Future<Uint8List?> getCourseImageBytes(Course course) async {
+  Future<Uint8List?> getCourseImageBytes(CourseModel course) async {
     if (course.thumbnail.isEmpty) return null;
 
     final imageUrl = getCourseThumbnailFromPath(course.thumbnail);

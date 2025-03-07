@@ -1,4 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:code_bolanon/ui/common/app_colors.dart';
+import 'package:code_bolanon/ui/common/widgets/course_list_progress.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
     Widget? child,
   ) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async => viewModel.refreshData(),
@@ -36,7 +39,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                   const SizedBox(height: 24),
                   _buildTopRatedCourses(viewModel),
                   const SizedBox(height: 24),
-                  _buildRecentRegisteredCourses(viewModel),
+                  _buildRecentRegisteredCourses(viewModel, context),
                   const SizedBox(height: 24),
                   _buildUpcomingSessions(viewModel),
                   const SizedBox(height: 32),
@@ -566,7 +569,9 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
     );
   }
 
-  Widget _buildRecentRegisteredCourses(LearnerHomeViewModel viewModel) {
+  Widget _buildRecentRegisteredCourses(
+      LearnerHomeViewModel viewModel, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -586,82 +591,18 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                 itemCount: viewModel.recentCourses.length,
                 itemBuilder: (context, index) {
                   final course = viewModel.recentCourses[index];
-                  return _buildRecentCourseItem(course);
+                  return CourseListProgress(
+                    title: course.title,
+                    imageUrl: course.imageUrl,
+                    registrationDate: course.registrationDate,
+                    progress: course.progress,
+                    isDark: isDark,
+                    onTap: () => viewModel
+                        .openCourse(course.title), // or course.id if available
+                  );
                 },
               ),
       ],
-    );
-  }
-
-  Widget _buildRecentCourseItem(CourseModel course) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.asset(
-            course.imageUrl,
-            width: 60,
-            height: 60,
-            fit: BoxFit.cover,
-          ),
-        ),
-        title: Text(
-          course.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                const SizedBox(width: 4),
-                Text(
-                  'Registered on ${course.registrationDate}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            LinearProgressIndicator(
-              value: course.progress,
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(
-                course.progress < 0.3
-                    ? Colors.red
-                    : course.progress < 0.7
-                        ? Colors.orange
-                        : Colors.green,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${(course.progress * 100).toInt()}% completed',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.play_circle_fill, color: Colors.indigo),
-          onPressed: () {},
-        ),
-      ),
     );
   }
 

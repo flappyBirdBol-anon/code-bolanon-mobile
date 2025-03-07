@@ -1,20 +1,21 @@
-import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/app/app.router.dart';
+import 'package:code_bolanon/app/app_base_view_model.dart';
+import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
 import 'package:flutter/material.dart';
-import 'package:stacked/stacked.dart';
 
-class AvailableCoursesViewModel extends BaseViewModel {
+class AvailableCoursesViewModel extends AppBaseViewModel {
   final CourseService _courseService;
   final ImageService _imageService;
 
-  List<Course> _allCourses = [];
-  List<Course> _filteredCourses = [];
+  List<CourseModel> _allCourses = [];
+  List<CourseModel> _filteredCourses = [];
   final Set<String> _activeFilters = {};
   String _searchQuery = '';
 
-  List<Course> get filteredCourses => _filteredCourses;
+  List<CourseModel> get filteredCourses => _filteredCourses;
   Set<String> get activeFilters => _activeFilters;
   ImageService get imageService => _imageService;
 
@@ -118,7 +119,7 @@ class AvailableCoursesViewModel extends BaseViewModel {
   }
 
   Widget getCourseImageWidget({
-    required Course course,
+    required CourseModel course,
     double? width,
     double? height,
     BoxFit fit = BoxFit.cover,
@@ -168,9 +169,10 @@ class AvailableCoursesViewModel extends BaseViewModel {
   }
 
   void navigateToMyCourses() {
-    // Implement navigation to enrolled courses
+    navigationService.navigateTo(Routes.learnerCoursesView);
   }
-  void navigateToCourseDetails(BuildContext context, Course course) {
+
+  void navigateToCourseDetails(BuildContext context, CourseModel course) {
     Navigator.push(
       context,
       MaterialPageRoute(

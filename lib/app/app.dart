@@ -1,5 +1,8 @@
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/auth_service.dart';
+import 'package:code_bolanon/services/course_service.dart';
+import 'package:code_bolanon/services/file_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/theme_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
@@ -14,21 +17,19 @@ import 'package:code_bolanon/ui/views/auth/auth_view.dart';
 import 'package:code_bolanon/ui/views/available_courses/available_courses_view.dart';
 import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
 import 'package:code_bolanon/ui/views/home/home_view.dart';
+import 'package:code_bolanon/ui/views/learner_courses/learner_courses_view.dart';
 import 'package:code_bolanon/ui/views/learner_home/learner_home_view.dart';
+import 'package:code_bolanon/ui/views/lesson_details/lesson_details_view.dart';
+import 'package:code_bolanon/ui/views/lessons_full/lessons_full_view.dart';
 import 'package:code_bolanon/ui/views/main_body/main_body_view.dart';
 import 'package:code_bolanon/ui/views/menu/menu_view.dart';
 import 'package:code_bolanon/ui/views/onboarding/onboarding_view.dart';
 import 'package:code_bolanon/ui/views/profile/profile_view.dart';
 import 'package:code_bolanon/ui/views/startup/startup_view.dart';
 import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart';
-import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
 import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:code_bolanon/services/course_service.dart';
-import 'package:code_bolanon/services/image_service.dart';
-import 'package:code_bolanon/ui/views/lesson_details/lesson_details_view.dart';
-import 'package:code_bolanon/ui/views/lessons_full/lessons_full_view.dart';
-import 'package:code_bolanon/services/file_service.dart';
+import 'package:code_bolanon/ui/views/learner_wishlists/learner_wishlists_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -47,6 +48,8 @@ import 'package:code_bolanon/services/file_service.dart';
     MaterialRoute(page: AvailableCoursesView),
     MaterialRoute(page: LessonDetailsView),
     MaterialRoute(page: LessonsFullView),
+    MaterialRoute(page: LearnerCoursesView),
+    MaterialRoute(page: LearnerWishlistsView),
 // @stacked-route
   ],
   dependencies: [
