@@ -4,10 +4,10 @@ class SnackbarType {
   static const String info = 'info';
 }
 
-enum DialogType {
-  infoAlert,
-  basic,
-  success,
-  error,
-  warning,
-}
+// enum DialogType {
+//   infoAlert,
+//   basic,
+//   success,
+//   error,
+//   warning,
+// }

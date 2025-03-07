@@ -1048,7 +1048,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                                 const SizedBox(width: 4),
                                 Text(
                                   //TODO temporary for lesson count
-                                  "${course.id} Lessons",
+                                  "${course.lessonCount} Lessons",
                                   style: bodyStyle.copyWith(
                                     color: Colors.white,
                                     fontSize: 10,

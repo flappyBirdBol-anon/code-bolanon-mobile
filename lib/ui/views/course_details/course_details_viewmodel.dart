@@ -3,11 +3,11 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
-import 'package:code_bolanon/services/auth_service.dart';
+
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
-import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart';
+
 import 'package:code_bolanon/ui/views/lessons_full/lessons_full_view.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -150,7 +150,7 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   }
 
   void navigateToAddLesson(Course course) {
-    _navigationService.navigateTo(Routes.addLessonView, arguments: course);
+    _navigationService.navigateToAddLessonView(course: course);
   }
 
   void navigateToLessonsFullView() {

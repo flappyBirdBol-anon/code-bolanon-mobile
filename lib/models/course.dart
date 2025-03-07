@@ -8,7 +8,7 @@ class Course {
   final bool isActive;
   final int studentsEnrolled;
   final double rating;
-  final int lessons;
+  final int lessonCount;
   final int reviews;
 
   Course({
@@ -20,7 +20,7 @@ class Course {
     this.isActive = true,
     this.studentsEnrolled = 0,
     this.rating = 0.0,
-    this.lessons = 16,
+    required this.lessonCount,
     this.reviews = 4,
   });
 
@@ -34,6 +34,7 @@ class Course {
       studentsEnrolled: json['students_enrolled'] ?? 0,
       rating: (json['rating'] ?? 0.0).toDouble(),
       price: double.tryParse(json['price'] ?? 0.00) ?? 0.00,
+      lessonCount: json['lessons_count'],
     );
   }
 
@@ -55,16 +56,17 @@ class Course {
     int? studentsEnrolled,
     double? rating,
     double? price,
+    int? lessonCount,
   }) {
     return Course(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      thumbnail: thumbnail ?? this.thumbnail,
-      isActive: isActive ?? this.isActive,
-      studentsEnrolled: studentsEnrolled ?? this.studentsEnrolled,
-      rating: rating ?? this.rating,
-      price: price ?? this.price,
-    );
+        id: id ?? this.id,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        thumbnail: thumbnail ?? this.thumbnail,
+        isActive: isActive ?? this.isActive,
+        studentsEnrolled: studentsEnrolled ?? this.studentsEnrolled,
+        rating: rating ?? this.rating,
+        price: price ?? this.price,
+        lessonCount: lessonCount ?? this.lessonCount);
   }
 }

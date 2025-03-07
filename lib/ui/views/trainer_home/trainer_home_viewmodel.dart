@@ -33,6 +33,7 @@ class TrainerHomeViewModel extends AppBaseViewModel {
 
   TrainerHomeViewModel() {
     _init();
+    init();
   }
 
   List<RecentActivity> recentActivities = [
@@ -114,41 +115,41 @@ class TrainerHomeViewModel extends AppBaseViewModel {
       _showErrorMessage('Failed to load courses: ${e.toString()}');
 
       // Fallback to sample data if API fails
-      _courses = [
-        Course(
-          id: '1',
-          title: 'Web Development Fundamentals',
-          description:
-              'Learn the basics of web development with HTML, CSS, and JavaScript',
-          thumbnail: 'assets/images/1.jpg',
-          isActive: true,
-          studentsEnrolled: 45,
-          price: 10,
-          rating: 4.5,
-        ),
-        Course(
-          id: '2',
-          title: 'Flutter Development Fundamentals',
-          description:
-              'Learn flutter development with Dart, and build beautiful apps',
-          thumbnail: 'assets/images/2.jpg',
-          isActive: true,
-          studentsEnrolled: 56,
-          price: 20,
-          rating: 4.8,
-        ),
-        Course(
-          id: '3',
-          title: 'Python Development Fundamentals',
-          description:
-              'Learn python development with Django, and build beautiful apps',
-          thumbnail: 'assets/images/3.jpg',
-          isActive: true,
-          studentsEnrolled: 45,
-          price: 60,
-          rating: 4.2,
-        ),
-      ];
+      // _courses = [
+      //   Course(
+      //     id: '1',
+      //     title: 'Web Development Fundamentals',
+      //     description:
+      //         'Learn the basics of web development with HTML, CSS, and JavaScript',
+      //     thumbnail: 'assets/images/1.jpg',
+      //     isActive: true,
+      //     studentsEnrolled: 45,
+      //     price: 10,
+      //     rating: 4.5,
+      //   ),
+      //   Course(
+      //     id: '2',
+      //     title: 'Flutter Development Fundamentals',
+      //     description:
+      //         'Learn flutter development with Dart, and build beautiful apps',
+      //     thumbnail: 'assets/images/2.jpg',
+      //     isActive: true,
+      //     studentsEnrolled: 56,
+      //     price: 20,
+      //     rating: 4.8,
+      //   ),
+      //   Course(
+      //     id: '3',
+      //     title: 'Python Development Fundamentals',
+      //     description:
+      //         'Learn python development with Django, and build beautiful apps',
+      //     thumbnail: 'assets/images/3.jpg',
+      //     isActive: true,
+      //     studentsEnrolled: 45,
+      //     price: 60,
+      //     rating: 4.2,
+      //   ),
+      // ];
     } finally {
       setBusy(false);
     }
@@ -359,9 +360,9 @@ class TrainerHomeViewModel extends AppBaseViewModel {
 
   void _init() async {
     isLoading = true; // Changed from setLoading(true)
-    notifyListeners();
     await Future.delayed(const Duration(seconds: 2));
     await refreshData();
+    notifyListeners();
   }
 }
 

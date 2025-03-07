@@ -36,7 +36,7 @@ class LessonDetailsViewModel extends BaseViewModel {
   bool _isFileDownloadable = false;
   bool get isFileDownloadable => _isFileDownloadable;
 
-  // New properties to enhance file viewing experience
+  // File viewing experience properties
   bool _isFileLoading = false;
   bool get isFileLoading => _isFileLoading;
 
@@ -68,48 +68,48 @@ class LessonDetailsViewModel extends BaseViewModel {
     );
   }
 
-  // Add these methods to handle file loading errors and improve initialization
-
   Future<void> initialize(Lesson? initialLesson) async {
-    final args = _navigationService.currentArguments;
-
-    if (args is Lesson) {
-      _lesson = args;
-      _hasValidLesson = true;
-    } else if (initialLesson != null) {
-      _lesson = initialLesson;
-      _hasValidLesson = true;
-    } else if (_lessonsService.currentLesson != null) {
-      _lesson = _lessonsService.currentLesson!;
-      _hasValidLesson = true;
-    } else {
-      _hasValidLesson = false;
-      _lesson = _createEmptyLesson();
-
-      Future.microtask(() async {
-        await _dialogService.showDialog(
-          title: 'Error',
-          description: 'No lesson data available',
-        );
-        _navigationService.back();
-      });
-      return;
-    }
-
-    notifyListeners();
-
     try {
       setBusy(true);
 
-      // First check if the lesson has a file
+      // Determine the lesson source with priority order
+      if (initialLesson != null) {
+        _lesson = initialLesson;
+        _hasValidLesson = true;
+      } else if (_navigationService.currentArguments is Lesson) {
+        _lesson = _navigationService.currentArguments as Lesson;
+        _hasValidLesson = true;
+      } else if (_lessonsService.currentLesson != null) {
+        _lesson = _lessonsService.currentLesson!;
+        _hasValidLesson = true;
+      } else {
+        _hasValidLesson = false;
+        _lesson = _createEmptyLesson();
+
+        // Show error dialog and navigate back after a short delay
+        Future.microtask(() async {
+          await _dialogService.showDialog(
+            title: 'Error',
+            description: 'No lesson data available',
+          );
+          _navigationService.back();
+        });
+
+        setBusy(false);
+        return;
+      }
+
+      // Notify UI of initial state
+      notifyListeners();
+
+      // Check if the lesson has a file and prefetch if needed
       if (_fileService.hasFile(lesson)) {
-        // Check if the file is already cached
+        // Check if file is already cached
         _isFileCached = await _fileService.isFileCached(lesson);
 
-        // If not cached, try to prefetch it silently
+        // Silent prefetch attempt if not cached
         if (!_isFileCached) {
           try {
-            // Try to prefetch the file without showing progress
             await _fileService.prefetchFile(
               _fileService.getLessonFileUrl(lesson),
               lessonId: lesson.id.toString(),
@@ -117,7 +117,7 @@ class LessonDetailsViewModel extends BaseViewModel {
             );
             _isFileCached = true;
           } catch (e) {
-            // If prefetch fails, just continue - we'll show download button
+            // Just log the error, don't show to user for silent prefetch
             print('Silent prefetch failed: $e');
           }
         }
@@ -125,23 +125,20 @@ class LessonDetailsViewModel extends BaseViewModel {
 
       // Get updated lesson data from service
       final updatedLesson = await _lessonsService.getLesson(_lesson!.id);
-
       if (updatedLesson != null) {
         _lesson = updatedLesson;
-        await _checkFileStatus();
-        _determineFilePlayability();
       }
+
+      // Update file status and playability
+      await _checkFileStatus();
+      _determineFilePlayability();
     } catch (e) {
       print('Error initializing lesson details: $e');
-      // Don't show error dialog here, just log it
-      // The UI will handle showing appropriate error states
     } finally {
       setBusy(false);
-      notifyListeners();
     }
   }
 
-// Improved file status check with error handling
   Future<void> _checkFileStatus() async {
     if (!_hasValidLesson) return;
 
@@ -155,6 +152,9 @@ class LessonDetailsViewModel extends BaseViewModel {
         _fileSize = 'No file';
         _isFileDownloadable = false;
       }
+
+      _hasFileError = false;
+      _fileErrorMessage = null;
     } catch (e) {
       print('Error checking file status: $e');
       _isFileCached = false;
@@ -167,7 +167,6 @@ class LessonDetailsViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  // New method to determine if file can be played
   void _determineFilePlayability() {
     if (!_hasValidLesson || !_fileService.hasFile(lesson)) {
       _canPlayFile = false;
@@ -208,7 +207,6 @@ class LessonDetailsViewModel extends BaseViewModel {
     }
   }
 
-  // Enhanced open lesson method with better error handling
   Future<void> openLesson() async {
     if (!_hasValidLesson || !_fileService.hasFile(lesson)) {
       await _showNoFileDialog();
@@ -216,7 +214,7 @@ class LessonDetailsViewModel extends BaseViewModel {
     }
 
     if (_isFileLoading) {
-      // Already trying to open file, prevent multiple attempts
+      // Prevent multiple attempts
       return;
     }
 
@@ -278,7 +276,6 @@ class LessonDetailsViewModel extends BaseViewModel {
     }
   }
 
-  // Enhanced download method with better progress tracking
   Future<void> downloadLesson() async {
     if (!_hasValidLesson || !_fileService.hasFile(lesson)) {
       await _showNoFileDialog();
@@ -286,7 +283,7 @@ class LessonDetailsViewModel extends BaseViewModel {
     }
 
     if (_isDownloading) {
-      // Already downloading, don't start another download
+      // Already downloading
       return;
     }
 
@@ -295,16 +292,8 @@ class LessonDetailsViewModel extends BaseViewModel {
       _downloadProgress = 0.0;
       notifyListeners();
 
-      // Create a progress callback
-      void onProgress(double progress) {
-        _downloadProgress = progress;
-        notifyListeners();
-      }
-
-      // Download the file with progress tracking
-      final downloadedFile = await _fileService.downloadFile(
-        lesson,
-      );
+      // Download the file
+      final downloadedFile = await _fileService.downloadFile(lesson);
 
       if (downloadedFile != null) {
         _isFileCached = true;
@@ -412,7 +401,6 @@ class LessonDetailsViewModel extends BaseViewModel {
     }
   }
 
-  // Improved prefetch method with error handling
   Future<void> prefetchLessonFile() async {
     if (!_hasValidLesson || !_fileService.hasFile(lesson)) {
       await _showNoFileDialog();
@@ -420,7 +408,7 @@ class LessonDetailsViewModel extends BaseViewModel {
     }
 
     if (_isDownloading) {
-      // Already downloading, don't start another download
+      // Already downloading
       return;
     }
 
@@ -430,13 +418,7 @@ class LessonDetailsViewModel extends BaseViewModel {
       _hasFileError = false;
       notifyListeners();
 
-      // Create a progress callback
-      void onProgress(double progress) {
-        _downloadProgress = progress;
-        notifyListeners();
-      }
-
-      // Call the prefetch method with progress tracking
+      // Call the prefetch method
       final file = await _fileService.prefetchFile(
         _fileService.getLessonFileUrl(lesson),
         lessonId: lesson.id.toString(),

@@ -1,4 +1,6 @@
 // lib/viewmodels/trainer_courses_viewmodel.dart
+import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
@@ -9,6 +11,7 @@ import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stacked/stacked.dart';
+import 'package:stacked_services/stacked_services.dart';
 
 class TrainerCoursesViewModel extends BaseViewModel {
   final _imagePicker = ImagePicker();
@@ -16,7 +19,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
   // Add service dependencies
   final CourseService _courseService;
   final ImageService _imageService;
-
+  final NavigationService _navigationService = locator<NavigationService>();
   List<Course> _courses = [];
   String _selectedFilter = 'All';
   XFile? _selectedImage;
@@ -57,6 +60,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
           studentsEnrolled: 45,
           price: 10,
           rating: 4.5,
+          lessonCount: 0,
         ),
         Course(
           id: '2',
@@ -68,6 +72,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
           studentsEnrolled: 56,
           price: 20,
           rating: 4.8,
+          lessonCount: 0,
         ),
         Course(
           id: '3',
@@ -79,6 +84,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
           studentsEnrolled: 45,
           price: 60,
           rating: 4.2,
+          lessonCount: 0,
         ),
       ];
     } finally {
@@ -207,6 +213,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
           studentsEnrolled: 0,
           rating: 0,
           price: price.toDouble(),
+          lessonCount: 0,
         );
 
         _courses.add(newCourse);
@@ -263,6 +270,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
           studentsEnrolled: course.studentsEnrolled,
           rating: course.rating,
           price: (price ?? course.price).toDouble(),
+          lessonCount: course.lessonCount,
         );
       }
     } finally {
@@ -292,6 +300,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
         studentsEnrolled: course.studentsEnrolled,
         rating: course.rating,
         price: course.price,
+        lessonCount: course.lessonCount,
       );
 
       final statusText =
@@ -348,11 +357,9 @@ class TrainerCoursesViewModel extends BaseViewModel {
   }
 
   void navigateToCourseDetails(BuildContext context, Course course) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CourseDetailsView(course: course),
-      ),
+    _navigationService.navigateTo(
+      Routes.courseDetailsView,
+      arguments: CourseDetailsViewArguments(course: course),
     );
   }
 

@@ -208,8 +208,12 @@ class StackedRouter extends _i1.RouterBase {
       );
     },
     _i12.AddLessonView: (data) {
+      final args = data.getArgs<AddLessonViewArguments>(
+        orElse: () => const AddLessonViewArguments(),
+      );
       return _i16.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i12.AddLessonView(),
+        builder: (context) =>
+            _i12.AddLessonView(key: args.key, course: args.course),
         settings: data,
       );
     },
@@ -292,6 +296,33 @@ class CourseDetailsViewArguments {
 
   @override
   bool operator ==(covariant CourseDetailsViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key && other.course == course;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode ^ course.hashCode;
+  }
+}
+
+class AddLessonViewArguments {
+  const AddLessonViewArguments({
+    this.key,
+    this.course,
+  });
+
+  final _i16.Key? key;
+
+  final _i17.Course? course;
+
+  @override
+  String toString() {
+    return '{"key": "$key", "course": "$course"}';
+  }
+
+  @override
+  bool operator ==(covariant AddLessonViewArguments other) {
     if (identical(this, other)) return true;
     return other.key == key && other.course == course;
   }
@@ -503,14 +534,17 @@ extension NavigatorStateExtension on _i19.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> navigateToAddLessonView([
+  Future<dynamic> navigateToAddLessonView({
+    _i16.Key? key,
+    _i17.Course? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return navigateTo<dynamic>(Routes.addLessonView,
+        arguments: AddLessonViewArguments(key: key, course: course),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -711,14 +745,17 @@ extension NavigatorStateExtension on _i19.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> replaceWithAddLessonView([
+  Future<dynamic> replaceWithAddLessonView({
+    _i16.Key? key,
+    _i17.Course? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return replaceWith<dynamic>(Routes.addLessonView,
+        arguments: AddLessonViewArguments(key: key, course: course),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,

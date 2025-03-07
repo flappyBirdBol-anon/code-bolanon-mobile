@@ -1,6 +1,7 @@
+import 'package:code_bolanon/app/app.dialogs.dart' show DialogType;
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course.dart';
-import 'package:code_bolanon/models/lessons_model.dart';
+
 import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart';
 import 'package:file_picker/file_picker.dart';

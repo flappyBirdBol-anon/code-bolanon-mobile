@@ -448,7 +448,6 @@ class FileService {
     final fileUrl = getLessonFileUrl(lesson);
 
     // Check our custom cache first
-    // Check our custom cache first
     if (_urlToFilePathMap.containsKey(fileUrl)) {
       final filePath = _urlToFilePathMap[fileUrl];
       final file = File(filePath!);

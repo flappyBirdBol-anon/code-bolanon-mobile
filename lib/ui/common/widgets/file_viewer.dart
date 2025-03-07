@@ -1,12 +1,13 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:stacked/stacked.dart';
-import 'package:chewie/chewie.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as path;
 import 'package:code_bolanon/app/app.locator.dart';
@@ -22,6 +23,7 @@ import 'package:shimmer/shimmer.dart';
 
 import 'package:stacked_services/stacked_services.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart';
+import 'package:code_bolanon/ui/common/app_colors.dart';
 
 class FileViewer extends StatefulWidget {
   final String fileUrl;
@@ -35,6 +37,9 @@ class FileViewer extends StatefulWidget {
   final String? description;
   final Lesson? lesson;
   final File? cachedFile;
+  final VoidCallback? onFileOpened;
+  final VoidCallback? onFileDownloaded;
+  final VoidCallback? onError;
 
   const FileViewer({
     Key? key,
@@ -49,6 +54,9 @@ class FileViewer extends StatefulWidget {
     this.description,
     this.lesson,
     this.cachedFile,
+    this.onFileOpened,
+    this.onFileDownloaded,
+    this.onError,
   }) : super(key: key);
 
   @override
@@ -69,10 +77,17 @@ class _FileViewerState extends State<FileViewer>
   String? _downloadProgress;
 
   // Media controllers
-  ChewieController? _chewieController;
+
   AudioPlayer? _audioPlayer;
   bool _isAudioPlaying = false;
+  Duration _audioPosition = Duration.zero;
+  Duration _audioDuration = Duration.zero;
 
+// Stream subscriptions
+  StreamSubscription? _audioPositionSubscription;
+  StreamSubscription? _audioDurationSubscription;
+  StreamSubscription? _audioStateSubscription;
+  // Lazy initialization for media players
   Player? _player;
   VideoController? _videoController;
 
@@ -83,15 +98,11 @@ class _FileViewerState extends State<FileViewer>
   late AnimationController _animationController;
   late Animation<double> _animation;
 
-  // Theme colors
-  final Color primaryColor = const Color(0xFF3F51B5);
-  final Color accentColor = const Color(0xFF536DFE);
-  final Color backgroundColor = const Color(0xFFF5F5F5);
-  final Color textColor = const Color(0xFF212121);
-  final Color secondaryTextColor = const Color(0xFF757575);
-
   // Add a mounted check flag to prevent setState after dispose
   bool _isMounted = true;
+
+  // Debounce timer for UI updates
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -107,13 +118,17 @@ class _FileViewerState extends State<FileViewer>
       curve: Curves.easeInOut,
     );
 
+    // Initialize audio player
+    _audioPlayer = AudioPlayer();
+
     // Use provided cached file if available
     if (widget.cachedFile != null) {
       _cachedFile = widget.cachedFile;
-      Future.microtask(_initializeContent);
+      _initializeContent();
+      widget.onFileOpened?.call();
     } else {
       // Load file with a slight delay to allow widget to build
-      Future.microtask(_loadFile);
+      _loadFile();
     }
   }
 
@@ -129,6 +144,7 @@ class _FileViewerState extends State<FileViewer>
       if (widget.cachedFile != null) {
         _cachedFile = widget.cachedFile;
         _initializeContent();
+        widget.onFileOpened?.call();
       } else {
         _loadFile();
       }
@@ -136,13 +152,27 @@ class _FileViewerState extends State<FileViewer>
   }
 
   void _disposeMediaControllers() {
-    _videoController = null;
     _player?.dispose();
-    _chewieController?.dispose();
-    _chewieController = null;
+    _player = null;
+    _videoController = null;
 
-    _audioPlayer?.dispose();
-    _audioPlayer = null;
+    _audioPositionSubscription?.cancel();
+    _audioDurationSubscription?.cancel();
+    _audioStateSubscription?.cancel();
+
+    _audioPlayer?.stop();
+  }
+
+  void _safeSetState(VoidCallback fn) {
+    // Cancel any pending debounce timer
+    _debounceTimer?.cancel();
+
+    // Set a new debounce timer
+    _debounceTimer = Timer(const Duration(milliseconds: 50), () {
+      if (_isMounted) {
+        setState(fn);
+      }
+    });
   }
 
   Future<void> _initializeContent() async {
@@ -161,28 +191,40 @@ class _FileViewerState extends State<FileViewer>
       } else if (widget.fileType.contains('spreadsheet') ||
           path.extension(widget.fileUrl).toLowerCase() == '.xlsx' ||
           path.extension(widget.fileUrl).toLowerCase() == '.xls') {
-        await _parseExcelFile(_cachedFile!);
+        // Use compute for Excel parsing to avoid UI freezes
+        _excelData = await compute(_parseExcelFile, _cachedFile!.path);
+
+        // If parsing failed, create a placeholder
+        if (_excelData == null) {
+          _excelData = [
+            ['This Excel file cannot be previewed directly'],
+            [
+              'Please use the download button to view it in an Excel application'
+            ]
+          ];
+        }
       }
 
       if (!_isMounted) return;
-      setState(() {
+      _safeSetState(() {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error initializing content: $e');
+      debugPrint('Error initializing content: $e');
       if (!_isMounted) return;
-      setState(() {
+      _safeSetState(() {
         _isLoading = false;
         _hasError = true;
         _errorMessage = e.toString();
       });
+      widget.onError?.call();
     }
   }
 
   Future<void> _loadFile() async {
     if (!_isMounted) return;
 
-    setState(() {
+    _safeSetState(() {
       _isLoading = true;
       _hasError = false;
     });
@@ -214,9 +256,12 @@ class _FileViewerState extends State<FileViewer>
             }
 
             if (!_isMounted) return;
-            setState(() {
+            _safeSetState(() {
               _cachedFile = downloadedFile;
             });
+
+            // Notify parent about successful download
+            widget.onFileDownloaded?.call();
           } catch (e) {
             throw Exception('File not found in cache and download failed: $e');
           }
@@ -225,65 +270,59 @@ class _FileViewerState extends State<FileViewer>
         }
       } else {
         if (!_isMounted) return;
-        setState(() {
+        _safeSetState(() {
           _cachedFile = file;
         });
       }
 
       await _initializeContent();
+      widget.onFileOpened?.call();
     } catch (e) {
-      print('Error loading file: $e');
+      debugPrint('Error loading file: $e');
       if (!_isMounted) return;
-      setState(() {
+      _safeSetState(() {
         _isLoading = false;
         _hasError = true;
         _errorMessage = e.toString();
       });
+      widget.onError?.call();
     }
   }
 
-  Future<void> _parseExcelFile(File file) async {
+  // Static method for compute to use
+  static List<List<dynamic>>? _parseExcelFile(String filePath) {
     try {
-      final oldPath = file.path;
-      final newPath = oldPath.endsWith('.xlsx') || oldPath.endsWith('.xls')
-          ? oldPath
-          : '$oldPath.xlsx';
-      file = await file.rename(newPath);
+      final file = File(filePath);
 
-      // First check if the file exists
-      if (!await file.exists()) {
-        throw Exception('Excel file does not exist');
+      // Check if file exists and has content
+      if (!file.existsSync()) {
+        debugPrint('Excel file does not exist at path: $filePath');
+        return null;
       }
 
-      final fileSize = await file.length();
+      final fileSize = file.lengthSync();
       if (fileSize == 0) {
-        throw Exception('Excel file is empty (0 bytes)');
+        debugPrint('Excel file is empty (0 bytes)');
+        return null;
       }
 
-      // Read file as bytes
-      List<int> bytes;
-      try {
-        bytes = await file.readAsBytes();
-        if (bytes.isEmpty) {
-          throw Exception('Bytes list is empty');
-        }
-      } catch (e) {
-        throw Exception('Failed to read Excel file: $e');
+      final bytes = file.readAsBytesSync();
+      if (bytes.isEmpty) {
+        debugPrint('Excel file bytes are empty');
+        return null;
       }
 
-      // Use a compute function to parse Excel in a separate isolate
       try {
         final excelFile = Excel.decodeBytes(bytes);
-
         if (excelFile.tables.isEmpty) {
-          throw Exception('Excel file has no sheets');
+          return null;
         }
 
         final firstSheetName = excelFile.tables.keys.first;
         final table = excelFile.tables[firstSheetName];
 
         if (table == null) {
-          throw Exception('Sheet data is null');
+          return null;
         }
 
         // Process the rows
@@ -296,50 +335,31 @@ class _FileViewerState extends State<FileViewer>
           excelData.add(rowData);
         }
 
-        if (_isMounted) {
-          setState(() {
-            _excelData = excelData;
-          });
-        }
+        return excelData;
       } catch (e) {
-        print('Error decoding Excel file: $e');
-        // Create a placeholder for failed Excel parsing
-        List<List<dynamic>> data = [
-          ['This Excel file cannot be previewed directly'],
-          ['Please use the download button to view it in an Excel application']
-        ];
-
-        if (_isMounted) {
-          setState(() {
-            _excelData = data;
-          });
-        }
+        print('Error parsing Excel: $e');
+        return null;
       }
     } catch (e) {
-      print('Error parsing Excel file: $e');
-      if (_isMounted) {
-        setState(() {
-          _hasError = true;
-          _errorMessage = 'Could not parse Excel file: $e';
-        });
-      }
+      debugPrint('Error in Excel parsing: $e');
+      return null;
     }
   }
 
   Future<void> _initializeVideoPlayer(String filePath) async {
     try {
-      // Initialize the player
-      _player = Player();
-      _videoController = VideoController(_player!);
+      // Lazy initialize the player only when needed
+      _player ??= Player();
+      _videoController ??= VideoController(_player!);
 
       // Open the media file
       await _player!.open(Media(filePath));
 
-      if (_isMounted) setState(() {});
+      if (_isMounted) _safeSetState(() {});
     } catch (e) {
-      print('Error initializing video player: $e');
+      debugPrint('Error initializing video player: $e');
       if (_isMounted) {
-        setState(() {
+        _safeSetState(() {
           _hasError = true;
           _errorMessage = 'Could not initialize video player: $e';
         });
@@ -347,12 +367,71 @@ class _FileViewerState extends State<FileViewer>
     }
   }
 
+  // Future<void> _initializeAudioPlayer(String filePath) async {
+  //   try {
+  //     _audioPlayer = AudioPlayer();
+  //     await _audioPlayer!.setFilePath(filePath);
+
+  //     _audioPlayer!.playerStateStream.listen((state) {
+  //       if (mounted) {
+  //         setState(() {
+  //           _isAudioPlaying = state.playing;
+  //         });
+  //       }
+  //     });
+
+  //     if (mounted) setState(() {});
+  //   } catch (e) {
+  //     print('Error initializing audio player: $e');
+  //     setState(() {
+  //       _hasError = true;
+  //       _errorMessage = 'Could not initialize audio player: $e';
+  //     });
+  //   }
+  // }
   Future<void> _initializeAudioPlayer(String filePath) async {
     try {
+      // Cancel any existing subscriptions
+      _audioPositionSubscription?.cancel();
+      _audioDurationSubscription?.cancel();
+      _audioStateSubscription?.cancel();
+
+      // Dispose the existing player before creating a new one
+      if (_audioPlayer != null) {
+        // Store reference to avoid using the same instance during disposal
+        final playerToDispose = _audioPlayer;
+        _audioPlayer = null;
+        await playerToDispose!.dispose();
+      }
+
+      // Create a new instance
       _audioPlayer = AudioPlayer();
+
+      // Set the audio file
       await _audioPlayer!.setFilePath(filePath);
 
-      _audioPlayer!.playerStateStream.listen((state) {
+      // Listen to position changes
+      _audioPositionSubscription =
+          _audioPlayer!.positionStream.listen((position) {
+        if (_isMounted) {
+          setState(() {
+            _audioPosition = position;
+          });
+        }
+      });
+
+      // Listen to duration changes
+      _audioDurationSubscription =
+          _audioPlayer!.durationStream.listen((duration) {
+        if (duration != null && _isMounted) {
+          setState(() {
+            _audioDuration = duration;
+          });
+        }
+      });
+
+      // Listen to player state changes
+      _audioStateSubscription = _audioPlayer!.playerStateStream.listen((state) {
         if (_isMounted) {
           setState(() {
             _isAudioPlaying = state.playing;
@@ -360,9 +439,9 @@ class _FileViewerState extends State<FileViewer>
         }
       });
 
-      if (_isMounted) setState(() {});
+      if (_isMounted) _safeSetState(() {});
     } catch (e) {
-      print('Error initializing audio player: $e');
+      debugPrint('Error initializing audio player: $e');
       if (_isMounted) {
         setState(() {
           _hasError = true;
@@ -375,7 +454,7 @@ class _FileViewerState extends State<FileViewer>
   Future<void> _downloadFile() async {
     if (_cachedFile == null) return;
 
-    setState(() {
+    _safeSetState(() {
       _isDownloading = true;
       _downloadProgress = 'Preparing download...';
     });
@@ -396,16 +475,27 @@ class _FileViewerState extends State<FileViewer>
       final destinationPath = '${downloadsDir.path}/$fileName';
 
       // Copy the file
-      setState(() {
+      _safeSetState(() {
         _downloadProgress = 'Copying file...';
       });
 
-      await _cachedFile!.copy(destinationPath);
+      // Use compute to perform file copy in a separate isolate
+      await compute<Map<String, String>, void>(
+        (params) async {
+          final source = params['source']!;
+          final destination = params['destination']!;
+          await File(source).copy(destination);
+        },
+        {'source': _cachedFile!.path, 'destination': destinationPath},
+      );
 
-      setState(() {
+      _safeSetState(() {
         _isDownloading = false;
         _downloadProgress = null;
       });
+
+      // Notify parent about successful download
+      widget.onFileDownloaded?.call();
 
       // Show success message using the SnackbarService
       _snackbarService.showCustomSnackBar(
@@ -417,12 +507,13 @@ class _FileViewerState extends State<FileViewer>
             text: 'Sharing ${widget.title ?? fileName}'),
       );
     } catch (e) {
-      print('Error downloading file: $e');
-      setState(() {
+      debugPrint('Error downloading file: $e');
+      _safeSetState(() {
         _isDownloading = false;
         _downloadProgress = null;
       });
 
+      // Show error message using the SnackbarService
       _snackbarService.showCustomSnackBar(
         variant: SnackbarType.error,
         message: 'Failed to download file: ${e.toString()}',
@@ -432,7 +523,10 @@ class _FileViewerState extends State<FileViewer>
   }
 
   void _toggleFullScreen() {
-    setState(() {
+    // Prevent multiple rapid toggles
+    if (_animationController.isAnimating) return;
+
+    _safeSetState(() {
       _isFullScreen = !_isFullScreen;
     });
 
@@ -455,17 +549,29 @@ class _FileViewerState extends State<FileViewer>
 
   @override
   void dispose() {
-    _isMounted = false;
+    // Cancel any pending debounce timer
+    _debounceTimer?.cancel();
+
+    // Cancel audio subscriptions
+    _audioPositionSubscription?.cancel();
+    _audioDurationSubscription?.cancel();
+    _audioStateSubscription?.cancel();
+    final playerToDispose = _audioPlayer;
+
+    _audioPlayer = null;
+    playerToDispose?.dispose();
+
+    // Dispose media controllers
     _disposeMediaControllers();
+
     _animationController.dispose();
-    _player?.dispose();
 
     // Reset orientation
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-
+    _isMounted = false;
     super.dispose();
   }
 
@@ -473,31 +579,31 @@ class _FileViewerState extends State<FileViewer>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         Row(
           children: [
             Icon(
               _getFileIcon(),
               size: 20,
-              color: accentColor,
+              color: AppColors.secondary,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 path.basename(widget.fileUrl),
                 style: GoogleFonts.figtree(
                   fontSize: 14,
-                  color: secondaryTextColor,
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
           ],
         ),
-        Divider(height: 24, thickness: 1),
+        const Divider(height: 24, thickness: 1),
       ],
     );
   }
@@ -572,46 +678,77 @@ class _FileViewerState extends State<FileViewer>
   }
 
   Widget _buildPdfPreview() {
-    return Column(
-      children: [
-        AspectRatio(
-          aspectRatio: 3 / 4,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
+    // First check if file exists and has content
+    return FutureBuilder<int>(
+      future: _cachedFile!.length(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildShimmerLoading();
+        }
+
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data == 0) {
+          return _buildErrorWidget(message: 'PDF file is empty or corrupted');
+        }
+
+        return Column(
+          children: [
+            AspectRatio(
+              aspectRatio: 3 / 4,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: PDFView(
-                filePath: _cachedFile!.path,
-                enableSwipe: true,
-                swipeHorizontal: false,
-                autoSpacing: true,
-                pageFling: true,
-                pageSnap: true,
-                fitPolicy: FitPolicy.BOTH,
-                preventLinkNavigation: false,
-                onError: (error) {
-                  print('Error rendering PDF: $error');
-                },
-                onPageError: (page, error) {
-                  print('Error rendering PDF page $page: $error');
-                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: PDFView(
+                    filePath: _cachedFile!.path,
+                    enableSwipe: true,
+                    swipeHorizontal: false,
+                    autoSpacing: true,
+                    pageFling: true,
+                    pageSnap: true,
+                    fitPolicy: FitPolicy.BOTH,
+                    preventLinkNavigation: false,
+                    onError: (error) {
+                      debugPrint('Error rendering PDF: $error');
+                      // Force rebuild on error
+                      if (_isMounted) {
+                        _safeSetState(() {
+                          _hasError = true;
+                          _errorMessage = 'Error rendering PDF: $error';
+                        });
+                      }
+                    },
+                    onPageError: (page, error) {
+                      debugPrint('Error rendering PDF page $page: $error');
+                    },
+                    onViewCreated: (controller) {
+                      // PDF view created successfully
+                      debugPrint('PDF view created successfully');
+                    },
+                    onRender: (pages) {
+                      debugPrint('PDF rendered with $pages pages');
+                    },
+                    onPageChanged: (page, total) {
+                      debugPrint('PDF page changed: $page/$total');
+                    },
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-        SizedBox(height: 16),
-        _buildFullScreenButton(),
-      ],
+            const SizedBox(height: 16),
+            _buildActionButtons(),
+          ],
+        );
+      },
     );
   }
 
@@ -621,7 +758,7 @@ class _FileViewerState extends State<FileViewer>
     }
 
     final oldPath = _cachedFile!.path;
-    final newPath = oldPath.endsWith('.docx') ? oldPath : oldPath + '.docx';
+    final newPath = oldPath.endsWith('.docx') ? oldPath : '$oldPath.docx';
 
     return Column(
       children: [
@@ -645,15 +782,27 @@ class _FileViewerState extends State<FileViewer>
             ),
           ),
         ),
-        SizedBox(height: 16),
-        _buildFullScreenButton(),
+        const SizedBox(height: 16),
+        _buildActionButtons(),
       ],
     );
   }
 
   Widget _buildExcelPreview() {
-    if (_excelData == null || _excelData!.isEmpty) {
+    if (_excelData == null) {
       return _buildShimmerLoading();
+    }
+
+    if (_excelData!.isEmpty) {
+      return Center(
+        child: Text(
+          'No data found in Excel file',
+          style: GoogleFonts.figtree(
+            fontSize: 16,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      );
     }
 
     // Extract headers from the first row
@@ -672,7 +821,7 @@ class _FileViewerState extends State<FileViewer>
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -695,7 +844,7 @@ class _FileViewerState extends State<FileViewer>
                       header.toString(),
                       style: GoogleFonts.figtree(
                         fontWeight: FontWeight.bold,
-                        color: textColor,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     size: ColumnSize.M,
@@ -710,7 +859,7 @@ class _FileViewerState extends State<FileViewer>
                           Text(
                             cell.toString(),
                             style: GoogleFonts.figtree(
-                              color: textColor,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
@@ -720,8 +869,8 @@ class _FileViewerState extends State<FileViewer>
             ),
           ),
         ),
-        SizedBox(height: 16),
-        _buildFullScreenButton(),
+        const SizedBox(height: 16),
+        _buildActionButtons(),
       ],
     );
   }
@@ -730,7 +879,7 @@ class _FileViewerState extends State<FileViewer>
     return Column(
       children: [
         Container(
-          constraints: BoxConstraints(
+          constraints: const BoxConstraints(
             maxHeight: 300,
           ),
           decoration: BoxDecoration(
@@ -740,7 +889,7 @@ class _FileViewerState extends State<FileViewer>
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -749,11 +898,31 @@ class _FileViewerState extends State<FileViewer>
             child: Image.file(
               _cachedFile!,
               fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                debugPrint('Error loading image: $error');
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.broken_image,
+                          size: 48, color: Colors.grey[400]),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Unable to load image',
+                        style: GoogleFonts.figtree(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ),
-        SizedBox(height: 16),
-        _buildFullScreenButton(),
+        const SizedBox(height: 16),
+        _buildActionButtons(),
       ],
     );
   }
@@ -775,7 +944,7 @@ class _FileViewerState extends State<FileViewer>
                 BoxShadow(
                   color: Colors.black.withOpacity(0.2),
                   blurRadius: 8,
-                  offset: Offset(0, 2),
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -788,8 +957,8 @@ class _FileViewerState extends State<FileViewer>
             ),
           ),
         ),
-        SizedBox(height: 16),
-        _buildFullScreenButton(),
+        const SizedBox(height: 16),
+        _buildActionButtons(),
       ],
     );
   }
@@ -800,7 +969,7 @@ class _FileViewerState extends State<FileViewer>
     }
 
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -808,15 +977,15 @@ class _FileViewerState extends State<FileViewer>
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            primaryColor.withOpacity(0.05),
-            accentColor.withOpacity(0.1),
+            AppColors.primary.withOpacity(0.05),
+            AppColors.secondary.withOpacity(0.1),
           ],
         ),
       ),
@@ -829,7 +998,7 @@ class _FileViewerState extends State<FileViewer>
                 height: 60,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: primaryColor.withOpacity(0.1),
+                  color: AppColors.primary.withOpacity(0.1),
                 ),
                 child: IconButton(
                   icon: Icon(
@@ -837,7 +1006,7 @@ class _FileViewerState extends State<FileViewer>
                         ? Icons.pause_rounded
                         : Icons.play_arrow_rounded,
                     size: 36,
-                    color: primaryColor,
+                    color: AppColors.primary,
                   ),
                   onPressed: () {
                     if (_isAudioPlaying) {
@@ -848,25 +1017,25 @@ class _FileViewerState extends State<FileViewer>
                   },
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Audio File',
+                      widget.title ?? 'Audio File',
                       style: GoogleFonts.figtree(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: textColor,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       path.basename(widget.fileUrl),
                       style: GoogleFonts.figtree(
                         fontSize: 14,
-                        color: secondaryTextColor,
+                        color: AppColors.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -876,65 +1045,101 @@ class _FileViewerState extends State<FileViewer>
               ),
             ],
           ),
-          SizedBox(height: 20),
-          StreamBuilder<Duration>(
-            stream: _audioPlayer!.positionStream,
-            builder: (context, snapshot) {
-              final position = snapshot.data ?? Duration.zero;
-              final duration = _audioPlayer!.duration ?? Duration.zero;
-
-              return Column(
-                children: [
-                  SliderTheme(
-                    data: SliderThemeData(
-                      trackHeight: 4,
-                      thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6),
-                      overlayShape: RoundSliderOverlayShape(overlayRadius: 14),
-                      activeTrackColor: primaryColor,
-                      inactiveTrackColor: Colors.grey[300],
-                      thumbColor: accentColor,
-                      overlayColor: accentColor.withOpacity(0.2),
+          const SizedBox(height: 20),
+          Column(
+            children: [
+              SliderTheme(
+                data: SliderThemeData(
+                  trackHeight: 4,
+                  thumbShape:
+                      const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  overlayShape:
+                      const RoundSliderOverlayShape(overlayRadius: 14),
+                  activeTrackColor: AppColors.primary,
+                  inactiveTrackColor: Colors.grey[300],
+                  thumbColor: AppColors.secondary,
+                  overlayColor: AppColors.secondary.withOpacity(0.2),
+                ),
+                child: Slider(
+                  value: _audioPosition.inMilliseconds.toDouble().clamp(
+                      0,
+                      _audioDuration.inMilliseconds.toDouble() > 0
+                          ? _audioDuration.inMilliseconds.toDouble()
+                          : 1),
+                  max: _audioDuration.inMilliseconds.toDouble() > 0
+                      ? _audioDuration.inMilliseconds.toDouble()
+                      : 1,
+                  onChanged: (value) {
+                    _audioPlayer?.seek(Duration(milliseconds: value.toInt()));
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _formatDuration(_audioPosition),
+                      style: GoogleFonts.figtree(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                    child: Slider(
-                      value: position.inMilliseconds.toDouble().clamp(
-                          0,
-                          duration.inMilliseconds.toDouble() > 0
-                              ? duration.inMilliseconds.toDouble()
-                              : 1),
-                      max: duration.inMilliseconds.toDouble() > 0
-                          ? duration.inMilliseconds.toDouble()
-                          : 1,
-                      onChanged: (value) {
-                        _audioPlayer
-                            ?.seek(Duration(milliseconds: value.toInt()));
-                      },
+                    Text(
+                      _formatDuration(_audioDuration),
+                      style: GoogleFonts.figtree(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _formatDuration(position),
-                          style: GoogleFonts.figtree(
-                            fontSize: 12,
-                            color: secondaryTextColor,
-                          ),
-                        ),
-                        Text(
-                          _formatDuration(duration),
-                          style: GoogleFonts.figtree(
-                            fontSize: 12,
-                            color: secondaryTextColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(Icons.replay_10_rounded, color: AppColors.primary),
+                onPressed: () {
+                  final newPosition =
+                      _audioPosition - const Duration(seconds: 10);
+                  _audioPlayer?.seek(
+                      newPosition.isNegative ? Duration.zero : newPosition);
+                },
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(
+                  _isAudioPlaying
+                      ? Icons.pause_circle_filled_rounded
+                      : Icons.play_circle_filled_rounded,
+                  color: AppColors.primary,
+                  size: 48,
+                ),
+                onPressed: () {
+                  if (_isAudioPlaying) {
+                    _audioPlayer?.pause();
+                  } else {
+                    _audioPlayer?.play();
+                  }
+                },
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(Icons.forward_10_rounded, color: AppColors.primary),
+                onPressed: () {
+                  final newPosition =
+                      _audioPosition + const Duration(seconds: 10);
+                  _audioPlayer?.seek(newPosition > _audioDuration
+                      ? _audioDuration
+                      : newPosition);
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -954,7 +1159,10 @@ class _FileViewerState extends State<FileViewer>
 
   Widget _buildTextPreview() {
     return FutureBuilder<String>(
-      future: _cachedFile!.readAsString(),
+      future: compute<String, String>(
+        (path) => File(path).readAsString(),
+        _cachedFile!.path,
+      ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildShimmerLoading();
@@ -969,10 +1177,10 @@ class _FileViewerState extends State<FileViewer>
         return Column(
           children: [
             Container(
-              constraints: BoxConstraints(
+              constraints: const BoxConstraints(
                 maxHeight: 300,
               ),
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -980,7 +1188,7 @@ class _FileViewerState extends State<FileViewer>
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -990,13 +1198,13 @@ class _FileViewerState extends State<FileViewer>
                   style: GoogleFonts.figtree(
                     fontSize: 14,
                     height: 1.5,
-                    color: textColor,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 16),
-            _buildFullScreenButton(),
+            const SizedBox(height: 16),
+            _buildActionButtons(),
           ],
         );
       },
@@ -1023,7 +1231,7 @@ class _FileViewerState extends State<FileViewer>
     }
 
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1031,11 +1239,13 @@ class _FileViewerState extends State<FileViewer>
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: 80,
@@ -1050,50 +1260,70 @@ class _FileViewerState extends State<FileViewer>
               color: iconColor,
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             path.basename(widget.fileUrl),
             style: GoogleFonts.figtree(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: textColor,
+              color: AppColors.textPrimary,
             ),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _downloadFile,
-            icon: Icon(Icons.download_rounded),
-            label: Text('Download File'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              textStyle: GoogleFonts.figtree(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
+          const SizedBox(height: 24),
+          _buildDownloadButton(),
         ],
       ),
     );
   }
 
-  Widget _buildFullScreenButton() {
+  Widget _buildActionButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ElevatedButton.icon(
+          onPressed: _toggleFullScreen,
+          icon: const Icon(Icons.fullscreen_rounded),
+          label: const Text('Full Screen'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.secondary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            textStyle: GoogleFonts.figtree(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        _buildDownloadButton(),
+      ],
+    );
+  }
+
+  Widget _buildDownloadButton() {
     return ElevatedButton.icon(
-      onPressed: _toggleFullScreen,
-      icon: Icon(Icons.fullscreen_rounded),
-      label: Text('Full Screen View'),
+      onPressed: _isDownloading ? null : _downloadFile,
+      icon: _isDownloading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+          : const Icon(Icons.download_rounded),
+      label: Text(_isDownloading ? 'Downloading...' : 'Download'),
       style: ElevatedButton.styleFrom(
-        backgroundColor: accentColor,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -1105,17 +1335,13 @@ class _FileViewerState extends State<FileViewer>
     );
   }
 
-  Widget _buildLoadingWidget() {
-    return widget.placeholder ?? _buildShimmerLoading();
-  }
-
   Widget _buildErrorWidget({String? message}) {
     return widget.errorWidget ??
         Container(
           width: widget.width,
           height: widget.height ?? 200,
           decoration: BoxDecoration(
-            color: backgroundColor,
+            color: Colors.grey[50],
             borderRadius: BorderRadius.circular(16),
           ),
           child: Center(
@@ -1127,7 +1353,7 @@ class _FileViewerState extends State<FileViewer>
                   color: Colors.red[400],
                   size: 48,
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'Unable to load file',
                   style: GoogleFonts.figtree(
@@ -1136,27 +1362,28 @@ class _FileViewerState extends State<FileViewer>
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
                     message ?? _errorMessage ?? 'The file could not be loaded',
                     style: GoogleFonts.figtree(
-                      color: secondaryTextColor,
+                      color: AppColors.textSecondary,
                       fontSize: 14,
                     ),
                     textAlign: TextAlign.center,
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 ElevatedButton.icon(
                   onPressed: _loadFile,
-                  icon: Icon(Icons.refresh_rounded),
-                  label: Text('Try Again'),
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Try Again'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1173,43 +1400,52 @@ class _FileViewerState extends State<FileViewer>
   }
 
   Widget _buildFullScreenContent() {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Container(
-          color: Colors.white,
-          child: Stack(
-            children: [
-              Center(
-                child: _buildFullScreenFileContent(),
-              ),
-              Positioned(
-                top: 40,
-                right: 16,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _toggleFullScreen,
-                    borderRadius: BorderRadius.circular(24),
-                    child: Container(
-                      padding: EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 24,
+    return WillPopScope(
+      onWillPop: () async {
+        if (_isFullScreen) {
+          _toggleFullScreen();
+          return false;
+        }
+        return true;
+      },
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          return Container(
+            color: Colors.white,
+            child: Stack(
+              children: [
+                Center(
+                  child: _buildFullScreenFileContent(),
+                ),
+                Positioned(
+                  top: 40,
+                  right: 16,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _toggleFullScreen,
+                      borderRadius: BorderRadius.circular(24),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 24,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -1235,6 +1471,25 @@ class _FileViewerState extends State<FileViewer>
         child: Image.file(
           _cachedFile!,
           fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            debugPrint('Error loading image in fullscreen: $error');
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.broken_image, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Unable to load image',
+                    style: GoogleFonts.figtree(
+                      fontSize: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       );
     } else if (widget.fileType.contains('video') && _videoController != null) {
@@ -1242,9 +1497,11 @@ class _FileViewerState extends State<FileViewer>
         controller: _videoController!,
         controls: AdaptiveVideoControls,
       );
+    } else if (widget.fileType.contains('audio')) {
+      return _buildAudioPreview();
     } else if (path.extension(widget.fileUrl).toLowerCase() == '.docx') {
       final oldPath = _cachedFile!.path;
-      final newPath = oldPath.endsWith('.docx') ? oldPath : oldPath + '.docx';
+      final newPath = oldPath.endsWith('.docx') ? oldPath : '$oldPath.docx';
       return DocxView(
         filePath: newPath,
       );
@@ -1254,9 +1511,7 @@ class _FileViewerState extends State<FileViewer>
       if (_excelData == null || _excelData!.isEmpty) {
         return _buildShimmerLoading();
       }
-      // final oldPath = _cachedFile!.path;
-      // final newPath = oldPath.endsWith('.docx') ? oldPath + '.docx' : oldPath ;
-      print('Excel Data: $_excelData');
+
       // Extract headers from the first row
       final headers = _excelData![0];
       // Data rows (excluding header)
@@ -1264,7 +1519,7 @@ class _FileViewerState extends State<FileViewer>
 
       return Container(
         color: Colors.white,
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: DataTable2(
           columnSpacing: 12,
           horizontalMargin: 12,
@@ -1282,7 +1537,7 @@ class _FileViewerState extends State<FileViewer>
                   header.toString(),
                   style: GoogleFonts.figtree(
                     fontWeight: FontWeight.bold,
-                    color: textColor,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 size: ColumnSize.M,
@@ -1297,7 +1552,7 @@ class _FileViewerState extends State<FileViewer>
                       Text(
                         cell.toString(),
                         style: GoogleFonts.figtree(
-                          color: textColor,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -1308,7 +1563,10 @@ class _FileViewerState extends State<FileViewer>
       );
     } else if (widget.fileType.contains('text')) {
       return FutureBuilder<String>(
-        future: _cachedFile!.readAsString(),
+        future: compute<String, String>(
+          (path) => File(path).readAsString(),
+          _cachedFile!.path,
+        ),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return _buildShimmerLoading();
@@ -1322,14 +1580,14 @@ class _FileViewerState extends State<FileViewer>
 
           return Container(
             color: Colors.white,
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             child: SingleChildScrollView(
               child: Text(
                 text,
                 style: GoogleFonts.figtree(
                   fontSize: 16,
                   height: 1.6,
-                  color: textColor,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),
@@ -1356,11 +1614,11 @@ class _FileViewerState extends State<FileViewer>
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1422,6 +1680,8 @@ class LessonContentViewer extends StatelessWidget {
   final String? title;
   final String? description;
   final Function()? onRetry;
+  final VoidCallback? onFileOpened;
+  final VoidCallback? onFileDownloaded;
 
   LessonContentViewer({
     Key? key,
@@ -1429,6 +1689,8 @@ class LessonContentViewer extends StatelessWidget {
     this.title,
     this.description,
     this.onRetry,
+    this.onFileOpened,
+    this.onFileDownloaded,
   }) : super(key: key);
 
   @override
@@ -1438,7 +1700,7 @@ class LessonContentViewer extends StatelessWidget {
     if (!fileService.hasFile(lesson)) {
       return Center(
         child: Container(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -1446,7 +1708,7 @@ class LessonContentViewer extends StatelessWidget {
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
                 blurRadius: 10,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -1458,7 +1720,7 @@ class LessonContentViewer extends StatelessWidget {
                 size: 48,
                 color: Colors.grey[400],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
                 'No Content Available',
                 style: GoogleFonts.figtree(
@@ -1467,7 +1729,7 @@ class LessonContentViewer extends StatelessWidget {
                   color: Colors.grey[700],
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 'This lesson does not have any file content to display.',
                 textAlign: TextAlign.center,
@@ -1512,6 +1774,8 @@ class LessonContentViewer extends StatelessWidget {
           description: description ?? lesson.description,
           lesson: lesson,
           cachedFile: cachedFile,
+          onFileOpened: onFileOpened,
+          onFileDownloaded: onFileDownloaded,
           errorWidget: _buildErrorWidget(
             onRetry: onRetry ??
                 () {
@@ -1541,7 +1805,7 @@ class LessonContentViewer extends StatelessWidget {
     final SnackbarService _snackbarService = locator<SnackbarService>();
 
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1549,7 +1813,7 @@ class LessonContentViewer extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -1561,7 +1825,7 @@ class LessonContentViewer extends StatelessWidget {
             size: 48,
             color: Colors.red[400],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Content Unavailable',
             style: GoogleFonts.figtree(
@@ -1570,7 +1834,7 @@ class LessonContentViewer extends StatelessWidget {
               color: Colors.grey[800],
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'There was a problem loading the lesson content. Please try again later.',
             textAlign: TextAlign.center,
@@ -1579,7 +1843,7 @@ class LessonContentViewer extends StatelessWidget {
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: () {
               if (onRetry != null) {
@@ -1595,12 +1859,12 @@ class LessonContentViewer extends StatelessWidget {
                 duration: const Duration(seconds: 2),
               );
             },
-            icon: Icon(Icons.refresh_rounded),
-            label: Text('Retry'),
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Retry'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF3F51B5),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

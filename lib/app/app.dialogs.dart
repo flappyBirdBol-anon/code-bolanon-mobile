@@ -4,7 +4,6 @@
 // StackedDialogGenerator
 // **************************************************************************
 
-import 'package:code_bolanon/ui/common/enums/enums.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 import 'app.locator.dart';
@@ -13,6 +12,14 @@ import '../ui/dialogs/error/error_dialog.dart';
 import '../ui/dialogs/info_alert/info_alert_dialog.dart';
 import '../ui/dialogs/success/success_dialog.dart';
 import '../ui/dialogs/warning/warning_dialog.dart';
+
+enum DialogType {
+  infoAlert,
+  basic,
+  success,
+  error,
+  warning,
+}
 
 void setupDialogUi() {
   final dialogService = locator<DialogService>();
