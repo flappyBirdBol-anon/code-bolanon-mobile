@@ -151,7 +151,7 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   }
 
   void navigateToAddLesson(CourseModel course) {
-    _navigationService.navigateTo(Routes.addLessonView, arguments: course);
+    _navigationService.navigateToAddLessonView(course: course);
   }
 
   void navigateToLessonsFullView() {
@@ -164,10 +164,7 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   }
 
   void navigateToLessonDetails(Lesson lesson) {
-    _navigationService.navigateTo(
-      Routes.lessonDetailsView,
-      arguments: LessonDetailsViewArguments(lesson: lesson),
-    );
+    _navigationService.navigateToLessonDetailsView(lesson: lesson);
   }
 
   void toggleShowAllLessons() {

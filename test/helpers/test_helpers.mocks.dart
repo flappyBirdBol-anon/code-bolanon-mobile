@@ -4,22 +4,23 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i10;
-import 'dart:io' as _i20;
-import 'dart:typed_data' as _i19;
+import 'dart:io' as _i21;
+import 'dart:typed_data' as _i20;
 import 'dart:ui' as _i11;
 
 import 'package:code_bolanon/models/course_model.dart' as _i3;
 import 'package:code_bolanon/models/lessons_model.dart' as _i6;
 import 'package:code_bolanon/models/registration_model.dart' as _i17;
-import 'package:code_bolanon/models/user_model.dart' as _i22;
+import 'package:code_bolanon/models/user_model.dart' as _i23;
+import 'package:code_bolanon/models/wishlist_model.dart' as _i18;
 import 'package:code_bolanon/services/api_service.dart' as _i4;
 import 'package:code_bolanon/services/auth_service.dart' as _i12;
 import 'package:code_bolanon/services/course_service.dart' as _i16;
-import 'package:code_bolanon/services/file_service.dart' as _i24;
-import 'package:code_bolanon/services/image_service.dart' as _i18;
-import 'package:code_bolanon/services/lesson_service.dart' as _i23;
+import 'package:code_bolanon/services/file_service.dart' as _i25;
+import 'package:code_bolanon/services/image_service.dart' as _i19;
+import 'package:code_bolanon/services/lesson_service.dart' as _i24;
 import 'package:code_bolanon/services/theme_service.dart' as _i13;
-import 'package:code_bolanon/services/user_service.dart' as _i21;
+import 'package:code_bolanon/services/user_service.dart' as _i22;
 import 'package:dio/dio.dart' as _i2;
 import 'package:file_picker/file_picker.dart' as _i15;
 import 'package:flutter/material.dart' as _i5;
@@ -1091,6 +1092,37 @@ class MockApiService extends _i1.Mock implements _i4.ApiService {
       ) as _i10.Future<_i2.Response<dynamic>>);
 
   @override
+  _i10.Future<_i2.Response<dynamic>> delete(
+    String? path, {
+    dynamic data,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #delete,
+          [path],
+          {#data: data},
+        ),
+        returnValue:
+            _i10.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #delete,
+            [path],
+            {#data: data},
+          ),
+        )),
+        returnValueForMissingStub:
+            _i10.Future<_i2.Response<dynamic>>.value(_FakeResponse_1<dynamic>(
+          this,
+          Invocation.method(
+            #delete,
+            [path],
+            {#data: data},
+          ),
+        )),
+      ) as _i10.Future<_i2.Response<dynamic>>);
+
+  @override
   _i10.Future<void> setAuthToken(String? token) => (super.noSuchMethod(
         Invocation.method(
           #setAuthToken,
@@ -1386,12 +1418,49 @@ class MockCourseService extends _i1.Mock implements _i16.CourseService {
         returnValueForMissingStub:
             _i10.Future<List<_i3.CourseModel>>.value(<_i3.CourseModel>[]),
       ) as _i10.Future<List<_i3.CourseModel>>);
+
+  @override
+  _i10.Future<List<_i18.WishlistModel>> getUserWishlists() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getUserWishlists,
+          [],
+        ),
+        returnValue:
+            _i10.Future<List<_i18.WishlistModel>>.value(<_i18.WishlistModel>[]),
+        returnValueForMissingStub:
+            _i10.Future<List<_i18.WishlistModel>>.value(<_i18.WishlistModel>[]),
+      ) as _i10.Future<List<_i18.WishlistModel>>);
+
+  @override
+  _i10.Future<List<_i3.CourseModel>> getWishlistCourses(
+          List<_i18.WishlistModel>? wishlists) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getWishlistCourses,
+          [wishlists],
+        ),
+        returnValue:
+            _i10.Future<List<_i3.CourseModel>>.value(<_i3.CourseModel>[]),
+        returnValueForMissingStub:
+            _i10.Future<List<_i3.CourseModel>>.value(<_i3.CourseModel>[]),
+      ) as _i10.Future<List<_i3.CourseModel>>);
+
+  @override
+  _i10.Future<bool> removeFromWishlist(int? wishlistId) => (super.noSuchMethod(
+        Invocation.method(
+          #removeFromWishlist,
+          [wishlistId],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
 }
 
 /// A class which mocks [ImageService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockImageService extends _i1.Mock implements _i18.ImageService {
+class MockImageService extends _i1.Mock implements _i19.ImageService {
   @override
   String get baseUrl => (super.noSuchMethod(
         Invocation.getter(#baseUrl),
@@ -1556,26 +1625,26 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
       ) as _i10.Future<void>);
 
   @override
-  _i10.Future<_i19.Uint8List?> getCourseImageBytes(_i3.CourseModel? course) =>
+  _i10.Future<_i20.Uint8List?> getCourseImageBytes(_i3.CourseModel? course) =>
       (super.noSuchMethod(
         Invocation.method(
           #getCourseImageBytes,
           [course],
         ),
-        returnValue: _i10.Future<_i19.Uint8List?>.value(),
-        returnValueForMissingStub: _i10.Future<_i19.Uint8List?>.value(),
-      ) as _i10.Future<_i19.Uint8List?>);
+        returnValue: _i10.Future<_i20.Uint8List?>.value(),
+        returnValueForMissingStub: _i10.Future<_i20.Uint8List?>.value(),
+      ) as _i10.Future<_i20.Uint8List?>);
 
   @override
-  _i10.Future<_i20.File?> getCachedImageFile(String? imageUrl) =>
+  _i10.Future<_i21.File?> getCachedImageFile(String? imageUrl) =>
       (super.noSuchMethod(
         Invocation.method(
           #getCachedImageFile,
           [imageUrl],
         ),
-        returnValue: _i10.Future<_i20.File?>.value(),
-        returnValueForMissingStub: _i10.Future<_i20.File?>.value(),
-      ) as _i10.Future<_i20.File?>);
+        returnValue: _i10.Future<_i21.File?>.value(),
+        returnValueForMissingStub: _i10.Future<_i21.File?>.value(),
+      ) as _i10.Future<_i21.File?>);
 
   @override
   _i5.Widget loadImage({
@@ -1659,7 +1728,7 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
 /// A class which mocks [UserService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockUserService extends _i1.Mock implements _i21.UserService {
+class MockUserService extends _i1.Mock implements _i22.UserService {
   @override
   int get listenersCount => (super.noSuchMethod(
         Invocation.getter(#listenersCount),
@@ -1678,14 +1747,14 @@ class MockUserService extends _i1.Mock implements _i21.UserService {
       ) as _i10.Future<void>);
 
   @override
-  _i10.Future<_i22.UserModel?> getUserFromPrefs() => (super.noSuchMethod(
+  _i10.Future<_i23.UserModel?> getUserFromPrefs() => (super.noSuchMethod(
         Invocation.method(
           #getUserFromPrefs,
           [],
         ),
-        returnValue: _i10.Future<_i22.UserModel?>.value(),
-        returnValueForMissingStub: _i10.Future<_i22.UserModel?>.value(),
-      ) as _i10.Future<_i22.UserModel?>);
+        returnValue: _i10.Future<_i23.UserModel?>.value(),
+        returnValueForMissingStub: _i10.Future<_i23.UserModel?>.value(),
+      ) as _i10.Future<_i23.UserModel?>);
 
   @override
   _i10.Future<Map<String, dynamic>?> getProfile() => (super.noSuchMethod(
@@ -1742,7 +1811,7 @@ class MockUserService extends _i1.Mock implements _i21.UserService {
       ) as _i10.Future<bool>);
 
   @override
-  void setUser(_i22.UserModel? user) => super.noSuchMethod(
+  void setUser(_i23.UserModel? user) => super.noSuchMethod(
         Invocation.method(
           #setUser,
           [user],
@@ -1791,7 +1860,7 @@ class MockUserService extends _i1.Mock implements _i21.UserService {
 /// A class which mocks [LessonsService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockLessonsService extends _i1.Mock implements _i23.LessonsService {
+class MockLessonsService extends _i1.Mock implements _i24.LessonsService {
   @override
   _i4.ApiService get apiService => (super.noSuchMethod(
         Invocation.getter(#apiService),
@@ -2061,7 +2130,7 @@ class MockLessonsService extends _i1.Mock implements _i23.LessonsService {
 /// A class which mocks [FileService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockFileService extends _i1.Mock implements _i24.FileService {
+class MockFileService extends _i1.Mock implements _i25.FileService {
   @override
   String get baseUrl => (super.noSuchMethod(
         Invocation.getter(#baseUrl),
@@ -2207,7 +2276,7 @@ class MockFileService extends _i1.Mock implements _i24.FileService {
       ) as _i10.Future<void>);
 
   @override
-  _i10.Future<_i19.Uint8List?> getFileBytes(
+  _i10.Future<_i20.Uint8List?> getFileBytes(
     String? fileUrl, {
     String? lessonId,
     String? fileName,
@@ -2221,12 +2290,12 @@ class MockFileService extends _i1.Mock implements _i24.FileService {
             #fileName: fileName,
           },
         ),
-        returnValue: _i10.Future<_i19.Uint8List?>.value(),
-        returnValueForMissingStub: _i10.Future<_i19.Uint8List?>.value(),
-      ) as _i10.Future<_i19.Uint8List?>);
+        returnValue: _i10.Future<_i20.Uint8List?>.value(),
+        returnValueForMissingStub: _i10.Future<_i20.Uint8List?>.value(),
+      ) as _i10.Future<_i20.Uint8List?>);
 
   @override
-  _i10.Future<_i20.File?> getCachedFile(
+  _i10.Future<_i21.File?> getCachedFile(
     String? fileUrl, {
     String? fileName,
   }) =>
@@ -2236,9 +2305,9 @@ class MockFileService extends _i1.Mock implements _i24.FileService {
           [fileUrl],
           {#fileName: fileName},
         ),
-        returnValue: _i10.Future<_i20.File?>.value(),
-        returnValueForMissingStub: _i10.Future<_i20.File?>.value(),
-      ) as _i10.Future<_i20.File?>);
+        returnValue: _i10.Future<_i21.File?>.value(),
+        returnValueForMissingStub: _i10.Future<_i21.File?>.value(),
+      ) as _i10.Future<_i21.File?>);
 
   @override
   _i10.Future<_i7.OpenResult> openFile(
@@ -2371,15 +2440,15 @@ class MockFileService extends _i1.Mock implements _i24.FileService {
       ) as _i5.Widget);
 
   @override
-  _i10.Future<_i20.File?> downloadFile(_i6.Lesson? lesson) =>
+  _i10.Future<_i21.File?> downloadFile(_i6.Lesson? lesson) =>
       (super.noSuchMethod(
         Invocation.method(
           #downloadFile,
           [lesson],
         ),
-        returnValue: _i10.Future<_i20.File?>.value(),
-        returnValueForMissingStub: _i10.Future<_i20.File?>.value(),
-      ) as _i10.Future<_i20.File?>);
+        returnValue: _i10.Future<_i21.File?>.value(),
+        returnValueForMissingStub: _i10.Future<_i21.File?>.value(),
+      ) as _i10.Future<_i21.File?>);
 
   @override
   _i10.Future<bool> isFileCached(_i6.Lesson? lesson) => (super.noSuchMethod(
@@ -2551,16 +2620,16 @@ class MockFileService extends _i1.Mock implements _i24.FileService {
       ) as _i10.Future<bool>);
 
   @override
-  _i10.Future<List<_i20.File>> getCachedFilesForLesson(String? lessonId) =>
+  _i10.Future<List<_i21.File>> getCachedFilesForLesson(String? lessonId) =>
       (super.noSuchMethod(
         Invocation.method(
           #getCachedFilesForLesson,
           [lessonId],
         ),
-        returnValue: _i10.Future<List<_i20.File>>.value(<_i20.File>[]),
+        returnValue: _i10.Future<List<_i21.File>>.value(<_i21.File>[]),
         returnValueForMissingStub:
-            _i10.Future<List<_i20.File>>.value(<_i20.File>[]),
-      ) as _i10.Future<List<_i20.File>>);
+            _i10.Future<List<_i21.File>>.value(<_i21.File>[]),
+      ) as _i10.Future<List<_i21.File>>);
 
   @override
   _i10.Future<void> prefetchFilesForCourse(List<_i6.Lesson>? courseLessons) =>

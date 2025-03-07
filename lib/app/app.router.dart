@@ -229,7 +229,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<AddLessonViewArguments>(
         orElse: () => const AddLessonViewArguments(),
       );
-      return _i16.MaterialPageRoute<dynamic>(
+      return _i18.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i12.AddLessonView(key: args.key, course: args.course),
         settings: data,
@@ -342,9 +342,9 @@ class AddLessonViewArguments {
     this.course,
   });
 
-  final _i16.Key? key;
+  final _i18.Key? key;
 
-  final _i17.Course? course;
+  final _i19.CourseModel? course;
 
   @override
   String toString() {
@@ -565,17 +565,15 @@ extension NavigatorStateExtension on _i21.NavigationService {
   }
 
   Future<dynamic> navigateToAddLessonView({
-    _i16.Key? key,
-    _i17.Course? course,
+    _i18.Key? key,
+    _i19.CourseModel? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
   }) async {
-  }) async {
     return navigateTo<dynamic>(Routes.addLessonView,
-        arguments: AddLessonViewArguments(key: key, course: course),
         arguments: AddLessonViewArguments(key: key, course: course),
         id: routerId,
         preventDuplicates: preventDuplicates,
@@ -806,17 +804,15 @@ extension NavigatorStateExtension on _i21.NavigationService {
   }
 
   Future<dynamic> replaceWithAddLessonView({
-    _i16.Key? key,
-    _i17.Course? course,
+    _i18.Key? key,
+    _i19.CourseModel? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
   }) async {
-  }) async {
     return replaceWith<dynamic>(Routes.addLessonView,
-        arguments: AddLessonViewArguments(key: key, course: course),
         arguments: AddLessonViewArguments(key: key, course: course),
         id: routerId,
         preventDuplicates: preventDuplicates,

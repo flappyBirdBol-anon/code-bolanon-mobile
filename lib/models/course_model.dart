@@ -17,6 +17,7 @@ class CourseModel {
   final WishlistModel? wishlist;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int? lessonCount;
 
   CourseModel({
     required this.id,
@@ -33,6 +34,7 @@ class CourseModel {
     this.wishlist,
     this.createdAt,
     this.updatedAt,
+    this.lessonCount,
   });
 
   factory CourseModel.fromJson(Map<String, dynamic> json) {
@@ -57,6 +59,7 @@ class CourseModel {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'])
           : null,
+      lessonCount: json['lessons_count'],
     );
   }
 
@@ -88,6 +91,7 @@ class CourseModel {
     WishlistModel? wishlist,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? lessonCount,
   }) {
     return CourseModel(
       id: id ?? this.id,
@@ -102,6 +106,7 @@ class CourseModel {
       wishlist: wishlist ?? this.wishlist,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      lessonCount: lessonCount ?? this.lessonCount,
     );
   }
 }

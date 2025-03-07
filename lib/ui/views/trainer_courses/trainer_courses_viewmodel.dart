@@ -1,4 +1,6 @@
 // lib/viewmodels/trainer_courses_viewmodel.dart
+import 'package:code_bolanon/app/app.router.dart';
+import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
@@ -10,7 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 
-class TrainerCoursesViewModel extends BaseViewModel {
+class TrainerCoursesViewModel extends AppBaseViewModel {
   final _imagePicker = ImagePicker();
 
   // Add service dependencies
@@ -355,11 +357,9 @@ class TrainerCoursesViewModel extends BaseViewModel {
   }
 
   void navigateToCourseDetails(BuildContext context, CourseModel course) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CourseDetailsView(course: course),
-      ),
+    navigationService.navigateTo(
+      Routes.courseDetailsView,
+      arguments: CourseDetailsViewArguments(course: course),
     );
   }
 
