@@ -27,7 +27,7 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
         actions: [
           IconButton(
             icon: const Icon(Icons.favorite_rounded),
-            onPressed: () => (),
+            onPressed: () => viewModel.navigateToWishlist(),
           ),
         ],
         onSearchTap: () => (),

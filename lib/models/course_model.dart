@@ -1,5 +1,6 @@
 // lib/models/course.dart
 import 'package:code_bolanon/models/registration_model.dart';
+import 'package:code_bolanon/models/wishlist_model.dart';
 
 class CourseModel {
   final String id;
@@ -13,6 +14,7 @@ class CourseModel {
   final int lessons;
   final int reviews;
   final RegistrationModel? registration;
+  final WishlistModel? wishlist;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -28,6 +30,7 @@ class CourseModel {
     this.lessons = 16,
     this.reviews = 4,
     this.registration,
+    this.wishlist,
     this.createdAt,
     this.updatedAt,
   });
@@ -44,6 +47,9 @@ class CourseModel {
       price: double.tryParse(json['price'] ?? 0.00) ?? 0.00,
       registration: json['registration'] != null
           ? RegistrationModel.fromJson(json['registration'])
+          : null,
+      wishlist: json['wishlist'] != null
+          ? WishlistModel.fromJson(json['wishlist'])
           : null,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
@@ -63,6 +69,9 @@ class CourseModel {
       'is_active': isActive ? '1' : '0',
       'students_enrolled': studentsEnrolled.toString(),
       'registration': registration?.toJson(),
+      'wishlist': wishlist?.toJson(),
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 
@@ -76,6 +85,9 @@ class CourseModel {
     double? rating,
     double? price,
     RegistrationModel? registration,
+    WishlistModel? wishlist,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return CourseModel(
       id: id ?? this.id,
@@ -87,6 +99,9 @@ class CourseModel {
       rating: rating ?? this.rating,
       price: price ?? this.price,
       registration: registration ?? this.registration,
+      wishlist: wishlist ?? this.wishlist,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }

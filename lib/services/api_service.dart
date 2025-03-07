@@ -1,9 +1,9 @@
 // api_service.dart
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 
 class ApiService {
   static ApiService? _instance;
@@ -86,6 +86,15 @@ class ApiService {
   Future<Response> patch(String path, {dynamic data}) async {
     try {
       final response = await _dio.patch(path, data: data);
+      return response;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Response> delete(String path, {dynamic data}) async {
+    try {
+      final response = await _dio.delete(path, data: data);
       return response;
     } on DioException catch (e) {
       throw _handleError(e);

@@ -2,9 +2,11 @@
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/registration_model.dart';
+import 'package:code_bolanon/models/wishlist_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CourseService {
@@ -204,6 +206,54 @@ class CourseService {
       return courses;
     } catch (e) {
       throw Exception('Failed to get registered courses: ${e.toString()}');
+    }
+  }
+
+  Future<List<WishlistModel>> getUserWishlists() async {
+    try {
+      final response = await _apiService.get('/wishlists');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> registrationsJson = response.data['data'];
+        return registrationsJson
+            .map((json) => WishlistModel.fromJson(json))
+            .toList();
+      } else {
+        throw Exception(
+            'Failed to load wishlists: ${response.data['message']}');
+      }
+    } catch (e) {
+      throw Exception('Failed to get user wishlists: ${e.toString()}');
+    }
+  }
+
+  Future<List<CourseModel>> getWishlistCourses(
+      List<WishlistModel> wishlists) async {
+    try {
+      List<CourseModel> courses = [];
+
+      for (var wishlist in wishlists) {
+        final response = await _apiService.get('/courses/${wishlist.courseId}');
+
+        if (response.statusCode == 200) {
+          final courseJson = response.data['data'];
+          courseJson['wishlist'] = wishlist.toJson();
+          courses.add(CourseModel.fromJson(courseJson));
+        }
+      }
+      return courses;
+    } catch (e) {
+      throw Exception('Failed to get wishlisted courses: ${e.toString()}');
+    }
+  }
+
+  Future<bool> removeFromWishlist(int wishlistId) async {
+    try {
+      final response = await _apiService.delete('/wishlists/$wishlistId');
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Error removing from wishlist: $e');
+      return false;
     }
   }
 }

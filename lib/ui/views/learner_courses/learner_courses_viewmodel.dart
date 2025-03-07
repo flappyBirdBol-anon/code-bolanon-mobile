@@ -1,3 +1,4 @@
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/completed_lessons.dart';
 import 'package:code_bolanon/models/course_model.dart';
@@ -209,6 +210,6 @@ class LearnerCoursesViewModel extends AppBaseViewModel {
   }
 
   void navigateToWishlist() {
-    //navigationService.navigateTo();
+    navigationService.navigateTo(Routes.learnerWishlistsView);
   }
 }
