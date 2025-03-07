@@ -1,5 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/utils/tech_stack_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
@@ -46,7 +47,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
           color: Colors.grey,

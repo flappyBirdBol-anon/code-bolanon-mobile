@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -14,11 +15,10 @@ class MenuView extends StackedView<MenuViewModel> {
     Widget? child,
   ) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: const CustomAppBar(
         title: 'Menu',
         showNotificationButton: true,
-        backgroundColor: Colors.white,
       ),
       body: ListView(
         children: [

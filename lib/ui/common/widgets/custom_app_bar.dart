@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -17,7 +18,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showNotificationButton = false,
     this.onSearchTap,
     this.onNotificationTap,
-    this.backgroundColor = const Color(0xFFFFFFFF),
+    this.backgroundColor = AppColors.background,
   }) : super(key: key);
 
   @override

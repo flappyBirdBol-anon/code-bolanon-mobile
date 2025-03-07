@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/views/auth/signup/signup_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,6 +14,7 @@ class AuthView extends StackedView<AuthViewModel> {
   @override
   Widget builder(BuildContext context, AuthViewModel viewModel, Widget? child) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

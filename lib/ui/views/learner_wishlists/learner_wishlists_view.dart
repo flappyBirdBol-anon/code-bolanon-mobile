@@ -3,6 +3,7 @@ import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/ui_helpers.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
@@ -19,8 +20,8 @@ class LearnerWishlistsView extends StackedView<LearnerWishlistsViewModel> {
   ) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('My Wishlist'),
+      appBar: CustomAppBar(
+        title: 'My Wishlist',
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -43,6 +44,7 @@ class LearnerWishlistsView extends StackedView<LearnerWishlistsViewModel> {
                   itemBuilder: (context, index) {
                     final course = viewModel.wishlistedCourses[index];
                     return Card(
+                      color: AppColors.cardBackground,
                       margin: const EdgeInsets.only(bottom: 16),
                       elevation: 2,
                       child: Padding(

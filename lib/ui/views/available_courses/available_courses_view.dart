@@ -36,6 +36,7 @@ class AvailableCoursesView extends StackedView<AvailableCoursesViewModel> {
         onSearchTap: () => (),
         onNotificationTap: () => (),
       ),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [

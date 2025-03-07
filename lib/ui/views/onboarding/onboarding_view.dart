@@ -1,8 +1,9 @@
-import 'package:code_bolanon/utils/constants.dart';
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:stacked/stacked.dart';
 import 'package:lottie/lottie.dart';
+import 'package:stacked/stacked.dart';
+
 import 'onboarding_viewmodel.dart';
 
 class OnboardingView extends StackedView<OnboardingViewModel> {
@@ -12,6 +13,7 @@ class OnboardingView extends StackedView<OnboardingViewModel> {
   Widget builder(
       BuildContext context, OnboardingViewModel viewModel, Widget? child) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
