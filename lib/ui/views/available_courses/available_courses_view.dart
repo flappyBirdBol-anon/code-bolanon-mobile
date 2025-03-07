@@ -1,5 +1,4 @@
 import 'package:code_bolanon/app/app.locator.dart';
-import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
@@ -20,18 +19,17 @@ class AvailableCoursesView extends StackedView<AvailableCoursesViewModel> {
     Widget? child,
   ) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: CustomAppBar(
         title: 'Available Courses',
         showSearchButton: true,
         showNotificationButton: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.filter_list_rounded),
             onPressed: () => _showFilterOptions(context, viewModel),
           ),
           IconButton(
-            icon: const Icon(Icons.book),
+            icon: const Icon(Icons.book_rounded),
             onPressed: viewModel.navigateToMyCourses,
           ),
         ],
