@@ -1,17 +1,15 @@
 // lib/ui/views/lessons_full/lessons_full_viewmodel.dart
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
-import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
-
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class LessonsFullViewModel extends BaseViewModel {
   final _lessonsService = locator<LessonsService>();
@@ -21,7 +19,7 @@ class LessonsFullViewModel extends BaseViewModel {
   final _dialogService = locator<DialogService>();
 
   int _courseId = 0;
-  Course? _course;
+  CourseModel? _course;
   List<Lesson> _lessons = [];
 
   List<Lesson> get lessons => _lessons;
@@ -86,14 +84,14 @@ class LessonsFullViewModel extends BaseViewModel {
     Widget? placeholder,
     Widget? errorWidget,
   }) {
-    if (_course == null || _course!.thumbnail == null) {
+    if (_course == null) {
       return _buildDefaultErrorWidget(width, height);
     }
 
     // Handle local assets differently
-    if (_course!.thumbnail!.startsWith('assets/')) {
+    if (_course!.thumbnail.startsWith('assets/')) {
       return Image.asset(
-        _course!.thumbnail!,
+        _course!.thumbnail,
         width: width,
         height: height,
         fit: fit,
@@ -105,7 +103,7 @@ class LessonsFullViewModel extends BaseViewModel {
 
     // Use ImageService for remote images
     final imageUrl =
-        _imageService.getCourseThumbnailFromPath(_course!.thumbnail!);
+        _imageService.getCourseThumbnailFromPath(_course!.thumbnail);
 
     return _imageService.loadImage(
       imageUrl: imageUrl,

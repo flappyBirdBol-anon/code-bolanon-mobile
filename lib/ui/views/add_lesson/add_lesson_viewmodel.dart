@@ -1,17 +1,15 @@
 import 'package:code_bolanon/app/app.locator.dart';
-import 'package:code_bolanon/models/course.dart';
-import 'package:code_bolanon/models/lessons_model.dart';
+import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:path/path.dart' as path;
 
 class AddLessonViewModel extends BaseViewModel {
 //model
-  Course? course;
+  CourseModel? course;
 
   // Services
   final _navigationService = locator<NavigationService>();
@@ -46,10 +44,10 @@ class AddLessonViewModel extends BaseViewModel {
       descriptionController.text.isNotEmpty &&
       hasFile;
 
-  Future<void> initialize(Course? courses) async {
+  Future<void> initialize(CourseModel? courses) async {
     final args = _navigationService.currentArguments;
 
-    if (args is Course) {
+    if (args is CourseModel) {
       print("has course");
       course = args;
     } else if (courses != null) {

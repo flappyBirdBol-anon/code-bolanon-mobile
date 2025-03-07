@@ -1,5 +1,4 @@
-import 'package:code_bolanon/models/course.dart';
-import 'package:code_bolanon/models/lessons_model.dart';
+import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart' show AppColors;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,7 +7,7 @@ import 'package:stacked/stacked.dart';
 import 'course_details_viewmodel.dart';
 
 class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
-  final Course? course;
+  final CourseModel? course;
 
   const CourseDetailsView({
     Key? key,

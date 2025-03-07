@@ -5,7 +5,7 @@
 // **************************************************************************
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:code_bolanon/models/course.dart' as _i18;
+import 'package:code_bolanon/models/course_model.dart' as _i18;
 import 'package:code_bolanon/models/lessons_model.dart' as _i19;
 import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart' as _i12;
 import 'package:code_bolanon/ui/views/auth/auth_view.dart' as _i5;
@@ -302,7 +302,7 @@ class CourseDetailsViewArguments {
 
   final _i17.Key? key;
 
-  final _i18.Course? course;
+  final _i18.CourseModel? course;
 
   @override
   String toString() {
@@ -329,7 +329,7 @@ class AddLessonViewArguments {
 
   final _i17.Key? key;
 
-  final _i18.Course? course;
+  final _i18.CourseModel? course;
 
   @override
   String toString() {
@@ -534,7 +534,7 @@ extension NavigatorStateExtension on _i20.NavigationService {
 
   Future<dynamic> navigateToCourseDetailsView({
     _i17.Key? key,
-    _i18.Course? course,
+    _i18.CourseModel? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -551,7 +551,7 @@ extension NavigatorStateExtension on _i20.NavigationService {
 
   Future<dynamic> navigateToAddLessonView({
     _i17.Key? key,
-    _i18.Course? course,
+    _i18.CourseModel? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -759,7 +759,7 @@ extension NavigatorStateExtension on _i20.NavigationService {
 
   Future<dynamic> replaceWithCourseDetailsView({
     _i17.Key? key,
-    _i18.Course? course,
+    _i18.CourseModel? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -776,7 +776,7 @@ extension NavigatorStateExtension on _i20.NavigationService {
 
   Future<dynamic> replaceWithAddLessonView({
     _i17.Key? key,
-    _i18.Course? course,
+    _i18.CourseModel? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,

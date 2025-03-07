@@ -1,5 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/ui/common/utils/tech_stack_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
@@ -1354,7 +1354,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     );
   }
 
-  Widget _buildCourseImage(TrainerHomeViewModel viewModel, Course course) {
+  Widget _buildCourseImage(TrainerHomeViewModel viewModel, CourseModel course) {
     return viewModel.getCourseImageWidget(
       course: course,
       fit: BoxFit.cover,

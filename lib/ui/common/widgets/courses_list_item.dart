@@ -1,9 +1,9 @@
-import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class CoursesListItem extends StatelessWidget {
-  final Course course;
+  final CourseModel course;
   final VoidCallback? onEdit;
   final VoidCallback? onToggleStatus;
   final dynamic viewModel;

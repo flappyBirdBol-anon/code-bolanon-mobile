@@ -1,6 +1,7 @@
 // course_service.dart
 import 'package:code_bolanon/app/app.locator.dart';
-import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/models/registration_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:dio/dio.dart';
@@ -14,15 +15,16 @@ class CourseService {
       : _apiService = apiService ?? locator<ApiService>(),
         _imageService = imageService ?? locator<ImageService>();
 
-  List<Course>? _courses;
-  List<Course>? get courseList => _courses;
+  List<CourseModel>? _courses;
+  List<CourseModel>? get courseList => _courses;
 
-  Future<List<Course>> getCourses() async {
+  Future<List<CourseModel>> getCourses() async {
     final response = await _apiService.get('/courses');
 
     if (response.statusCode == 200) {
       final List<dynamic> coursesJson = response.data['data'];
-      final courses = coursesJson.map((json) => Course.fromJson(json)).toList();
+      final courses =
+          coursesJson.map((json) => CourseModel.fromJson(json)).toList();
       _courses = courses;
       // Prefetch and cache all course images in the background
       _imageService.prefetchCourseImages(courses);
@@ -33,16 +35,16 @@ class CourseService {
     }
   }
 
-  Future<Course> getCourseById(int courseId) async {
+  Future<CourseModel> getCourseById(int courseId) async {
     final response = await _apiService.get('/courses/$courseId');
 
     if (response.statusCode == 200) {
-      final course = Course.fromJson(response.data['data']);
+      final course = CourseModel.fromJson(response.data['data']);
 
       // Prefetch and cache this course's image
-      if (course.thumbnail != null && course.thumbnail!.isNotEmpty) {
+      if (course.thumbnail.isNotEmpty) {
         final imageUrl =
-            _imageService.getCourseThumbnailFromPath(course.thumbnail!);
+            _imageService.getCourseThumbnailFromPath(course.thumbnail);
         _imageService.prefetchImage(imageUrl, courseId: course.id);
       }
 
@@ -52,7 +54,7 @@ class CourseService {
     }
   }
 
-  Future<Course> addCourse({
+  Future<CourseModel> addCourse({
     required String title,
     required String description,
     required double price,
@@ -81,7 +83,7 @@ class CourseService {
       }
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        final course = Course.fromJson(response.data['data']);
+        final course = CourseModel.fromJson(response.data['data']);
 
         // Cache the new course image
         await _imageService.handleCourseCacheUpdate(course);
@@ -95,7 +97,7 @@ class CourseService {
     }
   }
 
-  Future<Course> updateCourse({
+  Future<CourseModel> updateCourse({
     required String courseId,
     String? title,
     String? description,
@@ -105,7 +107,7 @@ class CourseService {
     try {
       // Prepare update data
       final Map<String, dynamic> updateData = {};
-      if (courseId != null) updateData['id'] = courseId;
+      updateData['id'] = courseId;
       if (title != null) updateData['title'] = title;
       if (description != null) updateData['description'] = description;
       if (price != null) updateData['price'] = price.toString();
@@ -131,7 +133,7 @@ class CourseService {
       }
 
       if (response.statusCode == 200) {
-        final course = Course.fromJson(response.data['data']);
+        final course = CourseModel.fromJson(response.data['data']);
 
         // Update the cache for this course
         await _imageService.handleCourseCacheUpdate(course);
@@ -161,6 +163,47 @@ class CourseService {
       }
     } catch (e) {
       throw Exception('Failed to delete course: ${e.toString()}');
+    }
+  }
+
+  Future<List<RegistrationModel>> getUserRegistrations() async {
+    try {
+      final response = await _apiService.get('/registrations');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> registrationsJson = response.data['data'];
+        return registrationsJson
+            .map((json) => RegistrationModel.fromJson(json))
+            .toList();
+      } else {
+        throw Exception(
+            'Failed to load registrations: ${response.data['message']}');
+      }
+    } catch (e) {
+      throw Exception('Failed to get user registrations: ${e.toString()}');
+    }
+  }
+
+  Future<List<CourseModel>> getRegisteredCourses(
+      List<RegistrationModel> registrations) async {
+    try {
+      List<CourseModel> courses = [];
+
+      // Get course details for each registration
+      for (var registration in registrations) {
+        final response =
+            await _apiService.get('/courses/${registration.courseId}');
+
+        if (response.statusCode == 200) {
+          final courseJson = response.data['data'];
+          // Add registration data to course model
+          courseJson['registration'] = registration.toJson();
+          courses.add(CourseModel.fromJson(courseJson));
+        }
+      }
+      return courses;
+    } catch (e) {
+      throw Exception('Failed to get registered courses: ${e.toString()}');
     }
   }
 }

@@ -1,11 +1,10 @@
 // lib/viewmodels/trainer_courses_viewmodel.dart
-import 'package:code_bolanon/models/course.dart';
+import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/common/helpers/dialog_helper.dart';
 import 'package:code_bolanon/ui/common/widgets/course_dialog.dart';
 import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stacked/stacked.dart';
@@ -17,13 +16,14 @@ class TrainerCoursesViewModel extends BaseViewModel {
   final CourseService _courseService;
   final ImageService _imageService;
 
-  List<Course> _courses = [];
+  List<CourseModel> _courses = [];
   String _selectedFilter = 'All';
   XFile? _selectedImage;
-  bool _isBusy = false;
+  final bool _isBusy = false;
 
-  List<Course> get courses => _filterCourses();
+  List<CourseModel> get courses => _filterCourses();
   String get selectedFilter => _selectedFilter;
+  @override
   bool get isBusy => _isBusy;
   ImageService get imageService => _imageService; // Expose image service for UI
 
@@ -47,7 +47,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
 
       // Fallback to sample data if API fails
       _courses = [
-        Course(
+        CourseModel(
           id: '1',
           title: 'Web Development Fundamentals',
           description:
@@ -58,7 +58,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
           price: 10,
           rating: 4.5,
         ),
-        Course(
+        CourseModel(
           id: '2',
           title: 'Flutter Development Fundamentals',
           description:
@@ -69,7 +69,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
           price: 20,
           rating: 4.8,
         ),
-        Course(
+        CourseModel(
           id: '3',
           title: 'Python Development Fundamentals',
           description:
@@ -91,7 +91,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  List<Course> _filterCourses() {
+  List<CourseModel> _filterCourses() {
     if (_selectedFilter == 'All') return _courses;
     if (_selectedFilter == 'Active') {
       return _courses.where((course) => course.isActive).toList();
@@ -118,7 +118,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
 
   // Get a widget to display a course image
   Widget getCourseImageWidget({
-    required Course course,
+    required CourseModel course,
     double? width,
     double? height,
     BoxFit fit = BoxFit.cover,
@@ -126,9 +126,9 @@ class TrainerCoursesViewModel extends BaseViewModel {
     Widget? errorWidget,
   }) {
     // Handle local assets differently
-    if (course.thumbnail != null && course.thumbnail!.startsWith('assets/')) {
+    if (course.thumbnail.startsWith('assets/')) {
       return Image.asset(
-        course.thumbnail!,
+        course.thumbnail,
         width: width,
         height: height,
         fit: fit,
@@ -139,9 +139,9 @@ class TrainerCoursesViewModel extends BaseViewModel {
     }
 
     // If it's a remote image, use the ImageService
-    if (course.thumbnail != null && course.thumbnail!.isNotEmpty) {
+    if (course.thumbnail.isNotEmpty) {
       final imageUrl =
-          _imageService.getCourseThumbnailFromPath(course.thumbnail!);
+          _imageService.getCourseThumbnailFromPath(course.thumbnail);
 
       return _imageService.loadImage(
         imageUrl: imageUrl,
@@ -198,7 +198,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
 
       // Fallback to local creation if API fails
       if (_courses.isNotEmpty) {
-        final newCourse = Course(
+        final newCourse = CourseModel(
           id: DateTime.now().toString(),
           title: title,
           description: description,
@@ -254,7 +254,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
           _courses.indexWhere((course) => course.id == courseId);
       if (courseIndex != -1) {
         final course = _courses[courseIndex];
-        _courses[courseIndex] = Course(
+        _courses[courseIndex] = CourseModel(
           id: course.id,
           title: title ?? course.title,
           description: description ?? course.description,
@@ -283,7 +283,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
 
       // For now, just update locally
       final course = _courses[courseIndex];
-      _courses[courseIndex] = Course(
+      _courses[courseIndex] = CourseModel(
         id: course.id,
         title: course.title,
         description: course.description,
@@ -296,7 +296,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
 
       final statusText =
           _courses[courseIndex].isActive ? 'activated' : 'deactivated';
-      _showSuccessMessage('Course ${statusText} successfully');
+      _showSuccessMessage('Course $statusText successfully');
     } catch (e) {
       _showErrorMessage('Failed to update course status: ${e.toString()}');
     } finally {
@@ -325,7 +325,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
   }
 
   // Option 1: Edit course with enhanced dialog
-  void showEditCourseDialog(BuildContext context, Course course) {
+  void showEditCourseDialog(BuildContext context, CourseModel course) {
     showGlassmorphicDialog(
       context: context,
       blurAmount: 8.0,
@@ -347,7 +347,7 @@ class TrainerCoursesViewModel extends BaseViewModel {
     );
   }
 
-  void navigateToCourseDetails(BuildContext context, Course course) {
+  void navigateToCourseDetails(BuildContext context, CourseModel course) {
     Navigator.push(
       context,
       MaterialPageRoute(
