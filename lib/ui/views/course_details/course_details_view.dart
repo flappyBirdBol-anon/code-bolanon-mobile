@@ -373,54 +373,6 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
     );
   }
 
-  // Widget _buildEmptyLessonsState(CourseDetailsViewModel viewModel) {
-  //   return Container(
-  //     padding: const EdgeInsets.symmetric(vertical: 32),
-  //     child: Center(
-  //       child: Column(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           Icon(
-  //             Icons.video_library_outlined,
-  //             size: 64,
-  //             color: Colors.grey[400],
-  //           ),
-  //           const SizedBox(height: 16),
-  //           Text(
-  //             'No lessons available yet',
-  //             style: TextStyle(
-  //               fontSize: 18,
-  //               color: Colors.grey[600],
-  //             ),
-  //           ),
-  //           const SizedBox(height: 8),
-  //           Text(
-  //             'Add your first lesson to get started',
-  //             style: TextStyle(
-  //               color: Colors.grey[500],
-  //             ),
-  //           ),
-  //           const SizedBox(height: 16),
-  //           ElevatedButton.icon(
-  //             onPressed: () => viewModel.navigateToAddLesson(),
-  //             icon: const Icon(Icons.add),
-  //             label: const Text('Add First Lesson'),
-  //             style: ElevatedButton.styleFrom(
-  //               backgroundColor: AppColors.primary,
-  //               foregroundColor: Colors.white,
-  //               padding:
-  //                   const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-  //               shape: RoundedRectangleBorder(
-  //                 borderRadius: BorderRadius.circular(8),
-  //               ),
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
   Widget _buildLessonsTab(
       CourseDetailsViewModel viewModel, BuildContext context) {
     return ListView(
@@ -468,8 +420,10 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
         ),
         const SizedBox(height: 16),
 
-        // Show first 3 lessons or all if less than 3
-        for (int i = 0; i < viewModel.lessons.length && i < 3; i++)
+        // Show either first 3 lessons or all lessons based on viewModel.showAllLessons
+        for (int i = 0;
+            i < viewModel.lessons.length && (viewModel.showAllLessons || i < 3);
+            i++)
           Container(
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
@@ -483,12 +437,12 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             ),
           ),
 
-        // View All button
-        if (viewModel.lessons.length > 3)
+        // View All button - only show if there are more than 3 lessons and not showing all
+        if (viewModel.lessons.length > 3 && !viewModel.showAllLessons)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: TextButton(
-              onPressed: () => viewModel.navigateToLessonsFullView(),
+              onPressed: () => viewModel.toggleShowAllLessons(),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -502,6 +456,33 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   SizedBox(width: 8),
                   Icon(
                     Icons.arrow_forward,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        // Show Less button - only show when displaying all lessons and there are more than 3
+        if (viewModel.showAllLessons && viewModel.lessons.length > 3)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: TextButton(
+              onPressed: () => viewModel.toggleShowAllLessons(),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Show Less',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Icon(
+                    Icons.keyboard_arrow_up,
                     size: 16,
                     color: AppColors.primary,
                   ),
@@ -558,7 +539,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
-            lesson.description ?? '',
+            lesson.description,
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 14,

@@ -107,7 +107,7 @@ class LessonDetailsViewModel extends BaseViewModel {
         _isFileCached = await _fileService.isFileCached(lesson);
 
         // If not cached, try to prefetch it silently
-        if (!_isFileCached && await _fileService.isFileDownloadable(lesson)) {
+        if (!_isFileCached) {
           try {
             // Try to prefetch the file without showing progress
             await _fileService.prefetchFile(

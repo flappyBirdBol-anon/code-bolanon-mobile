@@ -7,7 +7,8 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart';
+import 'package:media_kit/media_kit.dart' show MediaKit;
+
 import 'package:stacked_services/stacked_services.dart';
 
 // Define enum types for snackbars

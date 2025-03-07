@@ -42,6 +42,9 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   List<Lesson> _lessons = [];
   List<Lesson> get lessons => _lessons;
 
+//for toggle lessons
+  bool _showAllLessons = false;
+  bool get showAllLessons => _showAllLessons;
   // Initialize with a course
   Future<void> initialize(Course? course) async {
     _course = course;
@@ -164,6 +167,11 @@ class CourseDetailsViewModel extends ReactiveViewModel {
       Routes.lessonDetailsView,
       arguments: LessonDetailsViewArguments(lesson: lesson),
     );
+  }
+
+  void toggleShowAllLessons() {
+    _showAllLessons = !_showAllLessons;
+    notifyListeners();
   }
 
   // Delete a lesson

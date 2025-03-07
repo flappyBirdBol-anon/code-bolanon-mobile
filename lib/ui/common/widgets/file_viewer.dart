@@ -18,6 +18,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:excel/excel.dart';
 import 'package:docx_viewer/docx_viewer.dart';
 import 'package:data_table_2/data_table_2.dart';
+import 'package:shimmer/shimmer.dart';
 
 import 'package:stacked_services/stacked_services.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart';
@@ -33,6 +34,7 @@ class FileViewer extends StatefulWidget {
   final String? title;
   final String? description;
   final Lesson? lesson;
+  final File? cachedFile;
 
   const FileViewer({
     Key? key,
@@ -46,6 +48,7 @@ class FileViewer extends StatefulWidget {
     this.title,
     this.description,
     this.lesson,
+    this.cachedFile,
   }) : super(key: key);
 
   @override
@@ -66,16 +69,15 @@ class _FileViewerState extends State<FileViewer>
   String? _downloadProgress;
 
   // Media controllers
-  // VideoPlayerController? _videoController;
   ChewieController? _chewieController;
   AudioPlayer? _audioPlayer;
   bool _isAudioPlaying = false;
 
   Player? _player;
   VideoController? _videoController;
+
   // Document data
   List<List<dynamic>>? _excelData;
-  Map<String, dynamic>? _docxContent;
 
   // Animation controller for transitions
   late AnimationController _animationController;
@@ -90,6 +92,7 @@ class _FileViewerState extends State<FileViewer>
 
   // Add a mounted check flag to prevent setState after dispose
   bool _isMounted = true;
+
   @override
   void initState() {
     super.initState();
@@ -104,8 +107,14 @@ class _FileViewerState extends State<FileViewer>
       curve: Curves.easeInOut,
     );
 
-    // Load file with a slight delay to allow widget to build
-    Future.microtask(_loadFile);
+    // Use provided cached file if available
+    if (widget.cachedFile != null) {
+      _cachedFile = widget.cachedFile;
+      Future.microtask(_initializeContent);
+    } else {
+      // Load file with a slight delay to allow widget to build
+      Future.microtask(_loadFile);
+    }
   }
 
   @override
@@ -113,14 +122,20 @@ class _FileViewerState extends State<FileViewer>
     super.didUpdateWidget(oldWidget);
 
     // If the file URL changed, reload the file
-    if (oldWidget.fileUrl != widget.fileUrl) {
+    if (oldWidget.fileUrl != widget.fileUrl ||
+        oldWidget.cachedFile != widget.cachedFile) {
       _disposeMediaControllers();
-      _loadFile();
+
+      if (widget.cachedFile != null) {
+        _cachedFile = widget.cachedFile;
+        _initializeContent();
+      } else {
+        _loadFile();
+      }
     }
   }
 
   void _disposeMediaControllers() {
-    // _videoController?.dispose();
     _videoController = null;
     _player?.dispose();
     _chewieController?.dispose();
@@ -128,6 +143,40 @@ class _FileViewerState extends State<FileViewer>
 
     _audioPlayer?.dispose();
     _audioPlayer = null;
+  }
+
+  Future<void> _initializeContent() async {
+    if (!_isMounted) return;
+
+    try {
+      if (_cachedFile == null) {
+        throw Exception('No cached file available');
+      }
+
+      // Initialize media players or parse documents based on file type
+      if (widget.fileType.contains('video')) {
+        await _initializeVideoPlayer(_cachedFile!.path);
+      } else if (widget.fileType.contains('audio')) {
+        await _initializeAudioPlayer(_cachedFile!.path);
+      } else if (widget.fileType.contains('spreadsheet') ||
+          path.extension(widget.fileUrl).toLowerCase() == '.xlsx' ||
+          path.extension(widget.fileUrl).toLowerCase() == '.xls') {
+        await _parseExcelFile(_cachedFile!);
+      }
+
+      if (!_isMounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error initializing content: $e');
+      if (!_isMounted) return;
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+        _errorMessage = e.toString();
+      });
+    }
   }
 
   Future<void> _loadFile() async {
@@ -181,25 +230,7 @@ class _FileViewerState extends State<FileViewer>
         });
       }
 
-      // Initialize media players or parse documents based on file type
-      if (widget.fileType.contains('video')) {
-        await _initializeVideoPlayer(_cachedFile!.path);
-      } else if (widget.fileType.contains('audio')) {
-        await _initializeAudioPlayer(_cachedFile!.path);
-      } else if (widget.fileType.contains('spreadsheet') ||
-          path.extension(widget.fileUrl).toLowerCase() == '.xlsx' ||
-          path.extension(widget.fileUrl).toLowerCase() == '.xls') {
-        print("excel url: ${widget.fileUrl}");
-        await _parseExcelFile(_cachedFile!);
-      } else if (widget.fileType.contains('document') ||
-          path.extension(widget.fileUrl).toLowerCase() == '.docx') {
-        // Document parsing is handled by the DocxView widget
-      }
-
-      if (!_isMounted) return;
-      setState(() {
-        _isLoading = false;
-      });
+      await _initializeContent();
     } catch (e) {
       print('Error loading file: $e');
       if (!_isMounted) return;
@@ -213,14 +244,18 @@ class _FileViewerState extends State<FileViewer>
 
   Future<void> _parseExcelFile(File file) async {
     try {
+      final oldPath = file.path;
+      final newPath = oldPath.endsWith('.xlsx') || oldPath.endsWith('.xls')
+          ? oldPath
+          : '$oldPath.xlsx';
+      file = await file.rename(newPath);
+
       // First check if the file exists
       if (!await file.exists()) {
         throw Exception('Excel file does not exist');
       }
 
       final fileSize = await file.length();
-      print('Excel file size: $fileSize bytes');
-
       if (fileSize == 0) {
         throw Exception('Excel file is empty (0 bytes)');
       }
@@ -229,115 +264,60 @@ class _FileViewerState extends State<FileViewer>
       List<int> bytes;
       try {
         bytes = await file.readAsBytes();
-
-        // Check if bytes list is null or empty
-        if (bytes == null) {
-          throw Exception('Bytes list is null');
-        }
-
         if (bytes.isEmpty) {
           throw Exception('Bytes list is empty');
-        }
-
-        // Check for null values in the bytes list
-        bool hasNullValues = false;
-        int nullCount = 0;
-        int firstNullIndex = -1;
-
-        for (int i = 0; i < bytes.length; i++) {
-          if (bytes[i] == null) {
-            hasNullValues = true;
-            nullCount++;
-            if (firstNullIndex == -1) {
-              firstNullIndex = i;
-            }
-          }
-        }
-
-        if (hasNullValues) {
-          throw Exception(
-              'Bytes list contains $nullCount null values. First null at index $firstNullIndex');
-        }
-
-        // Print first few bytes for debugging
-        String bytesPreview = bytes.take(20).join(', ');
-        print('First 20 bytes: $bytesPreview');
-
-        // Check if the file has the correct Excel signature
-        // Excel files typically start with these bytes: 50 4B 03 04 (PK..)
-        if (bytes.length >= 4) {
-          if (bytes[0] != 80 ||
-              bytes[1] != 75 ||
-              bytes[2] != 3 ||
-              bytes[3] != 4) {
-            print(
-                'Warning: File does not have Excel signature. First 4 bytes: ${bytes.take(4).join(', ')}');
-          }
         }
       } catch (e) {
         throw Exception('Failed to read Excel file: $e');
       }
 
-      // Try a simpler approach - just create a placeholder
-      List<List<dynamic>> data = [
-        ['This Excel file cannot be previewed directly'],
-        ['Please use the download button to view it in an Excel application']
-      ];
-
-      if (mounted) {
-        setState(() {
-          _excelData = data;
-        });
-      }
-
-      // Attempt to decode but catch any errors
+      // Use a compute function to parse Excel in a separate isolate
       try {
         final excelFile = Excel.decodeBytes(bytes);
-        print('Successfully decoded Excel file');
 
         if (excelFile.tables.isEmpty) {
-          print('Excel file has no sheets');
-        } else {
-          print('Excel file has ${excelFile.tables.length} sheets');
+          throw Exception('Excel file has no sheets');
+        }
 
-          // Try to get the first sheet name
-          try {
-            final firstSheetName = excelFile.tables.keys.first;
-            print('First sheet name: $firstSheetName');
+        final firstSheetName = excelFile.tables.keys.first;
+        final table = excelFile.tables[firstSheetName];
 
-            final table = excelFile.tables[firstSheetName];
-            if (table == null) {
-              print('Sheet data is null');
-            } else {
-              print('Sheet has ${table.rows.length} rows');
+        if (table == null) {
+          throw Exception('Sheet data is null');
+        }
 
-              // Process the rows
-              List<List<dynamic>> excelData = [];
-              for (var row in table.rows) {
-                List<dynamic> rowData = [];
-                for (var cell in row) {
-                  rowData.add(cell?.value ?? '');
-                }
-                excelData.add(rowData);
-              }
-
-              if (mounted) {
-                setState(() {
-                  _excelData = excelData;
-                });
-              }
-            }
-          } catch (e) {
-            print('Error accessing first sheet: $e');
+        // Process the rows
+        List<List<dynamic>> excelData = [];
+        for (var row in table.rows) {
+          List<dynamic> rowData = [];
+          for (var cell in row) {
+            rowData.add(cell?.value ?? '');
           }
+          excelData.add(rowData);
+        }
+
+        if (_isMounted) {
+          setState(() {
+            _excelData = excelData;
+          });
         }
       } catch (e) {
-        print('Error decoding Excel file (non-fatal): $e');
-        // We already set a placeholder, so we don't need to throw
+        print('Error decoding Excel file: $e');
+        // Create a placeholder for failed Excel parsing
+        List<List<dynamic>> data = [
+          ['This Excel file cannot be previewed directly'],
+          ['Please use the download button to view it in an Excel application']
+        ];
+
+        if (_isMounted) {
+          setState(() {
+            _excelData = data;
+          });
+        }
       }
     } catch (e) {
       print('Error parsing Excel file: $e');
-      if (mounted) {
+      if (_isMounted) {
         setState(() {
           _hasError = true;
           _errorMessage = 'Could not parse Excel file: $e';
@@ -355,13 +335,15 @@ class _FileViewerState extends State<FileViewer>
       // Open the media file
       await _player!.open(Media(filePath));
 
-      if (mounted) setState(() {});
+      if (_isMounted) setState(() {});
     } catch (e) {
       print('Error initializing video player: $e');
-      setState(() {
-        _hasError = true;
-        _errorMessage = 'Could not initialize video player: $e';
-      });
+      if (_isMounted) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = 'Could not initialize video player: $e';
+        });
+      }
     }
   }
 
@@ -371,20 +353,22 @@ class _FileViewerState extends State<FileViewer>
       await _audioPlayer!.setFilePath(filePath);
 
       _audioPlayer!.playerStateStream.listen((state) {
-        if (mounted) {
+        if (_isMounted) {
           setState(() {
             _isAudioPlaying = state.playing;
           });
         }
       });
 
-      if (mounted) setState(() {});
+      if (_isMounted) setState(() {});
     } catch (e) {
       print('Error initializing audio player: $e');
-      setState(() {
-        _hasError = true;
-        _errorMessage = 'Could not initialize audio player: $e';
-      });
+      if (_isMounted) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = 'Could not initialize audio player: $e';
+        });
+      }
     }
   }
 
@@ -410,7 +394,6 @@ class _FileViewerState extends State<FileViewer>
       }
 
       final destinationPath = '${downloadsDir.path}/$fileName';
-      final destinationFile = File(destinationPath);
 
       // Copy the file
       setState(() {
@@ -490,26 +473,6 @@ class _FileViewerState extends State<FileViewer>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // if (widget.title != null && widget.title!.isNotEmpty)
-        //   Text(
-        //     widget.title!,
-        //     style: GoogleFonts.figtree(
-        //       fontSize: 22,
-        //       fontWeight: FontWeight.bold,
-        //       color: textColor,
-        //     ),
-        //   ),
-        // if (widget.description != null && widget.description!.isNotEmpty) ...[
-        //   SizedBox(height: 8),
-        //   Text(
-        //     widget.description!,
-        //     style: GoogleFonts.figtree(
-        //       fontSize: 16,
-        //       color: secondaryTextColor,
-        //       height: 1.5,
-        //     ),
-        //   ),
-        // ],
         SizedBox(height: 16),
         Row(
           children: [
@@ -532,7 +495,6 @@ class _FileViewerState extends State<FileViewer>
               ),
             ),
             SizedBox(width: 8),
-            // _buildDownloadButton(),
           ],
         ),
         Divider(height: 24, thickness: 1),
@@ -564,12 +526,13 @@ class _FileViewerState extends State<FileViewer>
 
   Widget _buildFilePreview() {
     if (_isLoading) {
-      return _buildLoadingWidget();
+      return _buildShimmerLoading();
     }
 
     if (_hasError || _cachedFile == null) {
       return _buildErrorWidget();
     }
+
     // Determine content based on file type
     if (widget.fileType.contains('pdf')) {
       return _buildPdfPreview();
@@ -581,8 +544,7 @@ class _FileViewerState extends State<FileViewer>
       return _buildAudioPreview();
     } else if (widget.fileType.contains('text')) {
       return _buildTextPreview();
-    } else if (widget.fileType.contains('document') ||
-        path.extension(widget.fileUrl).toLowerCase() == '.docx' ||
+    } else if (path.extension(widget.fileUrl).toLowerCase() == '.docx' ||
         path.extension(widget.fileUrl).toLowerCase() == '.doc') {
       return _buildDocxPreview();
     } else if (widget.fileType.contains('spreadsheet') ||
@@ -592,6 +554,21 @@ class _FileViewerState extends State<FileViewer>
     } else {
       return _buildGenericFilePreview();
     }
+  }
+
+  Widget _buildShimmerLoading() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        width: widget.width,
+        height: widget.height ?? 300,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
   }
 
   Widget _buildPdfPreview() {
@@ -640,15 +617,12 @@ class _FileViewerState extends State<FileViewer>
 
   Widget _buildDocxPreview() {
     if (_cachedFile == null) {
-      return _buildLoadingWidget();
+      return _buildShimmerLoading();
     }
-    final Lesson lesson = widget.lesson!;
-    final fileService = locator<FileService>();
-    final fileUrl = fileService.getLessonFileUrl(lesson);
-    print('fileUrl: $fileUrl');
+
     final oldPath = _cachedFile!.path;
-    final newPath = oldPath + '.docx';
-    final newFile = _cachedFile!.rename(newPath);
+    final newPath = oldPath.endsWith('.docx') ? oldPath : oldPath + '.docx';
+
     return Column(
       children: [
         Container(
@@ -658,8 +632,7 @@ class _FileViewerState extends State<FileViewer>
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color:
-                    const Color.fromARGB(255, 255, 255, 255).withOpacity(0.1),
+                color: Colors.black.withOpacity(0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -680,7 +653,7 @@ class _FileViewerState extends State<FileViewer>
 
   Widget _buildExcelPreview() {
     if (_excelData == null || _excelData!.isEmpty) {
-      return _buildLoadingWidget();
+      return _buildShimmerLoading();
     }
 
     // Extract headers from the first row
@@ -787,7 +760,7 @@ class _FileViewerState extends State<FileViewer>
 
   Widget _buildVideoPreview() {
     if (_player == null || _videoController == null) {
-      return _buildLoadingWidget();
+      return _buildShimmerLoading();
     }
 
     return Column(
@@ -810,8 +783,7 @@ class _FileViewerState extends State<FileViewer>
               borderRadius: BorderRadius.circular(12),
               child: Video(
                 controller: _videoController!,
-                controls:
-                    AdaptiveVideoControls, // Uses platform-specific controls
+                controls: AdaptiveVideoControls,
               ),
             ),
           ),
@@ -824,7 +796,7 @@ class _FileViewerState extends State<FileViewer>
 
   Widget _buildAudioPreview() {
     if (_audioPlayer == null) {
-      return _buildLoadingWidget();
+      return _buildShimmerLoading();
     }
 
     return Container(
@@ -924,10 +896,14 @@ class _FileViewerState extends State<FileViewer>
                       overlayColor: accentColor.withOpacity(0.2),
                     ),
                     child: Slider(
-                      value: position.inMilliseconds
-                          .toDouble()
-                          .clamp(0, duration.inMilliseconds.toDouble()),
-                      max: duration.inMilliseconds.toDouble(),
+                      value: position.inMilliseconds.toDouble().clamp(
+                          0,
+                          duration.inMilliseconds.toDouble() > 0
+                              ? duration.inMilliseconds.toDouble()
+                              : 1),
+                      max: duration.inMilliseconds.toDouble() > 0
+                          ? duration.inMilliseconds.toDouble()
+                          : 1,
                       onChanged: (value) {
                         _audioPlayer
                             ?.seek(Duration(milliseconds: value.toInt()));
@@ -981,7 +957,7 @@ class _FileViewerState extends State<FileViewer>
       future: _cachedFile!.readAsString(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildLoadingWidget();
+          return _buildShimmerLoading();
         }
 
         if (snapshot.hasError || !snapshot.hasData) {
@@ -1130,34 +1106,7 @@ class _FileViewerState extends State<FileViewer>
   }
 
   Widget _buildLoadingWidget() {
-    return widget.placeholder ??
-        Container(
-          width: widget.width,
-          height: widget.height ?? 200,
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(
-                  color: accentColor,
-                  strokeWidth: 3,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Loading content...',
-                  style: GoogleFonts.figtree(
-                    color: secondaryTextColor,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+    return widget.placeholder ?? _buildShimmerLoading();
   }
 
   Widget _buildErrorWidget({String? message}) {
@@ -1168,7 +1117,6 @@ class _FileViewerState extends State<FileViewer>
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(16),
-            // border: Border.all(color: Colors.red.withOpacity(0.3)),
           ),
           child: Center(
             child: Column(
@@ -1229,7 +1177,7 @@ class _FileViewerState extends State<FileViewer>
       animation: _animation,
       builder: (context, child) {
         return Container(
-          color: const Color.fromARGB(255, 255, 255, 255),
+          color: Colors.white,
           child: Stack(
             children: [
               Center(
@@ -1246,8 +1194,7 @@ class _FileViewerState extends State<FileViewer>
                     child: Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color:
-                            const Color.fromARGB(255, 0, 0, 0).withOpacity(0.5),
+                        color: Colors.black.withOpacity(0.5),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -1290,16 +1237,14 @@ class _FileViewerState extends State<FileViewer>
           fit: BoxFit.contain,
         ),
       );
-    } else if (widget.fileType.contains('video') && _chewieController != null) {
+    } else if (widget.fileType.contains('video') && _videoController != null) {
       return Video(
         controller: _videoController!,
         controls: AdaptiveVideoControls,
       );
-    }
-    if (widget.fileType.contains('document') ||
-        path.extension(widget.fileUrl).toLowerCase() == '.docx') {
+    } else if (path.extension(widget.fileUrl).toLowerCase() == '.docx') {
       final oldPath = _cachedFile!.path;
-      final newPath = oldPath + '.docx';
+      final newPath = oldPath.endsWith('.docx') ? oldPath : oldPath + '.docx';
       return DocxView(
         filePath: newPath,
       );
@@ -1307,9 +1252,11 @@ class _FileViewerState extends State<FileViewer>
         path.extension(widget.fileUrl).toLowerCase() == '.xlsx' ||
         path.extension(widget.fileUrl).toLowerCase() == '.xls') {
       if (_excelData == null || _excelData!.isEmpty) {
-        return _buildLoadingWidget();
+        return _buildShimmerLoading();
       }
-
+      // final oldPath = _cachedFile!.path;
+      // final newPath = oldPath.endsWith('.docx') ? oldPath + '.docx' : oldPath ;
+      print('Excel Data: $_excelData');
       // Extract headers from the first row
       final headers = _excelData![0];
       // Data rows (excluding header)
@@ -1364,7 +1311,7 @@ class _FileViewerState extends State<FileViewer>
         future: _cachedFile!.readAsString(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return _buildLoadingWidget();
+            return _buildShimmerLoading();
           }
 
           if (snapshot.hasError || !snapshot.hasData) {
@@ -1539,88 +1486,53 @@ class LessonContentViewer extends StatelessWidget {
     final fileType =
         lesson.fileType ?? fileService.getFileType(lesson.fileName!);
 
-    return FutureBuilder<bool>(
-      future: fileService.isFileCached(lesson),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildLoadingWidget();
+    return FutureBuilder<File?>(
+      future: fileService.getCachedFile(fileUrl),
+      builder: (context, fileSnapshot) {
+        if (fileSnapshot.connectionState == ConnectionState.waiting) {
+          return _buildShimmerLoading();
         }
 
-        final isCached = snapshot.data ?? false;
+        final cachedFile = fileSnapshot.data;
 
-        if (!isCached) {
-          return FutureBuilder<File?>(
-            future: fileService.getCachedFile(fileUrl),
-            builder: (context, fileSnapshot) {
-              if (fileSnapshot.connectionState == ConnectionState.waiting) {
-                return _buildLoadingWidget();
-              }
-
-              if (fileSnapshot.hasError || fileSnapshot.data == null) {
-                return _buildErrorWidget(
-                  onRetry: onRetry ??
-                      () {
-                        fileService.handleLessonFileCacheUpdate(lesson);
-                      },
-                );
-              }
-              fileUrls = fileUrl;
-              return _buildFileViewer(fileUrl, fileType);
-            },
+        if (fileSnapshot.hasError || cachedFile == null) {
+          return _buildErrorWidget(
+            onRetry: onRetry ??
+                () {
+                  fileService.handleLessonFileCacheUpdate(lesson);
+                },
           );
         }
 
-        return _buildFileViewer(fileUrl, fileType);
+        fileUrls = fileUrl;
+        return FileViewer(
+          fileUrl: fileUrl,
+          fileType: fileType,
+          title: title ?? lesson.label,
+          description: description ?? lesson.description,
+          lesson: lesson,
+          cachedFile: cachedFile,
+          errorWidget: _buildErrorWidget(
+            onRetry: onRetry ??
+                () {
+                  fileService.handleLessonFileCacheUpdate(lesson);
+                },
+          ),
+        );
       },
     );
   }
 
-  Widget _buildFileViewer(String fileUrl, String fileType) {
-    return FileViewer(
-      fileUrl: fileUrl,
-      fileType: fileType,
-      title: title ?? lesson.label,
-      description: description ?? lesson.description,
-      lesson: lesson,
-      errorWidget: _buildErrorWidget(
-        onRetry: onRetry ??
-            () {
-              final fileService = locator<FileService>();
-              fileService.handleLessonFileCacheUpdate(lesson);
-            },
-      ),
-    );
-  }
-
-  Widget _buildLoadingWidget() {
-    return Container(
-      padding: EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF536DFE)),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Loading lesson content...',
-            style: GoogleFonts.figtree(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
+  Widget _buildShimmerLoading() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        height: 300,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
     );
   }
