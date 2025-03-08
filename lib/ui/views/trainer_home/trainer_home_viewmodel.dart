@@ -72,83 +72,13 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   List<CourseModel> _courses = [];
   List<CourseModel> get courseList => _courses;
 
-  // List<CourseModel> featureCourses = [
-  //   CourseModel(
-  //     id: '1',
-  //     title: 'User Experience Design Crash...',
-  //     imageUrl: 'assets/images/1.jpg',
-  //     price: 1500,
-  //     rating: 4.9,
-  //     reviews: 1724,
-  //     lessons: 12,
-  //   ),
-  //   CourseModel(
-  //     id: '2',
-  //     title: 'Web Development Bootcamp...',
-  //     imageUrl: 'assets/images/2.jpg',
-  //     price: 2000,
-  //     rating: 4.1,
-  //     reviews: 3432,
-  //     lessons: 18,
-  //   ),
-  //   CourseModel(
-  //     id: '3',
-  //     title: 'Python for Data Science...',
-  //     imageUrl: 'assets/images/3.jpg',
-  //     price: 1200,
-  //     rating: 4.3,
-  //     reviews: 1100,
-  //     lessons: 10,
-  //   ),
-  // ];
-
   Future<void> init() async {
     setBusy(true);
     try {
       // Fetch courses from API using CourseService
       _courses = await _courseService.getCourses();
-
-      // The CourseService already triggers image prefetching in the background
-      // through the ImageService.prefetchCourseImages method
     } catch (e) {
       _showErrorMessage('Failed to load courses: ${e.toString()}');
-
-      // Fallback to sample data if API fails
-      // _courses = [
-      //   Course(
-      //     id: '1',
-      //     title: 'Web Development Fundamentals',
-      //     description:
-      //         'Learn the basics of web development with HTML, CSS, and JavaScript',
-      //     thumbnail: 'assets/images/1.jpg',
-      //     isActive: true,
-      //     studentsEnrolled: 45,
-      //     price: 10,
-      //     rating: 4.5,
-      //   ),
-      //   Course(
-      //     id: '2',
-      //     title: 'Flutter Development Fundamentals',
-      //     description:
-      //         'Learn flutter development with Dart, and build beautiful apps',
-      //     thumbnail: 'assets/images/2.jpg',
-      //     isActive: true,
-      //     studentsEnrolled: 56,
-      //     price: 20,
-      //     rating: 4.8,
-      //   ),
-      //   Course(
-      //     id: '3',
-      //     title: 'Python Development Fundamentals',
-      //     description:
-      //         'Learn python development with Django, and build beautiful apps',
-      //     thumbnail: 'assets/images/3.jpg',
-      //     isActive: true,
-      //     studentsEnrolled: 45,
-      //     price: 60,
-      //     rating: 4.2,
-      //   ),
-      // ];
     } finally {
       setBusy(false);
     }

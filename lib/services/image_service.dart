@@ -1,7 +1,6 @@
 // lib/services/image_service.dart
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
@@ -148,7 +147,6 @@ class ImageService {
     await _cacheManager.removeFile(imageUrl);
     _memoryCache.remove('course_${course.id}_image');
 
-    // Prefetch the new image
     await prefetchImage(imageUrl, courseId: course.id);
   }
 
@@ -159,7 +157,7 @@ class ImageService {
     final imageUrl = getCourseThumbnailFromPath(course.thumbnail);
     final cacheKey = 'course_${course.id}_image';
 
-    // Check memory cache first
+    // Check memcache first
     if (_memoryCache.containsKey(cacheKey)) {
       return _memoryCache[cacheKey];
     }
@@ -169,7 +167,7 @@ class ImageService {
       final fileInfo = await _cacheManager.getFileFromCache(imageUrl);
       if (fileInfo != null) {
         final bytes = await fileInfo.file.readAsBytes();
-        // Store in memory cache for faster future access
+
         _memoryCache[cacheKey] = bytes;
         return bytes;
       }
@@ -291,7 +289,5 @@ class ImageService {
   /// Clears cache for a specific course
   Future<void> clearCourseCache(String courseId) async {
     _memoryCache.remove('course_${courseId}_image');
-    // We would need the URL to remove from disk cache
-    // This is handled in handleCourseCacheUpdate
   }
 }

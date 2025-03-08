@@ -39,13 +39,8 @@ void main() async {
     // You might want to navigate to an error screen or show a dialog
   }
 
-  // Set Flutter rendering features if needed
-  // Note: Setting Impeller should be done in Android/iOS platform-specific files
-
   runApp(MainApp(initialRoute: initialRoute));
 }
-
-// Add this function to setup snackbar UI
 
 class MainApp extends StatelessWidget {
   final String initialRoute;

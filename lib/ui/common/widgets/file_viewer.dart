@@ -186,8 +186,8 @@ class _FileViewerState extends State<FileViewer>
       // Initialize media players or parse documents based on file type
       if (widget.fileType.contains('video')) {
         await _initializeVideoPlayer(_cachedFile!.path);
-      } else if (widget.fileType.contains('audio')) {
-        await _initializeAudioPlayer(_cachedFile!.path);
+        // } else if (widget.fileType.contains('mp3')) {
+        //   await _initializeAudioPlayer(_cachedFile!.path);
       } else if (widget.fileType.contains('spreadsheet') ||
           path.extension(widget.fileUrl).toLowerCase() == '.xlsx' ||
           path.extension(widget.fileUrl).toLowerCase() == '.xls') {
@@ -362,90 +362,6 @@ class _FileViewerState extends State<FileViewer>
         _safeSetState(() {
           _hasError = true;
           _errorMessage = 'Could not initialize video player: $e';
-        });
-      }
-    }
-  }
-
-  // Future<void> _initializeAudioPlayer(String filePath) async {
-  //   try {
-  //     _audioPlayer = AudioPlayer();
-  //     await _audioPlayer!.setFilePath(filePath);
-
-  //     _audioPlayer!.playerStateStream.listen((state) {
-  //       if (mounted) {
-  //         setState(() {
-  //           _isAudioPlaying = state.playing;
-  //         });
-  //       }
-  //     });
-
-  //     if (mounted) setState(() {});
-  //   } catch (e) {
-  //     print('Error initializing audio player: $e');
-  //     setState(() {
-  //       _hasError = true;
-  //       _errorMessage = 'Could not initialize audio player: $e';
-  //     });
-  //   }
-  // }
-  Future<void> _initializeAudioPlayer(String filePath) async {
-    try {
-      // Cancel any existing subscriptions
-      _audioPositionSubscription?.cancel();
-      _audioDurationSubscription?.cancel();
-      _audioStateSubscription?.cancel();
-
-      // Dispose the existing player before creating a new one
-      if (_audioPlayer != null) {
-        // Store reference to avoid using the same instance during disposal
-        final playerToDispose = _audioPlayer;
-        _audioPlayer = null;
-        await playerToDispose!.dispose();
-      }
-
-      // Create a new instance
-      _audioPlayer = AudioPlayer();
-
-      // Set the audio file
-      await _audioPlayer!.setFilePath(filePath);
-
-      // Listen to position changes
-      _audioPositionSubscription =
-          _audioPlayer!.positionStream.listen((position) {
-        if (_isMounted) {
-          setState(() {
-            _audioPosition = position;
-          });
-        }
-      });
-
-      // Listen to duration changes
-      _audioDurationSubscription =
-          _audioPlayer!.durationStream.listen((duration) {
-        if (duration != null && _isMounted) {
-          setState(() {
-            _audioDuration = duration;
-          });
-        }
-      });
-
-      // Listen to player state changes
-      _audioStateSubscription = _audioPlayer!.playerStateStream.listen((state) {
-        if (_isMounted) {
-          setState(() {
-            _isAudioPlaying = state.playing;
-          });
-        }
-      });
-
-      if (_isMounted) _safeSetState(() {});
-    } catch (e) {
-      debugPrint('Error initializing audio player: $e');
-      if (_isMounted) {
-        setState(() {
-          _hasError = true;
-          _errorMessage = 'Could not initialize audio player: $e';
         });
       }
     }
