@@ -1,385 +1,190 @@
-// lib/viewmodels/trainer_courses_viewmodel.dart
-import 'package:code_bolanon/app/app.router.dart';
-import 'package:code_bolanon/app/app_base_view_model.dart';
+import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
-import 'package:code_bolanon/ui/common/helpers/dialog_helper.dart';
-import 'package:code_bolanon/ui/common/widgets/course_dialog.dart';
-import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
+
+import 'package:code_bolanon/services/user_service.dart';
+import 'package:code_bolanon/ui/common/base/course_base_view_model.dart';
+import 'package:code_bolanon/ui/common/enums/enums.dart';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:stacked/stacked.dart';
+import 'package:code_bolanon/ui/common/widgets/course_dialog.dart';
 import 'package:stacked_services/stacked_services.dart';
 
-class TrainerCoursesViewModel extends AppBaseViewModel {
-  final _imagePicker = ImagePicker();
-
-  // Add service dependencies
-  final CourseService _courseService;
-  final ImageService _imageService;
-
-  List<CourseModel> _courses = [];
-  String _selectedFilter = 'All';
+class TrainerCoursesViewModel extends CourseBaseViewModel {
+  final CourseService courseService;
   XFile? _selectedImage;
-  final bool _isBusy = false;
 
-  List<CourseModel> get courses => _filterCourses();
-  String get selectedFilter => _selectedFilter;
   @override
-  bool get isBusy => _isBusy;
-  ImageService get imageService => _imageService; // Expose image service for UI
+  List<String> get availableFilters => ['All', 'Active', 'Inactive'];
 
-  // Constructor with dependency injection
+  Set<String> _activeFilters = {'All'};
+  @override
+  Set<String> get activeFilters => _activeFilters;
+
+  @override
+  void toggleFilter(String filter) {
+    if (filter == 'All') {
+      _activeFilters = {'All'};
+    } else {
+      _activeFilters.remove('All');
+      if (_activeFilters.contains(filter)) {
+        _activeFilters.remove(filter);
+      } else {
+        _activeFilters.add(filter);
+      }
+    }
+    applyFilters();
+  }
+
+  @override
+  void clearFilters() {
+    _activeFilters = {'All'};
+    applyFilters();
+  }
+
   TrainerCoursesViewModel({
     required CourseService courseService,
     required ImageService imageService,
-  })  : _courseService = courseService,
-        _imageService = imageService;
-
-  Future<void> init() async {
-    setBusy(true);
-    try {
-      // Fetch courses from API using CourseService
-      _courses = await _courseService.getCourses();
-
-      // The CourseService already triggers image prefetching in the background
-      // through the ImageService.prefetchCourseImages method
-    } catch (e) {
-      _showErrorMessage('Failed to load courses: ${e.toString()}');
-
-      // Fallback to sample data if API fails
-      _courses = [
-        CourseModel(
-          id: '1',
-          title: 'Web Development Fundamentals',
-          description:
-              'Learn the basics of web development with HTML, CSS, and JavaScript',
-          thumbnail: 'assets/images/1.jpg',
-          isActive: true,
-          studentsEnrolled: 45,
-          price: 10,
-          rating: 4.5,
-          lessonCount: 0,
-        ),
-        CourseModel(
-          id: '2',
-          title: 'Flutter Development Fundamentals',
-          description:
-              'Learn flutter development with Dart, and build beautiful apps',
-          thumbnail: 'assets/images/2.jpg',
-          isActive: true,
-          studentsEnrolled: 56,
-          price: 20,
-          rating: 4.8,
-          lessonCount: 0,
-        ),
-        CourseModel(
-          id: '3',
-          title: 'Python Development Fundamentals',
-          description:
-              'Learn python development with Django, and build beautiful apps',
-          thumbnail: 'assets/images/3.jpg',
-          isActive: true,
-          studentsEnrolled: 45,
-          price: 60,
-          rating: 4.2,
-          lessonCount: 0,
-        ),
-      ];
-    } finally {
-      setBusy(false);
-    }
+  })  : courseService = courseService,
+        super(courseService, imageService: imageService) {
+    init();
   }
 
-  void setFilter(String filter) {
-    _selectedFilter = filter;
-    notifyListeners();
-  }
-
-  List<CourseModel> _filterCourses() {
-    if (_selectedFilter == 'All') return _courses;
-    if (_selectedFilter == 'Active') {
-      return _courses.where((course) => course.isActive).toList();
-    }
-    if (_selectedFilter == 'Inactive') {
-      return _courses.where((course) => !course.isActive).toList();
-    }
-    if (_selectedFilter == 'Archived') {
-      return _courses.where((course) => !course.isActive).toList();
-    }
-    return _courses;
-  }
-
-  Future<void> pickImage() async {
-    final XFile? image = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-    if (image != null) {
-      _selectedImage = image;
-      notifyListeners();
-    }
-  }
-
-  // Get a widget to display a course image
-  Widget getCourseImageWidget({
-    required CourseModel course,
-    double? width,
-    double? height,
-    BoxFit fit = BoxFit.cover,
-    Widget? placeholder,
-    Widget? errorWidget,
-  }) {
-    // Handle local assets differently
-    if (course.thumbnail.startsWith('assets/')) {
-      return Image.asset(
-        course.thumbnail,
-        width: width,
-        height: height,
-        fit: fit,
-        errorBuilder: (context, error, stackTrace) {
-          return errorWidget ?? _buildDefaultErrorWidget(width, height);
-        },
-      );
-    }
-
-    // If it's a remote image, use the ImageService
-    if (course.thumbnail.isNotEmpty) {
-      final imageUrl =
-          _imageService.getCourseThumbnailFromPath(course.thumbnail);
-
-      return _imageService.loadImage(
-        imageUrl: imageUrl,
-        courseId: course.id,
-        width: width,
-        height: height,
-        fit: fit,
-        placeholder: placeholder,
-        errorWidget: errorWidget,
-      );
-    }
-
-    // If no image path, return error widget
-    return errorWidget ?? _buildDefaultErrorWidget(width, height);
-  }
-
-  Widget _buildDefaultErrorWidget(double? width, double? height) {
-    return Container(
-      width: width,
-      height: height,
-      color: Colors.grey[300],
-      child: Icon(Icons.image_not_supported, color: Colors.grey[600]),
+  @override
+  Future<List<CourseModel>> loadCourses(
+      {int page = 1, int pageSize = 10}) async {
+    return await courseService.getCourses(
+      page: page,
+      pageSize: pageSize,
+      filters: activeFilters.toList(),
     );
   }
 
-  // Enhanced course creation with proper busy state management and image caching
-  Future<void> addNewCourse({
-    required String title,
-    required String description,
-    required double price,
-    XFile? image,
-  }) async {
-    try {
-      setBusy(true);
-
-      // Use CourseService to add the course
-      final newCourse = await _courseService.addCourse(
-        title: title,
-        description: description,
-        price: price.toDouble(),
-        image: image,
-      );
-
-      // Add to local list
-      _courses.add(newCourse);
-
-      // Clear selected image
-      _selectedImage = null;
-
-      // Show success message
-      _showSuccessMessage('Course created successfully');
-    } catch (e) {
-      _showErrorMessage('Failed to create course: ${e.toString()}');
-
-      // Fallback to local creation if API fails
-      if (_courses.isNotEmpty) {
-        final newCourse = CourseModel(
-          id: DateTime.now().toString(),
-          title: title,
-          description: description,
-          thumbnail: image?.path ?? 'assets/images/default.jpg',
-          isActive: true,
-          studentsEnrolled: 0,
-          rating: 0,
-          price: price.toDouble(),
-          lessonCount: 0,
-        );
-
-        _courses.add(newCourse);
-      }
-    } finally {
-      setBusy(false);
-    }
+  @override
+  bool filterCourse(CourseModel course) {
+    if (activeFilters.isEmpty || activeFilters.contains('All')) return true;
+    if (activeFilters.contains('Active') && course.isActive) return true;
+    if (activeFilters.contains('Inactive') && !course.isActive) return true;
+    return false;
   }
 
-  Future<void> editCourse(
-    String courseId, {
-    String? title,
-    String? description,
-    double? price,
-    XFile? newImage,
-  }) async {
-    try {
-      setBusy(true);
-
-      // Use CourseService to update the course
-      final updatedCourse = await _courseService.updateCourse(
-        courseId: courseId,
-        title: title,
-        description: description,
-        price: price?.toInt(),
-        image: newImage,
-      );
-
-      // Update local list
-      final courseIndex =
-          _courses.indexWhere((course) => course.id == courseId);
-      if (courseIndex != -1) {
-        _courses[courseIndex] = updatedCourse;
-      }
-
-      // Clear selected image
-      _selectedImage = null;
-
-      _showSuccessMessage('Course updated successfully');
-    } catch (e) {
-      _showErrorMessage('Failed to update course: ${e.toString()}');
-
-      // Fallback to local update if API fails
-      final courseIndex =
-          _courses.indexWhere((course) => course.id == courseId);
-      if (courseIndex != -1) {
-        final course = _courses[courseIndex];
-        _courses[courseIndex] = CourseModel(
-          id: course.id,
-          title: title ?? course.title,
-          description: description ?? course.description,
-          thumbnail: newImage?.path ?? course.thumbnail,
-          isActive: course.isActive,
-          studentsEnrolled: course.studentsEnrolled,
-          rating: course.rating,
-          price: (price ?? course.price).toDouble(),
-          lessonCount: course.lessonCount,
-        );
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  Future<void> toggleCourseStatus(String courseId) async {
-    try {
-      final courseIndex =
-          _courses.indexWhere((course) => course.id == courseId);
-      if (courseIndex == -1) return;
-
-      setBusy(true);
-
-      // In a real app, you would call an API here
-      // await _courseService.toggleCourseStatus(courseId);
-
-      // For now, just update locally
-      final course = _courses[courseIndex];
-      _courses[courseIndex] = CourseModel(
-        id: course.id,
-        title: course.title,
-        description: course.description,
-        thumbnail: course.thumbnail,
-        isActive: !course.isActive,
-        studentsEnrolled: course.studentsEnrolled,
-        rating: course.rating,
-        price: course.price,
-        lessonCount: course.lessonCount,
-      );
-
-      final statusText =
-          _courses[courseIndex].isActive ? 'activated' : 'deactivated';
-      _showSuccessMessage('Course $statusText successfully');
-    } catch (e) {
-      _showErrorMessage('Failed to update course status: ${e.toString()}');
-    } finally {
-      setBusy(false);
-      notifyListeners();
-    }
-  }
-
-  // Option 1: Enhanced Dialog approach
-  void showAddCourseDialog(BuildContext context) {
-    showGlassmorphicDialog(
+  void showAddCourseDialog(BuildContext context) async {
+    final result = await showDialog(
       context: context,
-      blurAmount: 8.0,
-      dialog: CourseDialog(
+      builder: (context) => CourseDialog(
         title: 'Add New Course',
-        onSave: (title, description, price, image) {
-          addNewCourse(
-            title: title,
-            description: description,
-            price: price,
-            image: image,
-          );
+        onSave: (title, description, price, image) async {
+          _selectedImage = image;
+          await _addCourse(title, description, price);
         },
       ),
     );
+
+    if (result == true) {
+      await refreshItems();
+    }
   }
 
-  // Option 1: Edit course with enhanced dialog
-  void showEditCourseDialog(BuildContext context, CourseModel course) {
-    showGlassmorphicDialog(
+  Future<void> _addCourse(
+      String title, String description, double price) async {
+    try {
+      await courseService.addCourse(
+        title: title,
+        description: description,
+        price: price,
+        image: _selectedImage,
+      );
+      _showSuccessMessage('Course added successfully');
+      await refreshItems();
+    } catch (e) {
+      _showErrorMessage('Failed to add course: ${e.toString()}');
+    }
+  }
+
+  void showEditCourseDialog(BuildContext context, CourseModel course) async {
+    final result = await showDialog(
       context: context,
-      blurAmount: 8.0,
-      dialog: CourseDialog(
+      builder: (context) => CourseDialog(
         title: 'Edit Course',
         initialCourseName: course.title,
         initialDescription: course.description,
-        initialPrice: course.price.toDouble(),
-        onSave: (title, description, price, image) {
-          editCourse(
-            course.id,
-            title: title,
-            description: description,
-            price: price,
-            newImage: image,
-          );
+        initialPrice: course.price,
+        onSave: (title, description, price, image) async {
+          _selectedImage = image;
+          await _updateCourse(course.id, title, description, price);
         },
       ),
     );
+
+    if (result == true) {
+      await refreshItems();
+    }
   }
 
-  void navigateToCourseDetails(BuildContext context, CourseModel course) {
-    navigationService.navigateTo(
-      Routes.courseDetailsView,
-      arguments: CourseDetailsViewArguments(course: course),
-    );
+  Future<void> _updateCourse(
+    String courseId,
+    String title,
+    String description,
+    double price,
+  ) async {
+    try {
+      await courseService.updateCourse(
+        courseId: courseId,
+        title: title,
+        description: description,
+        price: price.toInt(),
+        image: _selectedImage,
+      );
+      _showSuccessMessage('Course updated successfully');
+      await refreshItems();
+    } catch (e) {
+      _showErrorMessage('Failed to update course: ${e.toString()}');
+    }
   }
 
-  // Helper methods for showing feedback to users
-  void _showSuccessMessage(String message) {
-    // If using snackbar service from stacked:
-    // _snackbarService.showSnackbar(message: message, duration: const Duration(seconds: 2));
-
-    // Otherwise, this can be handled at the UI level via a reactive property
-    print(message); // For now, just print
+  Future<void> toggleCourseStatus(CourseModel course) async {
+    try {
+      await courseService.updateCourseStatus(
+        courseId: course.id,
+        isActive: !course.isActive,
+      );
+      _showSuccessMessage(
+        'Course ${course.isActive ? 'inactive' : 'activate'} successfully',
+      );
+      await refreshItems();
+    } catch (e) {
+      _showErrorMessage('Failed to update course status: ${e.toString()}');
+    }
   }
 
   void _showErrorMessage(String message) {
-    // If using dialog service from stacked:
-    // _dialogService.showDialog(
-    //   title: 'Error',
-    //   description: message,
-    //   buttonTitle: 'OK',
-    // );
-
-    print('ERROR: $message'); // For now, just print
+    snackbarService.showCustomSnackBar(
+      message: message,
+      duration: const Duration(seconds: 3),
+      variant: SnackbarType.error,
+    );
   }
+
+  void _showSuccessMessage(String message) {
+    snackbarService.showCustomSnackBar(
+      message: message,
+      duration: const Duration(seconds: 3),
+      variant: SnackbarType.success,
+    );
+  }
+
+  @override
+  AuthService get authService => locator<AuthService>();
+
+  @override
+  NavigationService get navigationService => locator<NavigationService>();
+
+  @override
+  SnackbarService get snackbarService => locator<SnackbarService>();
+
+  @override
+  UserService get userService => locator<UserService>();
 }

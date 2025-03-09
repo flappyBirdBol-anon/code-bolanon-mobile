@@ -20,24 +20,41 @@ class CourseService {
   List<CourseModel>? _courses;
   List<CourseModel>? get courseList => _courses;
 
-  Future<List<CourseModel>> getCourses() async {
-    final response = await _apiService.get('/courses');
+  Future<List<CourseModel>> getCourses({
+    int page = 1,
+    int pageSize = 10,
+    List<String>? filters,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {
+        'page': page,
+        'pageSize': pageSize,
+      };
 
-    if (response.statusCode == 200) {
-      final List<dynamic> coursesJson = response.data['data'];
-      final courses =
-          coursesJson.map((json) => CourseModel.fromJson(json)).toList();
-      _courses = courses;
-      // Prefetch and cache all course images in the background
-      _imageService.prefetchCourseImages(courses);
+      if (filters != null && filters.isNotEmpty) {
+        queryParams['filters'] = filters.join(',');
+      }
 
-      return courses;
-    } else {
-      throw Exception('Failed to load courses: ${response.data['message']}');
+      final response =
+          await _apiService.get('/courses', queryParameters: queryParams);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> coursesJson = response.data['data'];
+        final courses =
+            coursesJson.map((json) => CourseModel.fromJson(json)).toList();
+        _courses = courses;
+        _imageService.prefetchCourseImages(courses);
+        return courses;
+      } else {
+        throw Exception('Failed to load courses: ${response.data['message']}');
+      }
+    } catch (e) {
+      debugPrint('Error loading courses: $e');
+      return [];
     }
   }
 
-  Future<CourseModel> getCourseById(int courseId) async {
+  Future<CourseModel> getCourseById(String courseId) async {
     final response = await _apiService.get('/courses/$courseId');
 
     if (response.statusCode == 200) {
@@ -96,6 +113,42 @@ class CourseService {
       }
     } catch (e) {
       throw Exception('Failed to add course: ${e.toString()}');
+    }
+  }
+
+  Future<CourseModel> updateCourseStatus({
+    required String courseId,
+    required bool isActive,
+  }) async {
+    try {
+      final Map<String, dynamic> updateData = {
+        'is_active': isActive,
+        '_method': 'PUT', // For Laravel method spoofing
+      };
+
+      final response = await _apiService.post(
+        '/courses/$courseId/status',
+        data: updateData,
+      );
+
+      if (response.statusCode == 200) {
+        final course = CourseModel.fromJson(response.data['data']);
+
+        // Update our local course list if it exists
+        if (_courses != null) {
+          final index = _courses!.indexWhere((c) => c.id == courseId);
+          if (index != -1) {
+            _courses![index] = course;
+          }
+        }
+
+        return course;
+      } else {
+        throw Exception(
+            'Failed to update course status: ${response.data['message']}');
+      }
+    } catch (e) {
+      throw Exception('Failed to update course status: ${e.toString()}');
     }
   }
 
@@ -190,23 +243,33 @@ class CourseService {
       List<RegistrationModel> registrations) async {
     try {
       List<CourseModel> courses = [];
+      List<Future<CourseModel>> futures = [];
 
-      // Get course details for each registration
+      // Create futures for parallel execution
       for (var registration in registrations) {
-        final response =
-            await _apiService.get('/courses/${registration.courseId}');
-
-        if (response.statusCode == 200) {
-          final courseJson = response.data['data'];
-          // Add registration data to course model
-          courseJson['registration'] = registration.toJson();
-          courses.add(CourseModel.fromJson(courseJson));
-        }
+        futures.add(_fetchRegisteredCourse(registration));
       }
+
+      // Wait for all futures to complete
+      final results = await Future.wait(futures);
+      courses.addAll(results);
+
       return courses;
     } catch (e) {
       throw Exception('Failed to get registered courses: ${e.toString()}');
     }
+  }
+
+  Future<CourseModel> _fetchRegisteredCourse(
+      RegistrationModel registration) async {
+    final response = await _apiService.get('/courses/${registration.courseId}');
+    if (response.statusCode == 200) {
+      final courseJson = response.data['data'];
+      courseJson['registration'] = registration.toJson();
+      return CourseModel.fromJson(courseJson);
+    }
+    throw Exception(
+        'Failed to fetch registered course: ${registration.courseId}');
   }
 
   Future<List<WishlistModel>> getUserWishlists() async {
@@ -231,20 +294,31 @@ class CourseService {
       List<WishlistModel> wishlists) async {
     try {
       List<CourseModel> courses = [];
+      List<Future<CourseModel>> futures = [];
 
+      // Create futures for parallel execution
       for (var wishlist in wishlists) {
-        final response = await _apiService.get('/courses/${wishlist.courseId}');
-
-        if (response.statusCode == 200) {
-          final courseJson = response.data['data'];
-          courseJson['wishlist'] = wishlist.toJson();
-          courses.add(CourseModel.fromJson(courseJson));
-        }
+        futures.add(_fetchWishlistedCourse(wishlist));
       }
+
+      // Wait for all futures to complete
+      final results = await Future.wait(futures);
+      courses.addAll(results);
+
       return courses;
     } catch (e) {
       throw Exception('Failed to get wishlisted courses: ${e.toString()}');
     }
+  }
+
+  Future<CourseModel> _fetchWishlistedCourse(WishlistModel wishlist) async {
+    final response = await _apiService.get('/courses/${wishlist.courseId}');
+    if (response.statusCode == 200) {
+      final courseJson = response.data['data'];
+      courseJson['wishlist'] = wishlist.toJson();
+      return CourseModel.fromJson(courseJson);
+    }
+    throw Exception('Failed to fetch wishlisted course: ${wishlist.courseId}');
   }
 
   Future<bool> removeFromWishlist(int wishlistId) async {

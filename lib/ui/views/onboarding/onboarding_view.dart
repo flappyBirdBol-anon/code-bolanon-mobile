@@ -1,6 +1,7 @@
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 
@@ -35,15 +36,6 @@ class OnboardingView extends StackedView<OnboardingViewModel> {
                         alignment: Alignment.center,
                       ),
                     ),
-                    // Text(
-                    //   Constants.appName,
-                    //   style: TextStyle(
-                    //     fontFamily: 'Poppins',
-                    //     fontSize: 24,
-                    //     fontWeight: FontWeight.bold,
-                    //     color: Color.fromARGB(255, 0, 0, 0),
-                    //   ),
-                    // ),
                   ],
                 ),
               ),
@@ -100,14 +92,16 @@ class OnboardingView extends StackedView<OnboardingViewModel> {
             child: ElevatedButton(
               onPressed: viewModel.navigateToAuth,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 15),
-                textStyle: buttonTextStyle,
+                textStyle: GoogleFonts.figtree(
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
               ),
-              child: const Text(
+              child: Text(
                 'Get Started',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
+                style: GoogleFonts.figtree(
                   fontSize: 18,
                   color: Colors.white,
                 ),
@@ -125,14 +119,13 @@ class OnboardingView extends StackedView<OnboardingViewModel> {
           child: ElevatedButton(
             onPressed: viewModel.nextPage,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+              backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 15),
               textStyle: buttonTextStyle,
             ),
-            child: const Text(
+            child: Text(
               'Next',
-              style: TextStyle(
-                fontFamily: 'Poppins',
+              style: GoogleFonts.figtree(
                 fontSize: 18,
                 color: Colors.white,
               ),
@@ -142,10 +135,9 @@ class OnboardingView extends StackedView<OnboardingViewModel> {
         const SizedBox(height: 10),
         TextButton(
           onPressed: viewModel.navigateToAuth,
-          child: const Text(
+          child: Text(
             'Skip',
-            style: TextStyle(
-              fontFamily: 'Poppins',
+            style: GoogleFonts.figtree(
               fontSize: 16,
               color: Colors.grey,
             ),
@@ -184,8 +176,7 @@ class _OnboardingPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Text(
             title,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
+            style: GoogleFonts.figtree(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.black,
@@ -197,8 +188,7 @@ class _OnboardingPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           child: Text(
             description,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
+            style: GoogleFonts.figtree(
               fontSize: 16,
               color: Colors.black,
             ),
@@ -223,7 +213,7 @@ class _Indicator extends StatelessWidget {
       height: 8.0,
       width: isActive ? 24.0 : 8.0,
       decoration: BoxDecoration(
-        color: isActive ? const Color.fromARGB(255, 0, 0, 0) : Colors.grey,
+        color: isActive ? AppColors.primary : Colors.grey,
         borderRadius: const BorderRadius.all(Radius.circular(12)),
       ),
     );

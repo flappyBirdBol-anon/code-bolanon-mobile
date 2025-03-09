@@ -7,6 +7,7 @@ import 'package:code_bolanon/services/api_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ImageService {
   final String baseUrl;
@@ -49,12 +50,22 @@ class ImageService {
   /// Gets the course thumbnail URL from a path
   String getCourseThumbnailFromPath(String thumbnailPath) {
     if (thumbnailPath.isEmpty) return '';
-    if (thumbnailPath.startsWith('http')) return thumbnailPath;
+    if (thumbnailPath.startsWith('http') || thumbnailPath.startsWith('https')) {
+      return thumbnailPath;
+    }
+    if (thumbnailPath.startsWith('assets/')) {
+      return thumbnailPath;
+    }
 
-    // Ensure path has no leading slash
+    // Clean and construct the path
     final cleanPath = thumbnailPath.startsWith('/')
         ? thumbnailPath.substring(1)
         : thumbnailPath;
+
+    // If path already contains 'storage', don't add it again
+    if (cleanPath.contains('storage/')) {
+      return '$baseUrl/$cleanPath';
+    }
     return '$baseUrl/$cleanPath';
   }
 
@@ -289,5 +300,153 @@ class ImageService {
   /// Clears cache for a specific course
   Future<void> clearCourseCache(String courseId) async {
     _memoryCache.remove('course_${courseId}_image');
+  }
+
+  Widget getImage({
+    required String url,
+    double? width,
+    double? height,
+    BoxFit? fit,
+    Widget? placeholder,
+  }) {
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        width: width,
+        height: height,
+        fit: fit ?? BoxFit.cover,
+      );
+    }
+
+    // Use consistent cache key format
+    final cacheKey = 'img_${url.hashCode}';
+
+    return CachedNetworkImage(
+      imageUrl: url,
+      width: width,
+      height: height,
+      fit: fit ?? BoxFit.cover,
+      cacheKey: cacheKey,
+      memCacheWidth: width?.toInt(),
+      memCacheHeight: height?.toInt(),
+      placeholder: (context, url) =>
+          placeholder ??
+          Center(
+            child: SizedBox(
+              width: 30,
+              height: 30,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey[400]!),
+              ),
+            ),
+          ),
+      errorWidget: (context, url, error) {
+        print('Error loading image $url: $error');
+        return placeholder ?? Icon(Icons.error, color: Colors.grey[400]);
+      },
+    );
+  }
+
+  /// Gets course image from cache or network, prioritizing cache
+  Future<File?> getCourseThumbnailFile(CourseModel course) async {
+    if (course.thumbnail.isEmpty) return null;
+    if (course.thumbnail.startsWith('assets/')) return null;
+
+    final imageUrl = getCourseThumbnailFromPath(course.thumbnail);
+    final cacheKey = 'course_${course.id}_thumb';
+
+    try {
+      // Try to get from disk cache first
+      final fileInfo = await _cacheManager.getFileFromCache(imageUrl);
+      if (fileInfo != null) {
+        final age = DateTime.now().difference(fileInfo.file.lastModifiedSync());
+        if (age < cacheDuration) {
+          return fileInfo.file;
+        }
+      }
+
+      // If not in cache or expired, download and cache
+      final response = await apiService.dio.get(
+        imageUrl,
+        options: Options(
+          headers: apiService.dio.options.headers,
+          responseType: ResponseType.bytes,
+        ),
+      );
+
+      final file = await _cacheManager.putFile(
+        imageUrl,
+        response.data,
+        key: cacheKey,
+        maxAge: cacheDuration,
+      );
+
+      return file;
+    } catch (e) {
+      print('Error getting course thumbnail file: $e');
+      return null;
+    }
+  }
+
+  /// Widget to display course thumbnail from cache
+  Widget getCourseImage({
+    required CourseModel course,
+    BoxFit? fit,
+    Widget? placeholder,
+    double? width,
+    double? height,
+  }) {
+    if (course.thumbnail.startsWith('assets/')) {
+      return Image.asset(
+        course.thumbnail,
+        fit: fit ?? BoxFit.cover,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) =>
+            placeholder ?? _buildPlaceholder(width: width, height: height),
+      );
+    }
+
+    return FutureBuilder<File?>(
+      future: getCourseThumbnailFile(course),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return placeholder ?? _buildPlaceholder(width: width, height: height);
+        }
+
+        if (snapshot.hasError || !snapshot.hasData) {
+          print('Error loading course image: ${snapshot.error}');
+          return placeholder ?? _buildPlaceholder(width: width, height: height);
+        }
+
+        return Image.file(
+          snapshot.data!,
+          fit: fit ?? BoxFit.cover,
+          width: width,
+          height: height,
+          errorBuilder: (context, error, stackTrace) {
+            print('Error displaying course image: $error');
+            return placeholder ??
+                _buildPlaceholder(width: width, height: height);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPlaceholder({double? width, double? height}) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.grey[200],
+      child: Center(
+        child: Icon(
+          Icons.image_rounded,
+          size: 32,
+          color: Colors.grey[400],
+        ),
+      ),
+    );
   }
 }

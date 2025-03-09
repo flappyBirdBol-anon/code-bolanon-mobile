@@ -25,19 +25,19 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     final isDark = theme.brightness == Brightness.dark;
 
     // Custom text styles with Google Fonts
-    final headingStyle = GoogleFonts.inter(
+    final headingStyle = GoogleFonts.figtree(
       fontSize: 20,
       fontWeight: FontWeight.w600,
       letterSpacing: 0.1,
     );
 
-    final subheadingStyle = GoogleFonts.inter(
+    final subheadingStyle = GoogleFonts.figtree(
       fontSize: 16,
       fontWeight: FontWeight.w600,
       letterSpacing: 0.1,
     );
 
-    final bodyStyle = GoogleFonts.inter(
+    final bodyStyle = GoogleFonts.figtree(
       fontSize: 14,
     );
 
@@ -95,13 +95,6 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
           ),
         ),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () => viewModel.createNewCourse(),
-      //   elevation: 8,
-      //   backgroundColor: theme.primaryColor,
-      //   tooltip: 'Create new course',
-      //   child: const Icon(Icons.add),
-      // ),
     );
   }
 
@@ -157,7 +150,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
               children: [
                 Text(
                   'Welcome back,',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.figtree(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 14,
                     fontWeight: FontWeight.w300,
@@ -166,7 +159,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                 const SizedBox(height: 4),
                 Text(
                   viewModel.userName,
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.figtree(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -294,7 +287,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
             const SizedBox(height: 8),
             Text(
               label,
-              style: textStyle.copyWith(
+              style: GoogleFonts.figtree(
                 fontSize: 12,
                 color: isDark ? Colors.grey[300] : Colors.grey[800],
               ),
@@ -435,7 +428,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                       children: [
                         Text(
                           'Select Month & Year',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.figtree(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: isDark ? Colors.white : Colors.black87,
@@ -505,7 +498,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                             ),
                             child: Text(
                               selectedYear.toString(),
-                              style: GoogleFonts.inter(
+                              style: GoogleFonts.figtree(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                                 color: isDark ? Colors.white : Colors.black87,
@@ -574,7 +567,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                             alignment: Alignment.center,
                             child: Text(
                               monthNames[index].substring(0, 3),
-                              style: GoogleFonts.inter(
+                              style: GoogleFonts.figtree(
                                 color: isSelected
                                     ? Colors.white
                                     : isDark
@@ -615,7 +608,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                         ),
                         child: Text(
                           'Reset to Current Month',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.figtree(
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -1079,7 +1072,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                             children: [
                               Text(
                                 '\$${course.price}',
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.figtree(
                                   fontWeight: FontWeight.bold,
                                   color: theme.primaryColor,
                                   fontSize: 14,
@@ -1094,14 +1087,14 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                               const SizedBox(width: 4),
                               Text(
                                 '${course.rating}',
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.figtree(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                               Text(
                                 ' (${course.rating})',
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.figtree(
                                   fontSize: 12,
                                   color: isDark
                                       ? Colors.grey[400]
@@ -1258,9 +1251,9 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "Upcoming Sessions",
-          style: TextStyle(
+          style: GoogleFonts.figtree(
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -1337,10 +1330,10 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                 border: Border.all(color: Colors.white, width: 2),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
                   '+21',
-                  style: TextStyle(
+                  style: GoogleFonts.figtree(
                     color: Colors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,

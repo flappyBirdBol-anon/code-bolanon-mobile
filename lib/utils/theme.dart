@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const Color primaryColor = Color.fromARGB(255, 0, 0, 0); // Light Green
@@ -16,26 +17,30 @@ class AppTheme {
     primaryColor: primaryColor,
     hintColor: accentColor,
     scaffoldBackgroundColor: const Color.fromARGB(255, 132, 132, 132),
-    textTheme: const TextTheme(
-      displayLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: textColorLight,
-          fontFamily: 'Poppins'),
-      displayMedium: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: textColorLight,
-          fontFamily: 'Poppins'),
-      bodyLarge:
-          TextStyle(fontSize: 16, color: textColorLight, fontFamily: 'Poppins'),
-      bodyMedium: TextStyle(
-          fontSize: 14, color: secondaryTextColorLight, fontFamily: 'Poppins'),
+    textTheme: TextTheme(
+      displayLarge: GoogleFonts.figtree(
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+        color: textColorLight,
+      ),
+      displayMedium: GoogleFonts.figtree(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: textColorLight,
+      ),
+      bodyLarge: GoogleFonts.figtree(
+        fontSize: 16,
+        color: textColorLight,
+      ),
+      bodyMedium: GoogleFonts.figtree(
+        fontSize: 14,
+        color: secondaryTextColorLight,
+      ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
-        textStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 18),
+        textStyle: GoogleFonts.figtree(fontSize: 18),
         padding: const EdgeInsets.symmetric(vertical: 15),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -49,7 +54,7 @@ class AppTheme {
       ),
       filled: true,
       fillColor: Colors.grey[200],
-      hintStyle: const TextStyle(color: secondaryTextColorLight),
+      hintStyle: GoogleFonts.figtree(color: secondaryTextColorLight),
     ),
   );
 
@@ -58,26 +63,30 @@ class AppTheme {
     primaryColor: const Color.fromARGB(255, 174, 102, 25),
     hintColor: accentColor,
     scaffoldBackgroundColor: backgroundColorDark,
-    textTheme: const TextTheme(
-      displayLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: textColorDark,
-          fontFamily: 'Poppins'),
-      displayMedium: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: textColorDark,
-          fontFamily: 'Poppins'),
-      bodyLarge:
-          TextStyle(fontSize: 16, color: textColorDark, fontFamily: 'Poppins'),
-      bodyMedium: TextStyle(
-          fontSize: 14, color: secondaryTextColorDark, fontFamily: 'Poppins'),
+    textTheme: TextTheme(
+      displayLarge: GoogleFonts.figtree(
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+        color: textColorDark,
+      ),
+      displayMedium: GoogleFonts.figtree(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: textColorDark,
+      ),
+      bodyLarge: GoogleFonts.figtree(
+        fontSize: 16,
+        color: textColorDark,
+      ),
+      bodyMedium: GoogleFonts.figtree(
+        fontSize: 14,
+        color: secondaryTextColorDark,
+      ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
-        textStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 18),
+        textStyle: GoogleFonts.figtree(fontSize: 18),
         padding: const EdgeInsets.symmetric(vertical: 15),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -91,7 +100,7 @@ class AppTheme {
       ),
       filled: true,
       fillColor: Colors.grey[800],
-      hintStyle: const TextStyle(color: secondaryTextColorDark),
+      hintStyle: GoogleFonts.figtree(color: secondaryTextColorDark),
     ),
   );
 }

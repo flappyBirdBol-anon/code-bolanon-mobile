@@ -1,10 +1,13 @@
 import 'package:code_bolanon/app/app.router.dart';
+import 'package:code_bolanon/ui/common/enums/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 import '../../../../app/app.locator.dart';
 import '../../../../services/auth_service.dart';
+
+// Import the SnackbarType enum
 
 class LoginViewModel extends BaseViewModel {
   final _authService = locator<AuthService>();
@@ -36,20 +39,31 @@ class LoginViewModel extends BaseViewModel {
       final success = await _authService.login(
           emailController.text, passwordController.text);
       if (success) {
+        // Show success message before navigating
+        _snackbarService.showCustomSnackBar(
+          variant: SnackbarType.success,
+          message: 'Login successful! Welcome back.',
+          duration: const Duration(seconds: 2),
+        );
+
+        // Wait a moment to show the success message before navigating
+        await Future.delayed(const Duration(milliseconds: 500));
         await _navigationService.clearStackAndShow(Routes.mainBodyView);
       } else {
-        // Show error message (consider using a dialog service)
+        // Show error message with custom error snackbar
         print('Login failed. Please check your credentials.');
-        _snackbarService.showSnackbar(
-          message: 'Login failed. Please check your credentials.',
+        _snackbarService.showCustomSnackBar(
+          variant: SnackbarType.error,
+          message: 'Login failed. Please check your email and password.',
           duration: const Duration(seconds: 3),
         );
       }
     } catch (e) {
-      // Handle any errors (consider using a dialog service)
+      // Handle any errors with custom error snackbar
       print('An error occurred during login: $e');
-      _snackbarService.showSnackbar(
-        message: 'An error occurred during login: $e',
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.error,
+        message: 'Login error: ${e.toString().split('\n')[0]}',
         duration: const Duration(seconds: 3),
       );
     } finally {
@@ -58,26 +72,6 @@ class LoginViewModel extends BaseViewModel {
   }
 
   Future<void> loginWithEmail() async {
-    // if (!_validateInputs()) return;
-
-    // _isLoading = true;
-    // notifyListeners();
-
-    // try {
-    //   await _authService.signInWithEmail(
-    //     email: emailController.text.trim(),
-    //     password: passwordController.text,
-    //   );
-    //   _navigationService.replaceWith('/home');
-    // } catch (e) {
-    //   _snackbarService.showSnackbar(
-    //     message: 'Login failed: ${e.toString()}',
-    //     duration: const Duration(seconds: 3),
-    //   );
-    // } finally {
-    //   _isLoading = false;
-    //   notifyListeners();
-    // }
     _navigationService.replaceWith(Routes.homeView);
     _navigationService.clearStackAndShow(Routes.homeView);
   }
@@ -88,10 +82,19 @@ class LoginViewModel extends BaseViewModel {
 
     try {
       // await _authService.signInWithGoogle();
+      // Show success message for Google login
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.success,
+        message: 'Google login successful!',
+        duration: const Duration(seconds: 2),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 500));
       _navigationService.replaceWith('/home');
     } catch (e) {
-      _snackbarService.showSnackbar(
-        message: 'Google login failed: ${e.toString()}',
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.error,
+        message: 'Google login failed: ${e.toString().split('\n')[0]}',
         duration: const Duration(seconds: 3),
       );
     } finally {
@@ -106,7 +109,8 @@ class LoginViewModel extends BaseViewModel {
 
   bool _validateInputs() {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      _snackbarService.showSnackbar(
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.info,
         message: 'Please fill in all fields',
         duration: const Duration(seconds: 2),
       );

@@ -10,6 +10,15 @@ class AuthViewModel extends BaseViewModel {
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
 
+  // Add keyboard visibility state
+  bool _isKeyboardVisible = false;
+  bool get isKeyboardVisible => _isKeyboardVisible;
+
+  void setKeyboardVisibility(bool isVisible) {
+    _isKeyboardVisible = isVisible;
+    notifyListeners();
+  }
+
   AuthViewModel() {
     emailController = TextEditingController();
     passwordController = TextEditingController();

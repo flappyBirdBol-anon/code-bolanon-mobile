@@ -4,6 +4,7 @@ import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/file_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
+import 'package:code_bolanon/services/tag_service.dart';
 import 'package:code_bolanon/services/theme_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/bottom_sheets/notice/notice_sheet.dart';
@@ -66,8 +67,8 @@ import 'package:code_bolanon/ui/views/payment/payment_view.dart';
     LazySingleton(classType: ImageService),
     LazySingleton(classType: UserService),
     LazySingleton(classType: LessonsService),
-
     LazySingleton(classType: FileService),
+    LazySingleton(classType: TagService),
 // @stacked-service
   ],
   bottomsheets: [

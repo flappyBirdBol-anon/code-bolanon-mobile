@@ -1,8 +1,10 @@
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_stack_chip.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_text_field.dart';
 import 'package:code_bolanon/ui/common/widgets/password_validation_list.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 
 import 'signup_viewmodel.dart';
@@ -13,21 +15,33 @@ class SignupView extends StackedView<SignupViewModel> {
   @override
   Widget builder(
       BuildContext context, SignupViewModel viewModel, Widget? child) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 10),
-            _buildCommonFields(viewModel, context),
-            const SizedBox(height: 16),
-            if (viewModel.selectedRole == 'trainer')
-              _buildTrainerFields(viewModel, context),
-            _buildTermsAndConditions(context, viewModel),
-            const SizedBox(height: 24),
-            _buildButtons(viewModel, context),
-          ],
+    return GestureDetector(
+      // Add GestureDetector to handle taps outside text fields
+      onTap: () {
+        // Dismiss keyboard when tapping outside text fields
+        FocusScope.of(context).unfocus();
+        // Hide password validation checklist
+        if (viewModel.isAnyPasswordFieldFocused) {
+          viewModel.unfocusPasswordFields();
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 10),
+              _buildCommonFields(viewModel, context),
+              const SizedBox(height: 20), // Increased spacing
+              if (viewModel.selectedRole == 'trainer')
+                _buildTrainerFields(viewModel, context),
+              _buildTermsAndConditions(context, viewModel),
+              const SizedBox(height: 24),
+              _buildButtons(viewModel, context),
+            ],
+          ),
         ),
       ),
     );
@@ -61,7 +75,7 @@ class SignupView extends StackedView<SignupViewModel> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20), // Increased spacing
         CustomTextField(
           controller: viewModel.emailController,
           labelText: 'Enter your email',
@@ -70,7 +84,7 @@ class SignupView extends StackedView<SignupViewModel> {
           validator: (value) =>
               value?.isEmpty ?? true ? 'Please enter your email' : null,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20), // Increased spacing
         CustomTextField(
           controller: viewModel.passwordController,
           labelText: 'Enter your password',
@@ -82,7 +96,7 @@ class SignupView extends StackedView<SignupViewModel> {
           focusNode: viewModel.passwordFocusNode,
           onFocusChange: viewModel.updatePasswordFocus,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20), // Increased spacing
         CustomTextField(
           controller: viewModel.confirmPasswordController,
           labelText: 'Confirm your password',
@@ -94,28 +108,36 @@ class SignupView extends StackedView<SignupViewModel> {
           focusNode: viewModel.confirmPasswordFocusNode,
           onFocusChange: viewModel.updateConfirmPasswordFocus,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Visibility(
           visible: viewModel.isAnyPasswordFieldFocused,
-          child: PasswordValidationList(
-            hasMinLength: viewModel.passwordController.text.length >= 8,
-            hasNumber:
-                viewModel.passwordController.text.contains(RegExp(r'[0-9]')),
-            hasUpperCase:
-                viewModel.passwordController.text.contains(RegExp(r'[A-Z]')),
-            hasLowerCase:
-                viewModel.passwordController.text.contains(RegExp(r'[a-z]')),
-            isMatch: viewModel.passwordController.text ==
-                    viewModel.confirmPasswordController.text &&
-                viewModel.passwordController.text.isNotEmpty,
+          child: Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: PasswordValidationList(
+                hasMinLength: viewModel.passwordController.text.length >= 8,
+                hasNumber: viewModel.passwordController.text
+                    .contains(RegExp(r'[0-9]')),
+                hasUpperCase: viewModel.passwordController.text
+                    .contains(RegExp(r'[A-Z]')),
+                hasLowerCase: viewModel.passwordController.text
+                    .contains(RegExp(r'[a-z]')),
+                isMatch: viewModel.passwordController.text ==
+                        viewModel.confirmPasswordController.text &&
+                    viewModel.passwordController.text.isNotEmpty,
+              ),
+            ),
           ),
         ),
-        //Implement: add chips here that will be used to select a users preferred stack (for example, laravel, flutter, react, etc)
-        const SizedBox(height: 16),
+        const SizedBox(height: 20), // Increased spacing
         _buildChips(viewModel, context),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20), // Increased spacing
         _buildRoleSelect(context, viewModel),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20), // Increased spacing
       ],
     );
   }
@@ -129,9 +151,10 @@ class SignupView extends StackedView<SignupViewModel> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary, // Consistent text color
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           child: Column(
@@ -140,17 +163,17 @@ class SignupView extends StackedView<SignupViewModel> {
               if (viewModel.selectedTechStacks.isNotEmpty) ...[
                 Text(
                   'Selected: ${viewModel.selectedTechStacks.length}',
-                  style: TextStyle(
+                  style: GoogleFonts.figtree(
                     fontSize: 14,
-                    color: Theme.of(context).primaryColor,
+                    color: AppColors.primary, // Use darker blue
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
               ],
               Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
+                spacing: 10.0, // Increased spacing
+                runSpacing: 10.0, // Increased spacing
                 children: [
                   for (String stack in viewModel.availableTechStacks)
                     CustomStackChip(
@@ -173,14 +196,15 @@ class SignupView extends StackedView<SignupViewModel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Trainer Information',
-          style: TextStyle(
-            fontSize: 16,
+          style: GoogleFonts.figtree(
+            fontSize: 18, // Larger heading
             fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary, // Consistent text color
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         CustomTextField(
           controller: viewModel.organizationController,
           labelText: 'Organization',
@@ -188,7 +212,7 @@ class SignupView extends StackedView<SignupViewModel> {
           validator: (value) =>
               value?.isEmpty ?? true ? 'Please enter your organization' : null,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20), // Increased spacing
         CustomTextField(
           controller: viewModel.specializationController,
           labelText: 'Specialization',
@@ -206,30 +230,42 @@ class SignupView extends StackedView<SignupViewModel> {
       BuildContext context, SignupViewModel viewModel) {
     return Row(
       children: [
-        Checkbox(
-          value: viewModel.termsAccepted,
-          onChanged: (value) => viewModel.setTermsAccepted(value ?? false),
+        SizedBox(
+          width: 24, // Larger checkbox area
+          height: 24,
+          child: Checkbox(
+            value: viewModel.termsAccepted,
+            activeColor: AppColors.primary, // Use darker blue
+            onChanged: (value) => viewModel.setTermsAccepted(value ?? false),
+          ),
         ),
+        const SizedBox(width: 8),
         Expanded(
           child: RichText(
             text: TextSpan(
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 14, // Slightly larger text
+                  ),
               children: [
-                const TextSpan(text: 'By agreeing to the '),
+                TextSpan(
+                    text: 'By agreeing to the ',
+                    style: GoogleFonts.figtree(color: Colors.grey)),
                 TextSpan(
                   text: 'terms and conditions',
-                  style: const TextStyle(
-                    color: Colors.blue,
+                  style: GoogleFonts.figtree(
+                    color: AppColors.primary, // Use darker blue
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
                       // Navigate to terms and conditions
-                      //todo: navigate to terms and conditions
                     },
                 ),
-                const TextSpan(
+                TextSpan(
                   text:
                       ', you are entering into a legally binding contract with the service provider.',
+                  style: GoogleFonts.figtree(color: Colors.grey),
                 ),
               ],
             ),
@@ -244,103 +280,113 @@ class SignupView extends StackedView<SignupViewModel> {
       return Row(
         children: [
           Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: Theme.of(context).textTheme.bodyMedium,
-                children: [
-                  const TextSpan(
-                      text: 'Are you a Learner? Sign up ',
-                      style: TextStyle(color: Colors.grey)),
-                  TextSpan(
-                    text: 'Here',
-                    style: const TextStyle(
-                      color: Colors.blue,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        viewModel.setRole('learner');
-                      },
-                  ),
-                  TextSpan(
-                    style: const TextStyle(
-                      color: Colors.blue,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        viewModel.setRole(viewModel.selectedRole == 'trainer'
-                            ? 'learner'
-                            : 'trainer');
-                      },
-                  ),
-                  const TextSpan(
-                    text: ' instead',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
+            child: OutlinedButton.icon(
+              onPressed: () => viewModel.setRole('trainee'),
+              icon: const Icon(Icons.person),
+              label: const Text('Switch to Trainee'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                side: BorderSide(color: Colors.grey[400]!),
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () => viewModel.setRole('trainer'),
+              icon: const Icon(Icons.school),
+              label: const Text('Switch to Trainer'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                side: BorderSide(color: Colors.grey[400]!),
               ),
             ),
           ),
         ],
       );
     }
-    return Row(
-      children: [
-        Expanded(
-          child: RichText(
-            text: TextSpan(
-              style: Theme.of(context).textTheme.bodyMedium,
-              children: [
-                const TextSpan(
-                    text: 'Are you a Trainer? Sign up ',
-                    style: TextStyle(color: Colors.grey)),
-                TextSpan(
-                  text: 'Here',
-                  style: const TextStyle(
-                    color: Colors.blue,
-                  ),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () {
-                      viewModel.setRole('trainer');
-                    },
-                ),
-                const TextSpan(
-                  text: ' instead',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildButtons(SignupViewModel viewModel, BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (viewModel.isLoading)
-          const Center(child: CircularProgressIndicator())
+          const Center(
+            child: CircularProgressIndicator(
+              color: AppColors.primary, // Darker blue
+              strokeWidth: 3, // Thicker progress indicator
+            ),
+          )
         else ...[
-          _Divider(),
+          ElevatedButton(
+            onPressed: viewModel.signupWithEmail,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary, // Darker blue
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 2,
+            ),
+            child: const Text(
+              'Sign Up',
+              style: TextStyle(
+                fontSize: 16, // Larger text
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           const SizedBox(height: 16),
-          viewModel.termsAccepted == true && viewModel.isPasswordValid == true
-              ? ElevatedButton(
-                  onPressed: viewModel.signupWithEmail,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                  ),
-                  child: const Text('Sign Up',
-                      style: TextStyle(color: Color.fromARGB(255, 0, 0, 0))),
-                )
-              : ElevatedButton(
-                  onPressed: null,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                  ),
-                  child: const Text('Sign Up',
-                      style: TextStyle(color: Colors.grey)),
+          Row(
+            children: [
+              Expanded(
+                child: Divider(
+                  color: Colors.grey[400],
+                  thickness: 1,
                 ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  'OR',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Divider(
+                  color: Colors.grey[400],
+                  thickness: 1,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: viewModel.signupWithGoogle,
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: Colors.grey[400]!),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            icon: const Icon(Icons.login),
+            label: const Text(
+              'Continue with Google',
+              style: TextStyle(fontSize: 15),
+            ),
+          ),
         ],
       ],
     );
@@ -348,15 +394,4 @@ class SignupView extends StackedView<SignupViewModel> {
 
   @override
   SignupViewModel viewModelBuilder(BuildContext context) => SignupViewModel();
-}
-
-class _Divider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        Expanded(child: Divider()),
-      ],
-    );
-  }
 }

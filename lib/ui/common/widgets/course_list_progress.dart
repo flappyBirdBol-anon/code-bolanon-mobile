@@ -1,105 +1,176 @@
+import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/ui/common/app_colors.dart';
+import 'package:code_bolanon/ui/common/widgets/tag_chip.dart';
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 
 class CourseListProgress extends StatelessWidget {
   final String title;
-  final String imageUrl;
-  final String registrationDate;
+  final String? description;
+  final String? thumbnail;
+  final String? thumbnailUrl;
   final double progress;
-  final VoidCallback? onTap;
+  final double? rating;
+  final int? reviews;
+  final DateTime? registrationDate;
+  final VoidCallback onTap;
+  final ImageService? imageService;
   final bool isDark;
+  final List<String>? tags;
 
   const CourseListProgress({
     Key? key,
     required this.title,
-    required this.imageUrl,
-    required this.registrationDate,
+    this.description,
+    this.thumbnail,
+    this.thumbnailUrl,
     required this.progress,
-    this.onTap,
+    this.rating,
+    this.reviews,
+    this.registrationDate,
+    required this.onTap,
+    this.imageService,
     this.isDark = false,
+    this.tags,
   }) : super(key: key);
-
-  Color _getProgressColor() {
-    if (progress < 0.3) return Colors.red;
-    if (progress < 0.7) return Colors.orange;
-    return Colors.green;
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.asset(
-            imageUrl,
-            width: 60,
-            height: 60,
-            fit: BoxFit.cover,
-          ),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(Icons.calendar_today,
-                    size: 14,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  'Registered on $registrationDate',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
-                  ),
+    return Card(
+      color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 2,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildThumbnail(),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (description != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        description!,
+                        style: Theme.of(context).textTheme.bodySmall,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    if (tags != null && tags!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 28,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: tags!.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(width: 4),
+                          itemBuilder: (context, index) {
+                            return TagChip(tag: tags![index]);
+                          },
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    if (rating != null && reviews != null) ...[
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.star_rounded,
+                            size: 16,
+                            color: Colors.amber[700],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            rating!.toStringAsFixed(1),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '(${reviews!})',
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey[600],
+                                    ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    LinearPercentIndicator(
+                      percent: progress.clamp(0.0, 1.0),
+                      lineHeight: 8,
+                      backgroundColor:
+                          isDark ? Colors.grey[800] : Colors.grey[200],
+                      progressColor: Theme.of(context).primaryColor,
+                      padding: EdgeInsets.zero,
+                      barRadius: const Radius.circular(4),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${(progress * 100).toInt()}% Complete',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: isDark ? Colors.grey[300] : Colors.grey[600],
+                          ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            LinearProgressIndicator(
-              value: progress,
-              backgroundColor: isDark ? Colors.grey[700] : Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(_getProgressColor()),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${(progress * 100).toInt()}% completed',
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
               ),
-            ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: Icon(
-            Icons.play_circle_fill,
-            color: isDark ? Colors.indigo[300] : Colors.indigo,
+            ],
           ),
-          onPressed: onTap,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThumbnail() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: 120,
+        height: 120,
+        child: imageService?.getCourseImage(
+              course: CourseModel(
+                id: thumbnailUrl?.hashCode.toString() ?? '',
+                title: title,
+                description: description ?? '',
+                thumbnail: thumbnail ?? thumbnailUrl ?? '',
+                price: 0,
+              ),
+              width: 120,
+              height: 120,
+            ) ??
+            _buildPlaceholder(),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      color: isDark ? Colors.grey[800] : Colors.grey[200],
+      child: Center(
+        child: Icon(
+          Icons.image_rounded,
+          size: 32,
+          color: isDark ? Colors.grey[700] : Colors.grey[400],
         ),
       ),
     );

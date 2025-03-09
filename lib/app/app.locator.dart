@@ -18,6 +18,7 @@ import '../services/course_service.dart';
 import '../services/file_service.dart';
 import '../services/image_service.dart';
 import '../services/lesson_service.dart';
+import '../services/tag_service.dart';
 import '../services/theme_service.dart';
 import '../services/user_service.dart';
 
@@ -44,4 +45,5 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => UserService());
   locator.registerLazySingleton(() => LessonsService());
   locator.registerLazySingleton(() => FileService());
+  locator.registerLazySingleton(() => TagService());
 }

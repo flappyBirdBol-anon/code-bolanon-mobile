@@ -61,7 +61,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                     duration: const Duration(milliseconds: 300),
                     child: Text(
                       course!.title,
-                      style: const TextStyle(
+                      style: GoogleFonts.figtree(
                         color: Colors.black,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -141,7 +141,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                           Expanded(
                             child: Text(
                               course!.title,
-                              style: const TextStyle(
+                              style: GoogleFonts.figtree(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -196,7 +196,8 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                                 const SizedBox(width: 4),
                                 Text(
                                   '2 Weeks',
-                                  style: TextStyle(color: Colors.grey[600]),
+                                  style: GoogleFonts.figtree(
+                                      color: Colors.grey[600]),
                                 ),
                               ],
                             ),
@@ -218,7 +219,8 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                                 const SizedBox(width: 4),
                                 Text(
                                   'English',
-                                  style: TextStyle(color: Colors.grey[600]),
+                                  style: GoogleFonts.figtree(
+                                      color: Colors.grey[600]),
                                 ),
                               ],
                             ),
@@ -277,12 +279,12 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
         children: [
           Text(
             course!.description,
-            style: const TextStyle(fontSize: 16, height: 1.5),
+            style: GoogleFonts.figtree(fontSize: 16, height: 1.5),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Instructor',
-            style: TextStyle(
+            style: GoogleFonts.figtree(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -301,22 +303,24 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   child: const Icon(Icons.person),
                 ),
                 title: Text(viewModel.userName),
-                subtitle: const Row(
+                subtitle: Row(
                   children: [
-                    Icon(Icons.star, color: Colors.amber, size: 16),
-                    SizedBox(width: 4),
-                    Text('7.2'),
-                    SizedBox(width: 8),
-                    Text('Reviews (75)'),
+                    const Icon(Icons.star, color: Colors.amber, size: 16),
+                    const SizedBox(width: 4),
+                    Text('7.2',
+                        style: GoogleFonts.figtree(color: Colors.grey[600])),
+                    const SizedBox(width: 8),
+                    Text('Reviews (75)',
+                        style: GoogleFonts.figtree(color: Colors.grey[600])),
                   ],
                 ),
               ),
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Mentor',
-            style: TextStyle(
+            style: GoogleFonts.figtree(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -334,14 +338,17 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   backgroundColor: Colors.grey[200],
                   child: const Icon(Icons.person),
                 ),
-                title: const Text('Marie'),
-                subtitle: const Row(
+                title: Text('Marie',
+                    style: GoogleFonts.figtree(fontWeight: FontWeight.bold)),
+                subtitle: Row(
                   children: [
-                    Icon(Icons.star, color: Colors.amber, size: 16),
-                    SizedBox(width: 4),
-                    Text('8.2'),
-                    SizedBox(width: 8),
-                    Text('Reviews (33)'),
+                    const Icon(Icons.star, color: Colors.amber, size: 16),
+                    const SizedBox(width: 4),
+                    Text('8.2',
+                        style: GoogleFonts.figtree(color: Colors.grey[600])),
+                    const SizedBox(width: 8),
+                    Text('Reviews (33)',
+                        style: GoogleFonts.figtree(color: Colors.grey[600])),
                   ],
                 ),
               ),
@@ -380,9 +387,9 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Lessons',
-              style: TextStyle(
+              style: GoogleFonts.figtree(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -390,7 +397,8 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             ElevatedButton.icon(
               onPressed: () => viewModel.navigateToAddLesson(course!),
               icon: const Icon(Icons.add, size: 20, color: Colors.white),
-              label: const Text('Add Lesson'),
+              label:
+                  Text('Add Lesson', style: GoogleFonts.figtree(fontSize: 16)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -408,12 +416,12 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           children: [
             Text(
               '${viewModel.lessons.length} Lessons',
-              style: TextStyle(color: Colors.grey[600]),
+              style: GoogleFonts.figtree(color: Colors.grey[600]),
             ),
             const SizedBox(width: 16),
             Text(
               viewModel.totalDuration,
-              style: TextStyle(color: Colors.grey[600]),
+              style: GoogleFonts.figtree(color: Colors.grey[600]),
             ),
           ],
         ),
@@ -442,18 +450,18 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: TextButton(
               onPressed: () => viewModel.toggleShowAllLessons(),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     'View All Lessons',
-                    style: TextStyle(
+                    style: GoogleFonts.figtree(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Icon(
+                  const SizedBox(width: 8),
+                  const Icon(
                     Icons.arrow_forward,
                     size: 16,
                     color: AppColors.primary,
@@ -469,18 +477,18 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: TextButton(
               onPressed: () => viewModel.toggleShowAllLessons(),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     'Show Less',
-                    style: TextStyle(
+                    style: GoogleFonts.figtree(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Icon(
+                  const SizedBox(width: 8),
+                  const Icon(
                     Icons.keyboard_arrow_up,
                     size: 16,
                     color: AppColors.primary,
@@ -513,15 +521,15 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
       subtitle: lesson.description != null
           ? Text.rich(
               TextSpan(
-                style: TextStyle(color: Colors.grey[600]),
+                style: GoogleFonts.figtree(color: Colors.grey[600]),
                 children: [
                   TextSpan(
                     text: lesson.description.split(' ').take(3).join(' '),
                   ),
                   if ((lesson.description.split(' ').length > 3))
-                    const TextSpan(
+                    TextSpan(
                       text: '...',
-                      style: TextStyle(
+                      style: GoogleFonts.figtree(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
                       ),
@@ -529,7 +537,10 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                 ],
               ),
             )
-          : const Text('No description available'),
+          : Text(
+              'No description available',
+              style: GoogleFonts.figtree(),
+            ),
       trailing: IconButton(
         icon: const Icon(Icons.arrow_forward_ios, size: 16),
         onPressed: () => viewModel.navigateToLessonDetails(lesson),
@@ -539,7 +550,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           padding: const EdgeInsets.all(16.0),
           child: Text(
             lesson.description,
-            style: TextStyle(
+            style: GoogleFonts.figtree(
               color: Colors.grey[600],
               fontSize: 14,
             ),
@@ -610,9 +621,9 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
+        Text(
           'Reviews',
-          style: TextStyle(
+          style: GoogleFonts.figtree(
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -626,9 +637,9 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           ),
           child: Row(
             children: [
-              const Text(
+              Text(
                 'Overall Ratings',
-                style: TextStyle(
+                style: GoogleFonts.figtree(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -642,7 +653,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                 ),
                 child: Text(
                   course!.rating.toString(),
-                  style: const TextStyle(
+                  style: GoogleFonts.figtree(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -695,9 +706,9 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Carla',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: GoogleFonts.figtree(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Row(
@@ -706,7 +717,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                       const SizedBox(width: 4),
                       Text(
                         '8.2',
-                        style: TextStyle(
+                        style: GoogleFonts.figtree(
                           color: Colors.grey[600],
                           fontSize: 12,
                         ),
@@ -716,7 +727,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   const SizedBox(height: 4),
                   Text(
                     'Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit. Proin Faucibus, Sem Sed',
-                    style: TextStyle(
+                    style: GoogleFonts.figtree(
                       color: Colors.grey[600],
                       fontSize: 14,
                     ),

@@ -44,7 +44,7 @@ class LessonsFullViewModel extends BaseViewModel {
   Future<void> _loadCourseDetails() async {
     try {
       if (_courseId > 0) {
-        _course = await _courseService.getCourseById(_courseId);
+        _course = await _courseService.getCourseById(_courseId.toString());
       }
     } catch (e) {
       // Handle error

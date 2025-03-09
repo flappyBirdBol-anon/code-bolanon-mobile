@@ -1,5 +1,7 @@
+import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_image_field.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../app_colors.dart';
@@ -10,6 +12,7 @@ class CourseDialog extends StatefulWidget {
   final String? initialCourseName;
   final String? initialDescription;
   final double? initialPrice;
+  final CourseModel? course;
   final Function(String title, String description, double price, XFile? image)
       onSave;
 
@@ -19,6 +22,7 @@ class CourseDialog extends StatefulWidget {
     this.initialCourseName,
     this.initialDescription,
     this.initialPrice,
+    this.course,
     required this.onSave,
   }) : super(key: key);
 
@@ -89,7 +93,7 @@ class _CourseDialogState extends State<CourseDialog>
                       const SizedBox(width: 16),
                       Text(
                         widget.title,
-                        style: const TextStyle(
+                        style: GoogleFonts.figtree(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),

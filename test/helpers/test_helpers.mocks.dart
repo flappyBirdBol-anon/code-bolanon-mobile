@@ -1723,6 +1723,98 @@ class MockImageService extends _i1.Mock implements _i19.ImageService {
         returnValue: _i10.Future<void>.value(),
         returnValueForMissingStub: _i10.Future<void>.value(),
       ) as _i10.Future<void>);
+
+  @override
+  _i5.Widget getImage({
+    required String? url,
+    double? width,
+    double? height,
+    _i5.BoxFit? fit,
+    _i5.Widget? placeholder,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getImage,
+          [],
+          {
+            #url: url,
+            #width: width,
+            #height: height,
+            #fit: fit,
+            #placeholder: placeholder,
+          },
+        ),
+        returnValue: _FakeWidget_5(
+          this,
+          Invocation.method(
+            #getImage,
+            [],
+            {
+              #url: url,
+              #width: width,
+              #height: height,
+              #fit: fit,
+              #placeholder: placeholder,
+            },
+          ),
+        ),
+        returnValueForMissingStub: _FakeWidget_5(
+          this,
+          Invocation.method(
+            #getImage,
+            [],
+            {
+              #url: url,
+              #width: width,
+              #height: height,
+              #fit: fit,
+              #placeholder: placeholder,
+            },
+          ),
+        ),
+      ) as _i5.Widget);
+
+  @override
+  _i5.Widget getCourseImage({
+    required _i3.CourseModel? course,
+    _i5.BoxFit? fit,
+    _i5.Widget? placeholder,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getCourseImage,
+          [],
+          {
+            #course: course,
+            #fit: fit,
+            #placeholder: placeholder,
+          },
+        ),
+        returnValue: _FakeWidget_5(
+          this,
+          Invocation.method(
+            #getCourseImage,
+            [],
+            {
+              #course: course,
+              #fit: fit,
+              #placeholder: placeholder,
+            },
+          ),
+        ),
+        returnValueForMissingStub: _FakeWidget_5(
+          this,
+          Invocation.method(
+            #getCourseImage,
+            [],
+            {
+              #course: course,
+              #fit: fit,
+              #placeholder: placeholder,
+            },
+          ),
+        ),
+      ) as _i5.Widget);
 }
 
 /// A class which mocks [UserService].

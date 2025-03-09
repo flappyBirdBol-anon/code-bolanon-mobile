@@ -78,7 +78,9 @@ class CustomTextField extends StatelessWidget {
         keyboardType: keyboardType,
         maxLines: maxLines,
         enabled: enabled,
-        style: style ?? theme.textTheme.bodyMedium,
+        style: style ??
+            theme.textTheme.bodyMedium
+                ?.copyWith(fontSize: 16), // Increased font size
         decoration: InputDecoration(
           labelText: labelText,
           hintText: hintText,
@@ -87,13 +89,18 @@ class CustomTextField extends StatelessWidget {
           filled: filled,
           fillColor: fillColor ?? (isDark ? Colors.grey[900] : Colors.white),
           prefixIcon: prefixIcon != null
-              ? Icon(prefixIcon, color: AppColors.primary.withOpacity(0.7))
+              ? Icon(
+                  prefixIcon,
+                  color: AppColors.primary.withOpacity(0.7),
+                  size: 24, // Larger icon size
+                )
               : prefix,
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
                     obscureText ? Icons.visibility_off : Icons.visibility,
                     color: AppColors.primary.withOpacity(0.7),
+                    size: 24, // Larger icon size
                   ),
                   onPressed: onToggleVisibility,
                 )
@@ -110,39 +117,42 @@ class CustomTextField extends StatelessWidget {
             borderSide: BorderSide(
               color: borderColor ??
                   (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+              width: 1.5, // Slightly thicker border
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius),
             borderSide: BorderSide(
               color: focusedBorderColor ?? AppColors.primary,
-              width: 2,
+              width: 2.5, // Thicker focused border
             ),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius),
             borderSide: BorderSide(
               color: theme.colorScheme.error,
-              width: 1,
+              width: 1.5,
             ),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius),
             borderSide: BorderSide(
               color: theme.colorScheme.error,
-              width: 2,
+              width: 2.5,
             ),
           ),
+          // Increased vertical padding for larger field height
           contentPadding: contentPadding ??
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
           labelStyle: labelStyle ??
               TextStyle(
                 color: isDark ? Colors.grey[300] : Colors.grey[700],
+                fontSize: 16, // Larger label font
               ),
           hintStyle: hintStyle ??
               TextStyle(
                 color: isDark ? Colors.grey[500] : Colors.grey[400],
-                fontSize: 14,
+                fontSize: 15, // Larger hint font
               ),
         ),
         validator: validator,

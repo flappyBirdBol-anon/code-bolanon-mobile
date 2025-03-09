@@ -1,4 +1,5 @@
 // lib/models/course.dart
+import 'dart:convert';
 import 'package:code_bolanon/models/registration_model.dart';
 import 'package:code_bolanon/models/wishlist_model.dart';
 
@@ -8,6 +9,7 @@ class CourseModel {
   final double price;
   final String description;
   final String thumbnail;
+  final String? imageUrl;
   final bool isActive;
   final int studentsEnrolled;
   final double rating;
@@ -25,6 +27,7 @@ class CourseModel {
     required this.price,
     required this.description,
     required this.thumbnail,
+    this.imageUrl,
     this.isActive = true,
     this.studentsEnrolled = 0,
     this.rating = 0.0,
@@ -42,11 +45,15 @@ class CourseModel {
       id: json['id'].toString(),
       title: json['title'] ?? '',
       description: json['description'] ?? '',
-      thumbnail: json['thumbnail'] ?? '',
+      thumbnail:
+          json['thumbnail'] ?? json['image_url'] ?? '', // Try both fields
+      imageUrl: json['image_url'] ?? json['thumbnail'] ?? '', // Try both fields
       isActive: json['is_active'] ?? true,
       studentsEnrolled: json['students_enrolled'] ?? 0,
       rating: (json['rating'] ?? 0.0).toDouble(),
-      price: double.tryParse(json['price'] ?? 0.00) ?? 0.00,
+      price: double.tryParse("${json['price'] ?? 0.00}") ?? 0.00,
+      lessons: json['lessons'] ?? 16,
+      reviews: json['reviews'] ?? 4,
       registration: json['registration'] != null
           ? RegistrationModel.fromJson(json['registration'])
           : null,
@@ -69,6 +76,7 @@ class CourseModel {
       'description': description,
       'price': price.toString(),
       'thumbnail': thumbnail,
+      'image_url': imageUrl,
       'is_active': isActive ? '1' : '0',
       'students_enrolled': studentsEnrolled.toString(),
       'registration': registration?.toJson(),
@@ -83,6 +91,7 @@ class CourseModel {
     String? title,
     String? description,
     String? thumbnail,
+    String? imageUrl,
     bool? isActive,
     int? studentsEnrolled,
     double? rating,
@@ -98,6 +107,7 @@ class CourseModel {
       title: title ?? this.title,
       description: description ?? this.description,
       thumbnail: thumbnail ?? this.thumbnail,
+      imageUrl: imageUrl ?? this.imageUrl,
       isActive: isActive ?? this.isActive,
       studentsEnrolled: studentsEnrolled ?? this.studentsEnrolled,
       rating: rating ?? this.rating,
@@ -108,5 +118,10 @@ class CourseModel {
       updatedAt: updatedAt ?? this.updatedAt,
       lessonCount: lessonCount ?? this.lessonCount,
     );
+  }
+
+  @override
+  String toString() {
+    return jsonEncode(toJson());
   }
 }

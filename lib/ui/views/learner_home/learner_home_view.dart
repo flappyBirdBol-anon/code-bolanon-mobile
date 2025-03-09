@@ -593,8 +593,9 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                   final course = viewModel.recentCourses[index];
                   return CourseListProgress(
                     title: course.title,
-                    imageUrl: course.imageUrl,
-                    registrationDate: course.registrationDate,
+                    thumbnail: course.imageUrl,
+                    // registrationDate: DateTime.parse(course.registrationDate ?? "1969-07-20 20:18:04Z"),
+                    registrationDate: DateTime.parse("19700101"),
                     progress: course.progress,
                     isDark: isDark,
                     onTap: () => viewModel

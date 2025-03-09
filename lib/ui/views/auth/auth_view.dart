@@ -1,4 +1,5 @@
 import 'package:code_bolanon/ui/common/app_colors.dart';
+import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:code_bolanon/ui/views/auth/signup/signup_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,6 +14,17 @@ class AuthView extends StackedView<AuthViewModel> {
 
   @override
   Widget builder(BuildContext context, AuthViewModel viewModel, Widget? child) {
+    // Listen to keyboard visibility
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardVisible = bottomInset > 0;
+
+    // Update the viewmodel with keyboard state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (viewModel.isKeyboardVisible != isKeyboardVisible) {
+        viewModel.setKeyboardVisibility(isKeyboardVisible);
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -21,68 +33,86 @@ class AuthView extends StackedView<AuthViewModel> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // App Logo/Name
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: 100,
-                      width: 100,
-                      child: SvgPicture.asset(
-                        'assets/images/logo.svg',
-                        fit: BoxFit.cover,
-                        clipBehavior: Clip.hardEdge,
-                        // Control position and scaling
-                        alignment: Alignment.center,
-                      ),
+              // App Logo/Name - Hide when keyboard is visible
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                height: viewModel.isKeyboardVisible ? 0 : null,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: viewModel.isKeyboardVisible ? 0.0 : 1.0,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: 100,
+                          width: 100,
+                          child: SvgPicture.asset(
+                            PngImages.logo,
+                            fit: BoxFit.cover,
+                            clipBehavior: Clip.hardEdge,
+                            // Control position and scaling
+                            alignment: Alignment.center,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    // const Text(
-                    //   // Constants.appName,
-                    //   style: TextStyle(
-                    //     fontSize: 32,
-                    //     fontWeight: FontWeight.bold,
-                    //     fontFamily: "Poppins",
-                    //     color: Color.fromARGB(255, 5, 102, 182),
-                    //   ),
-                    // ),
+                  ),
+                ),
+              ),
+
+              // Description - Hide when keyboard is visible
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                height: viewModel.isKeyboardVisible ? 0 : null,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: viewModel.isKeyboardVisible ? 0.0 : 1.0,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 58),
+                      Text(
+                        'Sign up or login below to manage your courses, schedules, and productivity.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.figtree(
+                          color: const Color.fromARGB(115, 0, 0, 0),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 58),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Login/Signup Tabs - Always visible, but position changes
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: EdgeInsets.only(
+                  bottom: viewModel.isKeyboardVisible ? 20 : 0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _TabButton(
+                      title: 'Login',
+                      isSelected: viewModel.currentPage == 0,
+                      onTap: () => viewModel.navigateToPage(0),
+                    ),
+                    _TabButton(
+                      title: 'Sign Up',
+                      isSelected: viewModel.currentPage == 1,
+                      onTap: () => viewModel.navigateToPage(1),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 58),
-              // Description
-              Text(
-                'Sign up or login below to manage your courses, schedules, and productivity.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.bitter(
-                  color: const Color.fromARGB(115, 0, 0, 0),
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 58),
-              // Login/Signup Tabs
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _TabButton(
-                    title: 'Login',
-                    isSelected: viewModel.currentPage == 0,
-                    onTap: () => viewModel.navigateToPage(0),
-                  ),
-                  _TabButton(
-                    title: 'Sign Up',
-                    isSelected: viewModel.currentPage == 1,
-                    onTap: () => viewModel.navigateToPage(1),
-                  ),
-                ],
-              ),
 
               const SizedBox(height: 7),
-              // Page View
+              // Page View - Takes remaining space
               Expanded(
                 child: PageView(
                   controller: viewModel.pageController,
@@ -93,7 +123,6 @@ class AuthView extends StackedView<AuthViewModel> {
                   ],
                 ),
               ),
-              // Theme Toggle
             ],
           ),
         ),
@@ -125,21 +154,19 @@ class _TabButton extends StatelessWidget {
           border: Border(
             bottom: BorderSide(
               color: isSelected
-                  ? Theme.of(context).primaryColor
+                  ? AppColors.primary // Use our darker blue
                   : Colors.transparent,
-              width: 2.0,
+              width: 3.0, // Thicker underline
             ),
           ),
         ),
-        padding: const EdgeInsets.only(bottom: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
         child: Text(
           title,
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected
-                ? Theme.of(context).primaryColor
-                : Theme.of(context).textTheme.bodyLarge?.color,
+            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            fontSize: 17.0, // Slightly larger text
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           ),
         ),
       ),

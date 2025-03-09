@@ -1,6 +1,7 @@
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 
 import 'menu_viewmodel.dart';
@@ -44,7 +45,7 @@ class MenuView extends StackedView<MenuViewModel> {
                     children: [
                       Text(
                         viewModel.userName,
-                        style: const TextStyle(
+                        style: GoogleFonts.figtree(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -52,7 +53,7 @@ class MenuView extends StackedView<MenuViewModel> {
                       const SizedBox(height: 4),
                       Text(
                         viewModel.userRole,
-                        style: const TextStyle(
+                        style: GoogleFonts.figtree(
                           color: Colors.grey,
                           fontSize: 14,
                         ),
@@ -80,7 +81,7 @@ class MenuView extends StackedView<MenuViewModel> {
               ),
               child: const Icon(Icons.dark_mode, color: Colors.white, size: 20),
             ),
-            title: const Text('Dark Mode'),
+            title: Text('Dark Mode', style: GoogleFonts.figtree(fontSize: 16)),
             trailing: Switch(
               value: viewModel.isDarkMode,
               onChanged: viewModel.toggleDarkMode,
@@ -112,9 +113,9 @@ class MenuView extends StackedView<MenuViewModel> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: TextButton(
               onPressed: () => viewModel.logout(),
-              child: const Text(
+              child: Text(
                 'Logout',
-                style: TextStyle(
+                style: GoogleFonts.figtree(
                   color: Colors.red,
                   fontSize: 16,
                 ),
@@ -141,7 +142,7 @@ class MenuView extends StackedView<MenuViewModel> {
         ),
         child: Icon(icon, color: iconColor, size: 20),
       ),
-      title: Text(title),
+      title: Text(title, style: GoogleFonts.figtree(fontSize: 16)),
       trailing: const Icon(Icons.chevron_right, color: Colors.grey),
       onTap: onTap,
     );

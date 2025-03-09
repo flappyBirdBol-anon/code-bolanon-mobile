@@ -1,4 +1,5 @@
 import 'package:code_bolanon/app/app.router.dart';
+import 'package:code_bolanon/ui/common/enums/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -117,42 +118,57 @@ class SignupViewModel extends BaseViewModel {
 
     try {
       print('Attempting signup with email: ${emailController.text}');
+      // Fixed parameter order to match AuthService.register signature
       final success = await _authService.register(
         firstNameController.text,
         lastNameController.text,
         emailController.text,
         passwordController.text,
         selectedRole,
-        [specializationController.text],
+        selectedTechStacks,
+        specializationController.text,
         organizationController.text,
-        selectedTechStacks
-            as String?, // Add selected tech stacks to registration
       );
+
       if (success) {
+        // Show success message before navigating
+        _snackbarService.showCustomSnackBar(
+          variant: SnackbarType.success,
+          message: 'Signup successful! Welcome to the platform.',
+          duration: const Duration(seconds: 2),
+        );
+
+        // Wait a moment to show the success message before navigating
+        await Future.delayed(const Duration(milliseconds: 500));
         await _navigationService.clearStackAndShow(Routes.mainBodyView);
       } else {
-        // Show error message (consider using a dialog service)
+        // Show error message with custom error snackbar
         print('Sign up failed. Please check your credentials.');
-        _snackbarService.showSnackbar(
-          message: 'Sign up failed. Please check your credentials.',
+        _snackbarService.showCustomSnackBar(
+          variant: SnackbarType.error,
+          message:
+              'Signup failed. Please check your information and try again.',
           duration: const Duration(seconds: 3),
         );
       }
     } catch (e) {
-      // Handle any errors (consider using a dialog service)
-      print('An error occurred during login: $e');
-      _snackbarService.showSnackbar(
-        message: 'An error occurred during login: $e',
+      // Handle any errors with custom error snackbar
+      print('An error occurred during signup: $e');
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.error,
+        message: 'Signup error: ${e.toString().split('\n')[0]}',
         duration: const Duration(seconds: 3),
       );
     } finally {
-      setBusy(false);
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   Future<void> signupWithGoogle() async {
     if (!_termsAccepted) {
-      _snackbarService.showSnackbar(
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.info,
         message: 'Please accept the terms and conditions',
         duration: const Duration(seconds: 2),
       );
@@ -163,11 +179,20 @@ class SignupViewModel extends BaseViewModel {
     notifyListeners();
 
     try {
-      //  await _authService.signInWithGoogle();
+      // await _authService.signInWithGoogle();
+      // Show success message for Google signup
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.success,
+        message: 'Google signup successful!',
+        duration: const Duration(seconds: 2),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 500));
       _navigationService.replaceWith('/home');
     } catch (e) {
-      _snackbarService.showSnackbar(
-        message: 'Google signup failed: ${e.toString()}',
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.error,
+        message: 'Google signup failed: ${e.toString().split('\n')[0]}',
         duration: const Duration(seconds: 3),
       );
     } finally {
@@ -178,7 +203,8 @@ class SignupViewModel extends BaseViewModel {
 
   bool _validateInputs() {
     if (!_termsAccepted) {
-      _snackbarService.showSnackbar(
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.info,
         message: 'Please accept the terms and conditions',
         duration: const Duration(seconds: 2),
       );
@@ -190,7 +216,8 @@ class SignupViewModel extends BaseViewModel {
         emailController.text.isEmpty ||
         passwordController.text.isEmpty ||
         confirmPasswordController.text.isEmpty) {
-      _snackbarService.showSnackbar(
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.info,
         message: 'Please fill in all required fields',
         duration: const Duration(seconds: 2),
       );
@@ -198,7 +225,8 @@ class SignupViewModel extends BaseViewModel {
     }
 
     if (_selectedTechStacks.isEmpty) {
-      _snackbarService.showSnackbar(
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.info,
         message: 'Please select at least one tech stack',
         duration: const Duration(seconds: 2),
       );
@@ -206,7 +234,8 @@ class SignupViewModel extends BaseViewModel {
     }
 
     if (!isPasswordValid) {
-      _snackbarService.showSnackbar(
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.error,
         message: 'Password does not meet requirements',
         duration: const Duration(seconds: 2),
       );
@@ -214,7 +243,8 @@ class SignupViewModel extends BaseViewModel {
     }
 
     if (!isConfirmPasswordValid) {
-      _snackbarService.showSnackbar(
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.error,
         message: 'Passwords do not match',
         duration: const Duration(seconds: 2),
       );
@@ -238,6 +268,19 @@ class SignupViewModel extends BaseViewModel {
       isPasswordFieldFocused || isConfirmPasswordFieldFocused;
 
   void notifyPasswordInput() {
+    notifyListeners();
+  }
+
+  // Add method to unfocus password fields and hide validation checklist
+  void unfocusPasswordFields() {
+    if (passwordFocusNode.hasFocus) {
+      passwordFocusNode.unfocus();
+    }
+    if (confirmPasswordFocusNode.hasFocus) {
+      confirmPasswordFocusNode.unfocus();
+    }
+    isPasswordFieldFocused = false;
+    isConfirmPasswordFieldFocused = false;
     notifyListeners();
   }
 

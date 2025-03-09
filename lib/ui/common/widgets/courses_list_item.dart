@@ -1,23 +1,30 @@
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
+import 'package:code_bolanon/ui/common/widgets/tag_chip.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CoursesListItem extends StatelessWidget {
   final CourseModel course;
-  final VoidCallback? onEdit;
-  final VoidCallback? onToggleStatus;
-  final dynamic viewModel;
+  final VoidCallback onTap;
+  final ImageService imageService;
   final bool showControls;
-  final bool? showStatus; // Add this property
+  final bool? showStatus;
+  final List<String>? tags;
+  final VoidCallback? onEditTap;
+  final VoidCallback? onToggleTap;
 
   const CoursesListItem({
     super.key,
     required this.course,
-    this.onEdit,
-    this.onToggleStatus,
-    required this.viewModel,
+    required this.onTap,
+    required this.imageService,
     this.showControls = false,
-    this.showStatus = false, // Add this parameter
+    this.showStatus = false,
+    this.tags,
+    this.onEditTap,
+    this.onToggleTap,
   });
 
   @override
@@ -28,18 +35,80 @@ class CoursesListItem extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade100),
+        side: BorderSide(color: Colors.grey.shade200),
       ),
       child: InkWell(
-        onTap: () => viewModel.navigateToCourseDetails(context, course),
+        onTap: onTap,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildImageSection(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4), // Reduced padding
-              child: _buildCourseContent(),
+            Stack(
+              children: [
+                AspectRatio(
+                  aspectRatio: 16 / 8,
+                  child: _buildCourseImage(),
+                ),
+                if (showStatus ?? false)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: _buildStatusBadge(),
+                  ),
+              ],
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      course.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.figtree(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (course.description.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(course.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.figtree(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.grey[600],
+                          )),
+                    ],
+                    if (tags != null && tags!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: tags!
+                            .map((tag) => TagChip(
+                                  tag: tag,
+                                  onTap: () {},
+                                ))
+                            .toList(),
+                      ),
+                    ],
+                    const Spacer(),
+                    if (showControls) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _buildEditButton(context),
+                          const SizedBox(width: 8),
+                          _buildToggleButton(context),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -47,26 +116,32 @@ class CoursesListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildImageSection() {
-    return Stack(
-      children: [
-        AspectRatio(
-          aspectRatio: 16 / 9,
-          child: _buildCourseImage(),
-        ),
-        if (showStatus ?? true) // Only show if showStatus is true or null
-          Positioned(
-            top: 8,
-            right: 8,
-            child: _buildStatusBadge(),
+  Widget _buildCourseImage() {
+    return imageService.loadImage(
+      imageUrl: imageService.getCourseThumbnailFromPath(course.thumbnail),
+      courseId: course.id,
+      fit: BoxFit.cover,
+      placeholder: Container(
+        color: Colors.grey[200],
+        child: const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
           ),
-      ],
+        ),
+      ),
+      errorWidget: Container(
+        color: Colors.grey[300],
+        child: const Icon(
+          Icons.image_not_supported,
+          color: Colors.grey,
+        ),
+      ),
     );
   }
 
   Widget _buildStatusBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: course.isActive
             ? Colors.green.withOpacity(0.9)
@@ -75,7 +150,7 @@ class CoursesListItem extends StatelessWidget {
       ),
       child: Text(
         course.isActive ? 'Active' : 'Inactive',
-        style: const TextStyle(
+        style: GoogleFonts.figtree(
           color: Colors.white,
           fontSize: 12,
           fontWeight: FontWeight.w500,
@@ -84,172 +159,76 @@ class CoursesListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildCourseContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          course.title,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+  Widget _buildEditButton(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onEditTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 2), // Reduced spacing
-        SizedBox(
-          height: 28, // Reduced height
-          child: Text(
-            course.description,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 11, // Slightly smaller font
-              height: 1.2,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(height: 4), // Reduced spacing
-        _buildInfoRow(),
-        const SizedBox(height: 14), // Reduced spacing
-        _buildActionRow(),
-      ],
-    );
-  }
-
-  Widget _buildInfoRow() {
-    return Row(
-      children: [
-        Icon(Icons.people_outline, size: 14, color: Colors.grey[600]),
-        const SizedBox(width: 4),
-        Text(
-          '${course.studentsEnrolled}',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-        const SizedBox(width: 12),
-        Icon(Icons.star, size: 14, color: Colors.amber[400]),
-        const SizedBox(width: 4),
-        Text(
-          '4.5', // Replace with actual rating
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-        const Spacer(),
-        Text(
-          '\$${course.price}.00',
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionRow() {
-    if (!showControls) return const SizedBox.shrink();
-
-    return Row(
-      children: [
-        if (onEdit != null)
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onEdit,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.edit_outlined,
-                      size: 16,
-                      color: AppColors.primary,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      'Edit',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.edit_outlined,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Edit',
+                style: GoogleFonts.figtree(
+                  color: AppColors.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ),
+            ],
           ),
-        const Spacer(),
-        if (onToggleStatus != null)
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onToggleStatus,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: course.isActive
-                      ? AppColors.primary.withOpacity(0.1)
-                      : Colors.grey.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      course.isActive ? Icons.toggle_on : Icons.toggle_off,
-                      size: 18,
-                      color: course.isActive ? AppColors.primary : Colors.grey,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      course.isActive ? 'ON' : 'OFF',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color:
-                            course.isActive ? AppColors.primary : Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildCourseImage() {
-    return viewModel.getCourseImageWidget(
-      course: course,
-      fit: BoxFit.cover,
-      placeholder: Container(
-        color: Colors.grey[200],
-        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
       ),
-      errorWidget: Container(
-        color: Colors.grey[300],
-        child: const Center(
-          child: Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
+    );
+  }
+
+  Widget _buildToggleButton(BuildContext context) {
+    final isActive = course.isActive;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onToggleTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: (isActive ? Colors.red : Colors.green).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isActive
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                size: 16,
+                color: isActive ? Colors.red : Colors.green,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                isActive ? 'Active' : 'Inactive',
+                style: GoogleFonts.figtree(
+                  color: isActive ? Colors.red : Colors.green,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
