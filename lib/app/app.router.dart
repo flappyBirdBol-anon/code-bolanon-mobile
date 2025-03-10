@@ -6,6 +6,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:code_bolanon/models/course_model.dart' as _i20;
+import 'package:code_bolanon/models/course_param.dart' as _i22;
 import 'package:code_bolanon/models/lessons_model.dart' as _i21;
 import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart' as _i12;
 import 'package:code_bolanon/ui/views/auth/auth_view.dart' as _i5;
@@ -35,7 +36,7 @@ import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart'
 import 'package:flutter/material.dart' as _i19;
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart' as _i1;
-import 'package:stacked_services/stacked_services.dart' as _i22;
+import 'package:stacked_services/stacked_services.dart' as _i23;
 
 class Routes {
   static const homeView = '/home-view';
@@ -282,8 +283,10 @@ class StackedRouter extends _i1.RouterBase {
       );
     },
     _i18.PaymentView: (data) {
+      final args = data.getArgs<PaymentViewArguments>(nullOk: false);
       return _i19.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i18.PaymentView(),
+        builder: (context) =>
+            _i18.PaymentView(key: args.key, course: args.course),
         settings: data,
       );
     },
@@ -431,7 +434,34 @@ class LessonsFullViewArguments {
   }
 }
 
-extension NavigatorStateExtension on _i22.NavigationService {
+class PaymentViewArguments {
+  const PaymentViewArguments({
+    this.key,
+    required this.course,
+  });
+
+  final _i19.Key? key;
+
+  final _i22.CourseParam course;
+
+  @override
+  String toString() {
+    return '{"key": "$key", "course": "$course"}';
+  }
+
+  @override
+  bool operator ==(covariant PaymentViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key && other.course == course;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode ^ course.hashCode;
+  }
+}
+
+extension NavigatorStateExtension on _i23.NavigationService {
   Future<dynamic> navigateToHomeView([
     int? routerId,
     bool preventDuplicates = true,
@@ -671,14 +701,17 @@ extension NavigatorStateExtension on _i22.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> navigateToPaymentView([
+  Future<dynamic> navigateToPaymentView({
+    _i19.Key? key,
+    required _i22.CourseParam course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return navigateTo<dynamic>(Routes.paymentView,
+        arguments: PaymentViewArguments(key: key, course: course),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -924,14 +957,17 @@ extension NavigatorStateExtension on _i22.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> replaceWithPaymentView([
+  Future<dynamic> replaceWithPaymentView({
+    _i19.Key? key,
+    required _i22.CourseParam course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return replaceWith<dynamic>(Routes.paymentView,
+        arguments: PaymentViewArguments(key: key, course: course),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,

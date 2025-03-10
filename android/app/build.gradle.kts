@@ -37,6 +37,12 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+    dependencies {
+    // Add Material Components dependency
+    implementation("com.google.android.material:material:1.6.0")
+
+}
+
 }
 
 flutter {

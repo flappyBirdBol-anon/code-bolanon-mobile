@@ -1,4 +1,5 @@
 import 'package:code_bolanon/app/app.router.dart';
+import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -17,19 +18,19 @@ class OnboardingViewModel extends BaseViewModel {
       'title': 'Learn Programming in Bohol',
       'description':
           'Join our local tech community and learn programming from experienced Boholano developers. From web development to mobile apps, start your coding journey here.',
-      'animation': 'assets/animations/team_sucesss.json',
+      'animation': PngImages.communityAnim,
     },
     {
       'title': 'Expert Tech Mentors',
       'description':
           'Get guided by Bohol\'s finest software developers who understand both global standards and local industry needs. Learn practical coding skills that matter.',
-      'animation': 'assets/animations/user_friendly.json',
+      'animation': PngImages.mentorAnim,
     },
     {
       'title': 'Hands-on Coding Projects',
       'description':
           'Build real-world applications while learning. Practice with projects relevant to Bohol\'s growing tech scene, from tourism apps to business solutions.',
-      'animation': 'assets/animations/task_creations.json',
+      'animation': PngImages.codingAnim,
     },
   ];
 

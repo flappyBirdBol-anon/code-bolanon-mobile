@@ -290,10 +290,10 @@ packages:
     dependency: "direct main"
     description:
       name: cupertino_icons
-      sha256: d57953e10f9f8327ce64a508a355f0b1ec902193f66288e8cb5070e7c47eeb2d
+      sha256: ba631d1c7f7bef6b729a622b7b752645a2d076dba9976925b8f25725a30e1ee6
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.6"
+    version: "1.0.8"
   curved_navigation_bar:
     dependency: "direct main"
     description:
@@ -547,6 +547,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  flutter_stripe:
+    dependency: "direct main"
+    description:
+      name: flutter_stripe
+      sha256: "459c19dfae52ea22a3abb126163598559af606603c369d0257a6704221adeb1f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "11.4.0"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -805,6 +813,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1+1"
+  in_app_purchase:
+    dependency: "direct main"
+    description:
+      name: in_app_purchase
+      sha256: "11a40f148eeb4f681a0572003e2b33432e110c90c1bbb4f9ef83b81ec0c4f737"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.1"
+  in_app_purchase_android:
+    dependency: transitive
+    description:
+      name: in_app_purchase_android
+      sha256: "475b6c6541b54e6878263270d291ca8d5d7ef044263115bdec45e1e59737e3ad"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.0+1"
+  in_app_purchase_platform_interface:
+    dependency: transitive
+    description:
+      name: in_app_purchase_platform_interface
+      sha256: "1d353d38251da5b9fea6635c0ebfc6bb17a2d28d0e86ea5e083bf64244f1fb4c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.0"
+  in_app_purchase_storekit:
+    dependency: transitive
+    description:
+      name: in_app_purchase_storekit
+      sha256: "276831961023055b55a2156c1fc043f50f6215ff49fb0f5f2273da6eeb510ecf"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.21"
   injectable:
     dependency: "direct main"
     description:
@@ -1602,6 +1642,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  stripe_android:
+    dependency: transitive
+    description:
+      name: stripe_android
+      sha256: "0b13c730d520378766973f8b417c2cdab6ca30be087e770b84e8fb2bd0df1648"
+      url: "https://pub.dev"
+    source: hosted
+    version: "11.4.0"
+  stripe_ios:
+    dependency: transitive
+    description:
+      name: stripe_ios
+      sha256: "465fd72dd46f3d17fbd9817bf4b6ae3c5f8001b467415a2101fd27a51bebd010"
+      url: "https://pub.dev"
+    source: hosted
+    version: "11.4.0"
+  stripe_platform_interface:
+    dependency: transitive
+    description:
+      name: stripe_platform_interface
+      sha256: "84d589925cac4ae666e5d306b0edd3ff83bdd076a832a9eba0fbf9fa5216502d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "11.4.0"
   supabase:
     dependency: transitive
     description:

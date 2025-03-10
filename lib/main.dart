@@ -6,7 +6,9 @@ import 'package:code_bolanon/app/app.dialogs.dart';
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/services/auth_service.dart';
+import 'package:code_bolanon/ui/common/app_strings.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:media_kit/media_kit.dart' show MediaKit;
 
 import 'package:stacked_services/stacked_services.dart';
@@ -19,11 +21,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   await setupLocator();
+  Stripe.publishableKey = stripePK;
+  await Stripe.instance.applySettings();
 
   setupDialogUi();
   setupSnackbarUi();
   setupBottomSheetUi();
-  // Add this line t o setup snackbar UI
 
   final AuthService authService = locator<AuthService>();
   String initialRoute = Routes.onboardingView;

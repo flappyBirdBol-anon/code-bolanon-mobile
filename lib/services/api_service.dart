@@ -1,9 +1,12 @@
-// api_service.dart
+// lib/services/api_service.dart
+import 'dart:convert';
+import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
+import '../models/transaction_model.dart';
 
 class ApiService {
   static ApiService? _instance;
@@ -11,6 +14,9 @@ class ApiService {
   late Dio _dio;
   Dio get dio => _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
+  // Simulated transactions database
+  final List<Map<String, dynamic>> _transactions = [];
 
   // Private constructor
   ApiService._() {
@@ -280,5 +286,114 @@ class ApiService {
       default:
         return null;
     }
+  }
+
+  // PAYMENT RELATED METHODS
+
+  // Create payment intent
+  Future<Map<String, dynamic>> createPaymentIntent({
+    required int amount,
+    required String currency,
+    required String courseId,
+    String? paymentMethodId,
+  }) async {
+    try {
+      final response = await post('/create-payment-intent', data: {
+        'amount': amount,
+        'currency': currency,
+        'course_id': courseId,
+        if (paymentMethodId != null) 'payment_method_id': paymentMethodId,
+      });
+
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+
+      return {
+        'success': false,
+        'error': response.data['error'] ?? 'Failed to create payment intent',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Failed to create payment intent: $e',
+      };
+    }
+  }
+
+  // Save transaction to the database
+  Future<Map<String, dynamic>> saveTransaction(Transaction transaction) async {
+    try {
+      final response = await post('/save-transaction', data: {
+        'id': transaction.id,
+        'amount': (transaction.amount * 100).toInt(), // Convert to cents
+        'currency': 'usd', // Hardcoded for now, could be made dynamic
+        'status': transaction.status,
+        'payment_method': transaction.paymentMethod,
+        'course_id': transaction.courseId,
+        'user_id':
+            transaction.userId, // This will come from auth()->id() on backend
+        'created_at': transaction.timestamp.toIso8601String(),
+      });
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'transaction': response.data['transaction'],
+        };
+      }
+
+      return {
+        'success': false,
+        'error': response.data['error'] ?? 'Failed to save transaction',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Failed to save transaction: $e',
+      };
+    }
+  }
+
+  // Get all transactions
+  Future<List<Transaction>> getTransactions() async {
+    try {
+      final response = await get('/transactions');
+
+      if (response.statusCode == 200) {
+        return (response.data as List)
+            .map((json) => Transaction.fromJson(json))
+            .toList();
+      }
+
+      return [];
+    } catch (e) {
+      print('Error fetching transactions: $e');
+      return [];
+    }
+  }
+
+  // Get transaction by ID
+  Future<Transaction?> getTransactionById(String id) async {
+    try {
+      final response = await get('/transactions/$id');
+
+      if (response.statusCode == 200) {
+        return Transaction.fromJson(response.data);
+      }
+
+      return null;
+    } catch (e) {
+      print('Error fetching transaction: $e');
+      return null;
+    }
+  }
+
+  // Helper method to generate random string
+  String _generateRandomString(int length) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final random = Random();
+    return String.fromCharCodes(List.generate(
+        length, (index) => chars.codeUnitAt(random.nextInt(chars.length))));
   }
 }

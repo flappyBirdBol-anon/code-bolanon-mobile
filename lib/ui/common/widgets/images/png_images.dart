@@ -3,6 +3,14 @@ class PngImages {
 
   static const String _root = 'assets/images/';
 
+  static const String _anim_root = 'assets/lottie/';
+
+  static const String communityAnim = '${_anim_root}community_animation.json';
+
+  static const String mentorAnim = '${_anim_root}mentor_animation.json';
+
+  static const String codingAnim = '${_anim_root}coding_animation.json';
+
   static const String logo = '${_root}logo.svg';
 
   static const String profile = '${_root}profile.png';

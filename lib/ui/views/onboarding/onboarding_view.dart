@@ -1,4 +1,5 @@
 import 'package:code_bolanon/ui/common/app_colors.dart';
+import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -29,7 +30,7 @@ class OnboardingView extends StackedView<OnboardingViewModel> {
                       height: 100,
                       width: 100,
                       child: SvgPicture.asset(
-                        'assets/images/logo.svg',
+                        PngImages.logo,
                         fit: BoxFit.cover,
                         clipBehavior: Clip.hardEdge,
                         // Control position and scaling

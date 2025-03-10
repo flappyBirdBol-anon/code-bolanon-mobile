@@ -2,6 +2,7 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/models/course_param.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
@@ -116,8 +117,19 @@ abstract class CourseBaseViewModel extends BaseViewModel
   Future<List<CourseModel>> loadCourses({int page = 1, int pageSize = 10});
 
   void navigateToCourseDetails(CourseModel course) {
-    navigationService.navigateToCourseDetailsView(
-      course: course,
+    // navigationService.navigateToCourseDetailsView(
+    //   course: course,
+    // );
+    navigationService.navigateToPaymentView(
+      course: CourseParam(
+        id: "7",
+        title: "Firebase ",
+        description:
+            "Connect your Flutter app to Firebase for authentication, database, and cloud functions.",
+        price: 100,
+        taxRate: 0.06,
+        discountPercentage: 0.20,
+      ),
     );
   }
 
