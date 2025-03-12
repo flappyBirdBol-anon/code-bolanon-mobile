@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../app_colors.dart';
 
@@ -145,12 +146,12 @@ class CustomTextField extends StatelessWidget {
           contentPadding: contentPadding ??
               const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
           labelStyle: labelStyle ??
-              TextStyle(
+              GoogleFonts.figtree(
                 color: isDark ? Colors.grey[300] : Colors.grey[700],
                 fontSize: 16, // Larger label font
               ),
           hintStyle: hintStyle ??
-              TextStyle(
+              GoogleFonts.figtree(
                 color: isDark ? Colors.grey[500] : Colors.grey[400],
                 fontSize: 15, // Larger hint font
               ),

@@ -1,10 +1,10 @@
-// course_service.dart
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/registration_model.dart';
 import 'package:code_bolanon/models/wishlist_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/services/tag_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 class CourseService {
   final ApiService _apiService;
   final ImageService _imageService;
+  final TagService _tagService = locator<TagService>();
 
   CourseService({ApiService? apiService, ImageService? imageService})
       : _apiService = apiService ?? locator<ApiService>(),
@@ -19,6 +20,49 @@ class CourseService {
 
   List<CourseModel>? _courses;
   List<CourseModel>? get courseList => _courses;
+
+//  // Initialize with sample course data (for demonstration)
+//   void _initializeSampleData() {
+//     final sampleCourses = [
+//       CourseModel(
+//         id: "1",
+//         title: "Advanced Flutter Development",
+//         description: "Master Flutter app development with real-world projects",
+//         price: 99.99,
+//         thumbnail: "assets/images/1.jpg",
+//         lessons: 24,
+//         rating: 4.8,
+//         reviews: 128,
+//       ),
+//       CourseModel(
+//         id: "2",
+//         title: "Full Stack Web Development",
+//         description: "Learn modern web development from frontend to backend",
+//         price: 149.99,
+//         thumbnail: "assets/images/2.jpg",
+//         lessons: 36,
+//         rating: 4.9,
+//         reviews: 256,
+//       ),
+//       CourseModel(
+//         id: "3",
+//         title: "Python Data Science",
+//         description: "Master data analysis and machine learning with Python",
+//         price: 129.99,
+//         thumbnail: "assets/images/3.jpg",
+//         lessons: 30,
+//         rating: 4.7,
+//         reviews: 189,
+//       ),
+//     ];
+
+//     // Add tags to courses
+//     _tagService.addTagsToCourse("1", ["Flutter", "Mobile Dev", "Frontend"]);
+//     _tagService.addTagsToCourse("2", ["Frontend", "Backend", "Full Stack", "JavaScript"]);
+//     _tagService.addTagsToCourse("3", ["Python", "Data Science", "Machine Learning"]);
+
+//     _courses = sampleCourses;
+//   }
 
   Future<List<CourseModel>> getCourses({
     int page = 1,
@@ -40,8 +84,13 @@ class CourseService {
 
       if (response.statusCode == 200) {
         final List<dynamic> coursesJson = response.data['data'];
-        final courses =
-            coursesJson.map((json) => CourseModel.fromJson(json)).toList();
+        final courses = coursesJson.map((json) {
+          final course = CourseModel.fromJson(json);
+          _tagService.addTagsToCourse(
+              course.id, ["Flutter", "Mobile Dev", "Frontend"]);
+          return course;
+        }).toList();
+
         _courses = courses;
         _imageService.prefetchCourseImages(courses);
         return courses;

@@ -4,16 +4,24 @@ class TagService {
 
   // Predefined available tags
   final Set<String> availableTags = {
-    'Programming',
-    'Design',
-    'Business',
-    'Marketing',
-    'Web Development',
-    'Mobile Development',
+    'Flutter',
+    'React',
+    'Node.js',
+    'Python',
+    'JavaScript',
+    'TypeScript',
+    'Web Dev',
+    'Mobile Dev',
     'Data Science',
-    'UI/UX',
     'DevOps',
     'Machine Learning',
+    'UI/UX',
+    'Frontend',
+    'Backend',
+    'Full Stack',
+    'Cloud',
+    'Database',
+    'API',
   };
 
   // Initialize with some sample tags for courses

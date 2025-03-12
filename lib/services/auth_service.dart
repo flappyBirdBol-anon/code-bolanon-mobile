@@ -2,6 +2,7 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stacked/stacked.dart';
 
@@ -26,17 +27,41 @@ class AuthService with ListenableServiceMixin {
       });
 
       if (response.statusCode == 200) {
-        final token = response.data['token'] ?? response.data['access_token'];
+        final token = response.data['token'];
         if (token != null) {
           await _apiService.setAuthToken(token);
           await _userService.fetchUserProfile();
           return true;
+        } else {
+          // Token is unexpectedly null, handle this case
+          print('Login successful but token is null');
+          return false;
         }
+      } else if (response.statusCode == 401) {
+        // Incorrect credentials
+        print('Login failed: Incorrect credentials');
+        print('Response data: ${response.data}');
+        throw Exception(response.data['message'] ??
+            'Incorrect credentials'); // Or a custom exception
+      } else if (response.statusCode == 403) {
+        // Unverified user
+        print('Login failed: User unverified');
+        print('Response data: ${response.data}');
+        throw Exception(response.data['message'] ??
+            'User unverified'); // Or a custom exception
+      } else {
+        // Other error codes
+        print('Login failed with status: ${response.statusCode}');
+        print('Response data: ${response.data}');
+        throw Exception(
+            'Login failed with status code: ${response.statusCode}'); // Generic exception
       }
-      print('Login failed with status: ${response.statusCode}');
-      print('Response data: ${response.data}');
-      return false;
+    } on DioException catch (e) {
+      // DioError handles network errors, timeouts, etc.
+      print('DioError during login: $e');
+      rethrow; // Re-throw to allow the calling code to handle the error
     } catch (e) {
+      // Catch any other unexpected errors
       print('Login error: $e');
       rethrow;
     }
@@ -60,21 +85,22 @@ class AuthService with ListenableServiceMixin {
         'role': role,
         'specialization': specialization,
         'organization': organization,
-        'tech_stacks': selectedTechStacks,
+        'stack_ids':
+            selectedTechStacks.map((stack) => int.parse(stack)).toList(),
       });
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final token = response.data['token'] ?? response.data['access_token'];
-        if (token != null) {
-          await _apiService.setAuthToken(token);
-          // Fetch user profile after successful registration
-          await _userService.fetchUserProfile();
-          return true;
-        }
+      if (response.statusCode == 201) {
+        // Registration successful, but user needs to verify email
+        // Don't set auth token or fetch profile yet
+        return true;
       }
       return false;
     } catch (e) {
       print('Registration error: $e');
+      if (e is Exception && e.toString().contains('422')) {
+        // Handle validation errors
+        rethrow;
+      }
       rethrow;
     }
   }

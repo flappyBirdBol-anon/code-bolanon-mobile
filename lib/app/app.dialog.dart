@@ -22,7 +22,7 @@ void setupSnackbarUi() {
     // Using configBuilder approach for all snackbar types
     print('Registering SnackbarType.info with variant: ${SnackbarType.info}');
     service.registerCustomSnackbarConfig(
-      variant: SnackbarType.info,
+      variant: SnackbarType.error,
       configBuilder: () {
         // Default values
         print('Registering SnackbarType.info config');
@@ -53,7 +53,7 @@ void setupSnackbarUi() {
   }
 
   service.registerCustomSnackbarConfig(
-    variant: SnackbarType.error,
+    variant: SnackbarType.info,
     configBuilder: () {
       // Default values
       Color backgroundColor;

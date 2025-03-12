@@ -28,7 +28,7 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
             ? 3
             : 4;
     final aspectRatio = size.width < 600 ? 0.73 : 0.75;
-    final padding = size.width < 600 ? 0.2 : 24.0;
+    final padding = size.width < 600 ? 0.1 : 24.0;
 
     return Scaffold(
       backgroundColor: AppColors.background,

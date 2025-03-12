@@ -29,7 +29,7 @@ class AuthView extends StackedView<AuthViewModel> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(13.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -49,6 +49,7 @@ class AuthView extends StackedView<AuthViewModel> {
                           height: 100,
                           width: 100,
                           child: SvgPicture.asset(
+                            color: AppColors.primary,
                             PngImages.logo,
                             fit: BoxFit.cover,
                             clipBehavior: Clip.hardEdge,
@@ -82,7 +83,7 @@ class AuthView extends StackedView<AuthViewModel> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 58),
+                      const SizedBox(height: 30),
                     ],
                   ),
                 ),
@@ -92,7 +93,7 @@ class AuthView extends StackedView<AuthViewModel> {
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.only(
-                  bottom: viewModel.isKeyboardVisible ? 20 : 0,
+                  bottom: viewModel.isKeyboardVisible ? 10 : 0,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -111,7 +112,7 @@ class AuthView extends StackedView<AuthViewModel> {
                 ),
               ),
 
-              const SizedBox(height: 7),
+              // const SizedBox(height: 3),
               // Page View - Takes remaining space
               Expanded(
                 child: PageView(
@@ -163,7 +164,7 @@ class _TabButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
         child: Text(
           title,
-          style: TextStyle(
+          style: GoogleFonts.figtree(
             color: isSelected ? AppColors.primary : AppColors.textSecondary,
             fontSize: 17.0, // Slightly larger text
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,

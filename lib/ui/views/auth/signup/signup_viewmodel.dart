@@ -1,4 +1,6 @@
 import 'package:code_bolanon/app/app.router.dart';
+import 'package:code_bolanon/models/tech_stack_model.dart';
+import 'package:code_bolanon/services/tech_stack_service.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -11,6 +13,7 @@ class SignupViewModel extends BaseViewModel {
   final _authService = locator<AuthService>();
   final _navigationService = locator<NavigationService>();
   final _snackbarService = locator<SnackbarService>();
+  final _techStackService = locator<TechStackService>();
 
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
@@ -21,35 +24,52 @@ class SignupViewModel extends BaseViewModel {
   final specializationController = TextEditingController();
   final passwordFocusNode = FocusNode();
   final confirmPasswordFocusNode = FocusNode();
+
+  String? firstNameError;
+  String? lastNameError;
+  String? emailError;
+  String? passwordError;
+  String? confirmPasswordError;
+  String? organizationError;
+  String? specializationError;
+  String? techStackError;
+
   bool isPasswordFieldFocused = false;
   bool isConfirmPasswordFieldFocused = false;
 
-  // Tech stack selection properties
-  final List<String> availableTechStacks = [
-    'Flutter',
-    'React',
-    'Laravel',
-    'Node.js',
-    'Python',
-    'Vue.js',
-    'Angular',
-    'Django',
-    'Ruby on Rails',
-    'Swift',
-    'Kotlin',
-    'Java',
-    'Go',
-    'PHP',
-    'AWS',
-    'Azure',
-    'Firebase',
-    'MongoDB',
-    'PostgreSQL',
-    'MySQL'
-  ];
+  List<TechStackModel> _availableTechStacks = [];
+  List<String> get availableTechStacks =>
+      _availableTechStacks.map((stack) => stack.tags).toList();
 
   final Set<String> _selectedTechStacks = {};
   List<String> get selectedTechStacks => _selectedTechStacks.toList();
+
+  void toggleTechStack(String tag) {
+    if (_selectedTechStacks.contains(tag)) {
+      _selectedTechStacks.remove(tag);
+    } else {
+      _selectedTechStacks.add(tag);
+    }
+    validateTechStack();
+    notifyListeners();
+  }
+
+  bool isStackSelected(String tag) {
+    return _selectedTechStacks.contains(tag);
+  }
+
+  List<String> getSelectedStackIds() {
+    return _selectedTechStacks
+        .map((tag) {
+          final stack = _availableTechStacks.firstWhere(
+            (s) => s.tags == tag,
+            orElse: () => TechStackModel(id: -1, tags: ''),
+          );
+          return stack.id.toString();
+        })
+        .where((id) => id != '-1')
+        .toList();
+  }
 
   bool _isPasswordVisible = false;
   bool get isPasswordVisible => _isPasswordVisible;
@@ -65,6 +85,34 @@ class SignupViewModel extends BaseViewModel {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  SignupViewModel() {
+    _loadTechStacks();
+  }
+
+  void clearErrors() {
+    firstNameError = null;
+    lastNameError = null;
+    emailError = null;
+    passwordError = null;
+    confirmPasswordError = null;
+    organizationError = null;
+    specializationError = null;
+    techStackError = null;
+    notifyListeners();
+  }
+
+  Future<void> _loadTechStacks() async {
+    setBusy(true);
+    try {
+      _availableTechStacks = await _techStackService.fetchTechStacks();
+      notifyListeners();
+    } catch (e) {
+      print('Error loading tech stacks: $e');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   void togglePasswordVisibility() {
     _isPasswordVisible = !_isPasswordVisible;
@@ -86,16 +134,6 @@ class SignupViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  // Toggle tech stack selection
-  void toggleTechStack(String stack) {
-    if (_selectedTechStacks.contains(stack)) {
-      _selectedTechStacks.remove(stack);
-    } else {
-      _selectedTechStacks.add(stack);
-    }
-    notifyListeners();
-  }
-
   bool get isPasswordValid =>
       passwordController.text.length >= 8 &&
       passwordController.text.contains(RegExp(r'[0-9]')) &&
@@ -109,6 +147,7 @@ class SignupViewModel extends BaseViewModel {
       confirmPasswordController.text == passwordController.text;
 
   Future<void> signupWithEmail() async {
+    clearErrors();
     if (!_validateInputs()) {
       return;
     }
@@ -117,46 +156,37 @@ class SignupViewModel extends BaseViewModel {
     notifyListeners();
 
     try {
-      print('Attempting signup with email: ${emailController.text}');
-      // Fixed parameter order to match AuthService.register signature
       final success = await _authService.register(
         firstNameController.text,
         lastNameController.text,
         emailController.text,
         passwordController.text,
         selectedRole,
-        selectedTechStacks,
-        specializationController.text,
-        organizationController.text,
+        getSelectedStackIds(),
+        selectedRole == 'trainer' ? specializationController.text : null,
+        selectedRole == 'trainer' ? organizationController.text : null,
       );
 
       if (success) {
-        // Show success message before navigating
         _snackbarService.showCustomSnackBar(
           variant: SnackbarType.success,
-          message: 'Signup successful! Welcome to the platform.',
-          duration: const Duration(seconds: 2),
+          message:
+              'Registration successful! Please check your email to verify your account.',
+          duration: const Duration(seconds: 4),
         );
 
-        // Wait a moment to show the success message before navigating
-        await Future.delayed(const Duration(milliseconds: 500));
-        await _navigationService.clearStackAndShow(Routes.mainBodyView);
-      } else {
-        // Show error message with custom error snackbar
-        print('Sign up failed. Please check your credentials.');
-        _snackbarService.showCustomSnackBar(
-          variant: SnackbarType.error,
-          message:
-              'Signup failed. Please check your information and try again.',
-          duration: const Duration(seconds: 3),
-        );
+        await _navigationService.clearStackAndShow(Routes.authView);
       }
     } catch (e) {
-      // Handle any errors with custom error snackbar
-      print('An error occurred during signup: $e');
+      String errorMessage = 'Registration failed. ';
+      if (e.toString().contains('422')) {
+        errorMessage += 'Please check your information and try again.';
+      } else {
+        errorMessage += e.toString().split('\n')[0];
+      }
       _snackbarService.showCustomSnackBar(
         variant: SnackbarType.error,
-        message: 'Signup error: ${e.toString().split('\n')[0]}',
+        message: errorMessage,
         duration: const Duration(seconds: 3),
       );
     } finally {
@@ -168,7 +198,7 @@ class SignupViewModel extends BaseViewModel {
   Future<void> signupWithGoogle() async {
     if (!_termsAccepted) {
       _snackbarService.showCustomSnackBar(
-        variant: SnackbarType.info,
+        variant: SnackbarType.error,
         message: 'Please accept the terms and conditions',
         duration: const Duration(seconds: 2),
       );
@@ -179,8 +209,6 @@ class SignupViewModel extends BaseViewModel {
     notifyListeners();
 
     try {
-      // await _authService.signInWithGoogle();
-      // Show success message for Google signup
       _snackbarService.showCustomSnackBar(
         variant: SnackbarType.success,
         message: 'Google signup successful!',
@@ -202,56 +230,71 @@ class SignupViewModel extends BaseViewModel {
   }
 
   bool _validateInputs() {
-    if (!_termsAccepted) {
-      _snackbarService.showCustomSnackBar(
-        variant: SnackbarType.info,
-        message: 'Please accept the terms and conditions',
-        duration: const Duration(seconds: 2),
-      );
-      return false;
+    bool isValid = true;
+
+    if (firstNameController.text.isEmpty) {
+      firstNameError = 'Please enter your first name';
+      isValid = false;
     }
 
-    if (firstNameController.text.isEmpty ||
-        lastNameController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        confirmPasswordController.text.isEmpty) {
-      _snackbarService.showCustomSnackBar(
-        variant: SnackbarType.info,
-        message: 'Please fill in all required fields',
-        duration: const Duration(seconds: 2),
-      );
-      return false;
+    if (lastNameController.text.isEmpty) {
+      lastNameError = 'Please enter your last name';
+      isValid = false;
+    }
+
+    if (emailController.text.isEmpty) {
+      emailError = 'Please enter your email';
+      isValid = false;
+    }
+
+    if (passwordController.text.isEmpty) {
+      passwordError = 'Please enter your password';
+      isValid = false;
+    } else if (!isPasswordValid) {
+      passwordError = 'Password does not meet requirements';
+      isValid = false;
+    }
+
+    if (confirmPasswordController.text.isEmpty) {
+      confirmPasswordError = 'Please confirm your password';
+      isValid = false;
+    } else if (!isConfirmPasswordValid) {
+      confirmPasswordError = 'Passwords do not match';
+      isValid = false;
+    }
+
+    if (selectedRole == 'trainer') {
+      if (organizationController.text.isEmpty) {
+        organizationError = 'Please enter your organization';
+        isValid = false;
+      }
+      if (specializationController.text.isEmpty) {
+        specializationError = 'Please enter your specialization';
+        isValid = false;
+      }
     }
 
     if (_selectedTechStacks.isEmpty) {
+      techStackError = 'Please select at least one tech stack';
+      isValid = false;
       _snackbarService.showCustomSnackBar(
-        variant: SnackbarType.info,
+        variant: SnackbarType.error,
         message: 'Please select at least one tech stack',
         duration: const Duration(seconds: 2),
       );
-      return false;
     }
 
-    if (!isPasswordValid) {
+    if (!_termsAccepted) {
       _snackbarService.showCustomSnackBar(
         variant: SnackbarType.error,
-        message: 'Password does not meet requirements',
+        message: 'Please accept the terms and conditions',
         duration: const Duration(seconds: 2),
       );
-      return false;
+      isValid = false;
     }
 
-    if (!isConfirmPasswordValid) {
-      _snackbarService.showCustomSnackBar(
-        variant: SnackbarType.error,
-        message: 'Passwords do not match',
-        duration: const Duration(seconds: 2),
-      );
-      return false;
-    }
-
-    return true;
+    notifyListeners();
+    return isValid;
   }
 
   void updatePasswordFocus(bool hasFocus) {
@@ -271,7 +314,6 @@ class SignupViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  // Add method to unfocus password fields and hide validation checklist
   void unfocusPasswordFields() {
     if (passwordFocusNode.hasFocus) {
       passwordFocusNode.unfocus();
@@ -282,6 +324,72 @@ class SignupViewModel extends BaseViewModel {
     isPasswordFieldFocused = false;
     isConfirmPasswordFieldFocused = false;
     notifyListeners();
+  }
+
+  void navigateToTermsAndConditions() {
+    _navigationService.navigateToTosView();
+  }
+
+  void validateFirstName(String value) {
+    if (firstNameError != null && value.isNotEmpty) {
+      firstNameError = null;
+      notifyListeners();
+    }
+  }
+
+  void validateLastName(String value) {
+    if (lastNameError != null && value.isNotEmpty) {
+      lastNameError = null;
+      notifyListeners();
+    }
+  }
+
+  void validateEmail(String value) {
+    if (emailError != null && value.isNotEmpty) {
+      emailError = null;
+      notifyListeners();
+    }
+  }
+
+  void validatePassword(String value) {
+    if (passwordError != null) {
+      if (value.isNotEmpty) {
+        if (isPasswordValid) {
+          passwordError = null;
+          notifyListeners();
+        }
+      }
+    }
+  }
+
+  void validateConfirmPassword(String value) {
+    if (confirmPasswordError != null) {
+      if (value.isNotEmpty && isConfirmPasswordValid) {
+        confirmPasswordError = null;
+        notifyListeners();
+      }
+    }
+  }
+
+  void validateOrganization(String value) {
+    if (organizationError != null && value.isNotEmpty) {
+      organizationError = null;
+      notifyListeners();
+    }
+  }
+
+  void validateSpecialization(String value) {
+    if (specializationError != null && value.isNotEmpty) {
+      specializationError = null;
+      notifyListeners();
+    }
+  }
+
+  void validateTechStack() {
+    if (techStackError != null && _selectedTechStacks.isNotEmpty) {
+      techStackError = null;
+      notifyListeners();
+    }
   }
 
   @override

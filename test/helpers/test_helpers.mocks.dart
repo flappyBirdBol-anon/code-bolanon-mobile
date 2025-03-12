@@ -19,10 +19,12 @@ import 'package:code_bolanon/services/api_service.dart' as _i4;
 import 'package:code_bolanon/services/auth_service.dart' as _i12;
 import 'package:code_bolanon/services/course_service.dart' as _i17;
 import 'package:code_bolanon/services/file_service.dart' as _i26;
+import 'package:code_bolanon/services/forgot_password_service.dart' as _i30;
 import 'package:code_bolanon/services/image_service.dart' as _i20;
 import 'package:code_bolanon/services/lesson_service.dart' as _i25;
 import 'package:code_bolanon/services/payment_service.dart' as _i27;
 import 'package:code_bolanon/services/stripe_service.dart' as _i29;
+import 'package:code_bolanon/services/tech_stack_service.dart' as _i31;
 import 'package:code_bolanon/services/theme_service.dart' as _i13;
 import 'package:code_bolanon/services/user_service.dart' as _i23;
 import 'package:dio/dio.dart' as _i2;
@@ -1257,8 +1259,8 @@ class MockApiService extends _i1.Mock implements _i4.ApiService {
   _i10.Future<Map<String, dynamic>> createPaymentIntent({
     required int? amount,
     required String? currency,
-    required String? paymentMethodId,
     required String? courseId,
+    String? paymentMethodId,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -1267,8 +1269,8 @@ class MockApiService extends _i1.Mock implements _i4.ApiService {
           {
             #amount: amount,
             #currency: currency,
-            #paymentMethodId: paymentMethodId,
             #courseId: courseId,
+            #paymentMethodId: paymentMethodId,
           },
         ),
         returnValue:
@@ -2903,10 +2905,38 @@ class MockPaymentService extends _i1.Mock implements _i27.PaymentService {
     required String? expiryDate,
     required String? cvv,
     required String? cardHolderName,
+    bool? useGooglePay = false,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
           #processStripePayment,
+          [],
+          {
+            #course: course,
+            #cardNumber: cardNumber,
+            #expiryDate: expiryDate,
+            #cvv: cvv,
+            #cardHolderName: cardHolderName,
+            #useGooglePay: useGooglePay,
+          },
+        ),
+        returnValue:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+        returnValueForMissingStub:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i10.Future<Map<String, dynamic>>);
+
+  @override
+  _i10.Future<Map<String, dynamic>> processManualCardPayment({
+    required _i28.CourseParam? course,
+    required String? cardNumber,
+    required String? expiryDate,
+    required String? cvv,
+    required String? cardHolderName,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #processManualCardPayment,
           [],
           {
             #course: course,
@@ -2971,6 +3001,15 @@ class MockPaymentService extends _i1.Mock implements _i27.PaymentService {
       );
 
   @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   void listenToReactiveValues(List<dynamic>? reactiveValues) =>
       super.noSuchMethod(
         Invocation.method(
@@ -3012,3 +3051,108 @@ class MockPaymentService extends _i1.Mock implements _i27.PaymentService {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockStripeService extends _i1.Mock implements _i29.StripeService {}
+
+/// A class which mocks [ForgotPasswordService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockForgotPasswordService extends _i1.Mock
+    implements _i30.ForgotPasswordService {
+  @override
+  int get listenersCount => (super.noSuchMethod(
+        Invocation.getter(#listenersCount),
+        returnValue: 0,
+        returnValueForMissingStub: 0,
+      ) as int);
+
+  @override
+  _i10.Future<bool> requestPasswordReset(String? email) => (super.noSuchMethod(
+        Invocation.method(
+          #requestPasswordReset,
+          [email],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
+  _i10.Future<Map<String, dynamic>> verifyResetCode(
+    String email,
+    String code,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #verifyResetCode,
+          [
+            email,
+            code,
+          ],
+        ),
+        returnValue:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+        returnValueForMissingStub:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i10.Future<Map<String, dynamic>>);
+
+  @override
+  _i10.Future<bool> resetPassword(
+    String email,
+    String code,
+    String newPassword,
+    String confirmPassword,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #resetPassword,
+          [
+            email,
+            code,
+            newPassword,
+            confirmPassword,
+          ],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
+  void listenToReactiveValues(List<dynamic>? reactiveValues) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #listenToReactiveValues,
+          [reactiveValues],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void addListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+}
+
+/// A class which mocks [TechStackService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockTechStackService extends _i1.Mock implements _i31.TechStackService {}

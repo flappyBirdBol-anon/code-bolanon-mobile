@@ -36,22 +36,34 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return [
               SliverAppBar(
-                expandedHeight: 240.0,
-                floating: true,
+                expandedHeight: 280.0,
+                floating: false,
                 pinned: true,
                 backgroundColor: Colors.white,
                 elevation: innerBoxIsScrolled ? 4 : 0,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: innerBoxIsScrolled ? Colors.black : Colors.white,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.notifications_outlined,
-                        color: Colors.black),
+                    icon: Icon(
+                      Icons.notifications_outlined,
+                      color: innerBoxIsScrolled ? Colors.black : Colors.white,
+                    ),
                     onPressed: () {},
                   ),
-                  const SizedBox(width: 16),
+                  IconButton(
+                    icon: Icon(
+                      Icons.share_outlined,
+                      color: innerBoxIsScrolled ? Colors.black : Colors.white,
+                    ),
+                    onPressed: () {},
+                  ),
+                  const SizedBox(width: 8),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: false,
@@ -73,57 +85,102 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // Course image
-                      Container(
-                        margin: const EdgeInsets.fromLTRB(16, 80, 16, 16),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
+                      Hero(
+                        tag: 'course-${course!.id}',
+                        child: Container(
+                          margin: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                          child: viewModel.getCourseImageWidget(
+                            fit: BoxFit.cover,
+                            placeholder: Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
                             ),
-                          ],
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: viewModel.getCourseImageWidget(
-                          fit: BoxFit.cover,
-                          placeholder: Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          ),
-                          errorWidget: Container(
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: Icon(
-                                Icons.image_not_supported,
-                                size: 40,
-                                color: Colors.grey,
+                            errorWidget: Container(
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                      // Gradient overlay for better text visibility
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
+                          ),
+                        ),
+                      ),
                       Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          height: 80,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.3),
+                        bottom: 60,
+                        left: 16,
+                        right: 16,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              course!.title,
+                              style: GoogleFonts.figtree(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                shadows: [
+                                  Shadow(
+                                    offset: const Offset(0, 1),
+                                    blurRadius: 3.0,
+                                    color: Colors.black.withOpacity(0.3),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.star,
+                                          color: Colors.amber, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        course!.rating.toString(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${course!.reviews} Reviews',
+                                  style: GoogleFonts.figtree(
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
                               ],
                             ),
-                          ),
+                          ],
                         ),
                       ),
                     ],
@@ -277,15 +334,77 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            course!.description,
-            style: GoogleFonts.figtree(fontSize: 16, height: 1.5),
+          // Course Summary Card
+          Card(
+            elevation: 2,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'About This Course',
+                    style: GoogleFonts.figtree(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    course!.description,
+                    style: GoogleFonts.figtree(
+                      fontSize: 16,
+                      height: 1.5,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildKeyMetric(
+                          Icons.access_time, '2-3 months', 'Duration'),
+                      _buildKeyMetric(Icons.bar_chart, 'Beginner', 'Level'),
+                      _buildKeyMetric(Icons.people_outline,
+                          '${course!.reviews}+', 'Students'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 24),
+
+          // What You'll Learn Section
           Text(
-            'Instructor',
+            'What You\'ll Learn',
             style: GoogleFonts.figtree(
-              fontSize: 18,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _buildLearningPoint('Build real-world applications'),
+              _buildLearningPoint('Master core concepts'),
+              _buildLearningPoint('Industry best practices'),
+              _buildLearningPoint('Hands-on projects'),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Instructor Section
+          Text(
+            'Your Instructor',
+            style: GoogleFonts.figtree(
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -296,62 +415,120 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.grey[200],
-                  child: const Icon(Icons.person),
-                ),
-                title: Text(viewModel.userName),
-                subtitle: Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    const SizedBox(width: 4),
-                    Text('7.2',
-                        style: GoogleFonts.figtree(color: Colors.grey[600])),
-                    const SizedBox(width: 8),
-                    Text('Reviews (75)',
-                        style: GoogleFonts.figtree(color: Colors.grey[600])),
-                  ],
-                ),
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.grey[200],
+                    child: const Icon(Icons.person, size: 32),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          course?.author ?? "John Doe",
+                          style: GoogleFonts.figtree(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Senior Developer & Instructor',
+                          style: GoogleFonts.figtree(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.star, color: Colors.amber, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              '4.8',
+                              style: GoogleFonts.figtree(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '(120 reviews)',
+                              style: GoogleFonts.figtree(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           const SizedBox(height: 24),
+
+          // Requirements Section
           Text(
-            'Mentor',
+            'Requirements',
             style: GoogleFonts.figtree(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 16),
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.grey[200],
-                  child: const Icon(Icons.person),
-                ),
-                title: Text('Marie',
-                    style: GoogleFonts.figtree(fontWeight: FontWeight.bold)),
-                subtitle: Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    const SizedBox(width: 4),
-                    Text('8.2',
-                        style: GoogleFonts.figtree(color: Colors.grey[600])),
-                    const SizedBox(width: 8),
-                    Text('Reviews (33)',
-                        style: GoogleFonts.figtree(color: Colors.grey[600])),
-                  ],
-                ),
-              ),
+          _buildRequirementItem('Basic programming knowledge'),
+          _buildRequirementItem('Computer with internet connection'),
+          _buildRequirementItem('Dedication to learn'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKeyMetric(IconData icon, String value, String label) {
+    return Column(
+      children: [
+        Icon(icon, size: 24, color: AppColors.primary),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: GoogleFonts.figtree(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.figtree(
+            color: Colors.grey[600],
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLearningPoint(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle_outline, size: 20, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: GoogleFonts.figtree(
+              color: Colors.grey[800],
+              fontSize: 14,
             ),
           ),
         ],
@@ -359,20 +536,21 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(20),
-      ),
+  Widget _buildRequirementItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.grey[600]),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(color: Colors.grey[600]),
+          Icon(Icons.arrow_right, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.figtree(
+                fontSize: 15,
+                color: Colors.grey[800],
+              ),
+            ),
           ),
         ],
       ),
@@ -384,117 +562,156 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // Stats Cards
+        Container(
+          margin: const EdgeInsets.only(bottom: 24),
+          child: Row(
+            children: [
+              Expanded(
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Icon(Icons.school_outlined,
+                            color: AppColors.primary, size: 28),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${viewModel.lessons.length}',
+                          style: GoogleFonts.figtree(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Total Lessons',
+                          style: GoogleFonts.figtree(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Icon(Icons.timer_outlined,
+                            color: Colors.orange[400], size: 28),
+                        const SizedBox(height: 8),
+                        Text(
+                          viewModel.totalDuration,
+                          style: GoogleFonts.figtree(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Duration',
+                          style: GoogleFonts.figtree(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Header with Add Button
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Lessons',
+              'Course Content',
               style: GoogleFonts.figtree(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            ElevatedButton.icon(
-              onPressed: () => viewModel.navigateToAddLesson(course!),
-              icon: const Icon(Icons.add, size: 20, color: Colors.white),
-              label:
-                  Text('Add Lesson', style: GoogleFonts.figtree(fontSize: 16)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            if (course?.author == viewModel.userName) // Only show for trainers
+              ElevatedButton.icon(
+                onPressed: () => viewModel.navigateToAddLesson(course!),
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text('New Lesson'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Text(
-              '${viewModel.lessons.length} Lessons',
-              style: GoogleFonts.figtree(color: Colors.grey[600]),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              viewModel.totalDuration,
-              style: GoogleFonts.figtree(color: Colors.grey[600]),
-            ),
           ],
         ),
         const SizedBox(height: 16),
 
-        // Show either first 3 lessons or all lessons based on viewModel.showAllLessons
-        for (int i = 0;
-            i < viewModel.lessons.length && (viewModel.showAllLessons || i < 3);
-            i++)
-          Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: _buildLessonItem(
-              i,
-              context,
-              viewModel,
-            ),
+        // Lessons List
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          child: Column(
+            children: [
+              for (int i = 0;
+                  i < viewModel.lessons.length &&
+                      (viewModel.showAllLessons || i < 3);
+                  i++)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: _buildLessonItem(i, context, viewModel),
+                ),
+            ],
           ),
+        ),
 
-        // View All button - only show if there are more than 3 lessons and not showing all
-        if (viewModel.lessons.length > 3 && !viewModel.showAllLessons)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: TextButton(
-              onPressed: () => viewModel.toggleShowAllLessons(),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'View All Lessons',
-                    style: GoogleFonts.figtree(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.arrow_forward,
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
-                ],
+        // View All/Less Button
+        if (viewModel.lessons.length > 3)
+          TextButton(
+            onPressed: () => viewModel.toggleShowAllLessons(),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(color: AppColors.primary.withOpacity(0.3)),
               ),
             ),
-          ),
-
-        // Show Less button - only show when displaying all lessons and there are more than 3
-        if (viewModel.showAllLessons && viewModel.lessons.length > 3)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: TextButton(
-              onPressed: () => viewModel.toggleShowAllLessons(),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Show Less',
-                    style: GoogleFonts.figtree(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.keyboard_arrow_up,
-                    size: 16,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  viewModel.showAllLessons ? 'Show Less' : 'View All Lessons',
+                  style: GoogleFonts.figtree(
                     color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  viewModel.showAllLessons
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+              ],
             ),
           ),
       ],
@@ -518,29 +735,24 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           color: Colors.black87,
         ),
       ),
-      subtitle: lesson.description != null
-          ? Text.rich(
-              TextSpan(
-                style: GoogleFonts.figtree(color: Colors.grey[600]),
-                children: [
-                  TextSpan(
-                    text: lesson.description.split(' ').take(3).join(' '),
-                  ),
-                  if ((lesson.description.split(' ').length > 3))
-                    TextSpan(
-                      text: '...',
-                      style: GoogleFonts.figtree(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                ],
-              ),
-            )
-          : Text(
-              'No description available',
-              style: GoogleFonts.figtree(),
+      subtitle: Text.rich(
+        TextSpan(
+          style: GoogleFonts.figtree(color: Colors.grey[600]),
+          children: [
+            TextSpan(
+              text: lesson.description.split(' ').take(3).join(' '),
             ),
+            if ((lesson.description.split(' ').length > 3))
+              TextSpan(
+                text: '...',
+                style: GoogleFonts.figtree(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
+        ),
+      ),
       trailing: IconButton(
         icon: const Icon(Icons.arrow_forward_ios, size: 16),
         onPressed: () => viewModel.navigateToLessonDetails(lesson),
@@ -621,71 +833,194 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(
-          'Reviews',
-          style: GoogleFonts.figtree(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+        // Overall Rating Card
+        Card(
+          elevation: 2,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Overall Rating',
+                          style: GoogleFonts.figtree(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Text(
+                              course!.rating.toString(),
+                              style: GoogleFonts.figtree(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.amber[700],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'out of 5',
+                              style: GoogleFonts.figtree(
+                                color: Colors.grey[600],
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: List.generate(
+                        5,
+                        (index) => Icon(
+                          Icons.star,
+                          size: 24,
+                          color: index < course!.rating.floor()
+                              ? Colors.amber
+                              : Colors.grey[300],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildRatingBar(5, 0.8, '80%'),
+                    _buildRatingBar(4, 0.65, '65%'),
+                    _buildRatingBar(3, 0.4, '40%'),
+                    _buildRatingBar(2, 0.1, '10%'),
+                    _buildRatingBar(1, 0.05, '5%'),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Based on ${course!.reviews} reviews',
+                  style: GoogleFonts.figtree(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.amber.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Text(
-                'Overall Ratings',
-                style: GoogleFonts.figtree(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+        const SizedBox(height: 24),
+
+        // Latest Reviews Section
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Latest Reviews',
+              style: GoogleFonts.figtree(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.amber,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  course!.rating.toString(),
-                  style: GoogleFonts.figtree(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+            ),
+            TextButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.sort, size: 20),
+              label: const Text('Sort by'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
               ),
-              const SizedBox(width: 8),
-              Row(
-                children: List.generate(
-                  5,
-                  (index) => Icon(
-                    Icons.star,
-                    size: 18,
-                    color: index < course!.rating.floor()
-                        ? Colors.amber
-                        : Colors.grey[300],
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         ...List.generate(
           3,
-          (index) => _buildReviewItem(),
+          (index) => _buildEnhancedReviewItem(),
+        ),
+
+        // Add Review Button - Only show for enrolled students
+        const SizedBox(height: 24),
+        ElevatedButton(
+          onPressed: () {},
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: Text(
+            'Write a Review',
+            style: GoogleFonts.figtree(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildReviewItem() {
+  Widget _buildRatingBar(int rating, double percentage, String label) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Text(
+              '$rating',
+              style: GoogleFonts.figtree(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.star, size: 12, color: Colors.amber),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: 40,
+          height: 100,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.grey[200],
+          ),
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              Container(
+                width: 40,
+                height: 100 * percentage,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.amber,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: GoogleFonts.figtree(
+            color: Colors.grey[600],
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedReviewItem() {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -694,29 +1029,30 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              backgroundColor: Colors.grey[200],
-              child: const Icon(Icons.person),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Carla',
-                    style: GoogleFonts.figtree(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.grey[200],
+                  child: const Icon(Icons.person, size: 32),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4),
                       Text(
-                        '8.2',
+                        'John Smith',
+                        style: GoogleFonts.figtree(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        '2 days ago',
                         style: GoogleFonts.figtree(
                           color: Colors.grey[600],
                           fontSize: 12,
@@ -724,15 +1060,73 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit. Proin Faucibus, Sem Sed',
-                    style: GoogleFonts.figtree(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                ],
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        '4.5',
+                        style: GoogleFonts.figtree(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'This course exceeded my expectations. The instructor is very knowledgeable and explains complex concepts in a simple way.',
+              style: GoogleFonts.figtree(
+                color: Colors.grey[800],
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _buildReactionButton(Icons.thumb_up_outlined, '12'),
+                const SizedBox(width: 16),
+                _buildReactionButton(Icons.comment_outlined, '3'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReactionButton(IconData icon, String count) {
+    return InkWell(
+      onTap: () {},
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: Colors.grey[600]),
+            const SizedBox(width: 4),
+            Text(
+              count,
+              style: GoogleFonts.figtree(
+                color: Colors.grey[600],
+                fontSize: 12,
               ),
             ),
           ],

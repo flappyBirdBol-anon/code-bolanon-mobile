@@ -29,90 +29,216 @@ class CoursesListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: AppColors.cardBackground,
-      elevation: 2,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        minHeight: 320,
+        maxHeight: 400,
       ),
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                AspectRatio(
-                  aspectRatio: 16 / 8,
-                  child: _buildCourseImage(),
-                ),
-                if (showStatus ?? false)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: _buildStatusBadge(),
-                  ),
-              ],
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      child: Card(
+        color: AppColors.cardBackground,
+        elevation: 2,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: const Color.fromARGB(157, 238, 238, 238)),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                // height: 160, // Fixed height for image container
+                child: Stack(
                   children: [
-                    Text(
-                      course.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.figtree(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    AspectRatio(
+                      aspectRatio: 1.5,
+                      child: _buildCourseImage(),
                     ),
-                    if (course.description.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(course.description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.figtree(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.grey[600],
-                          )),
-                    ],
-                    if (tags != null && tags!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: tags!
-                            .map((tag) => TagChip(
-                                  tag: tag,
-                                  onTap: () {},
-                                ))
-                            .toList(),
+                    if (showStatus ?? false)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: _buildStatusBadge(),
                       ),
-                    ],
-                    const Spacer(),
-                    if (showControls) ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          _buildEditButton(context),
-                          const SizedBox(width: 8),
-                          _buildToggleButton(context),
-                        ],
+                    if (tags != null && tags!.isNotEmpty)
+                      Positioned(
+                        left: 8,
+                        right: 8,
+                        bottom: 8,
+                        child: _buildTagList(),
                       ),
-                    ],
                   ],
                 ),
               ),
-            ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!, width: 0.5),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                course.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.figtree(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            if (course.price == 0.00)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.green[100],
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.card_giftcard,
+                                      size: 14,
+                                      color: Colors.green[700],
+                                    ),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      'FREE',
+                                      style: GoogleFonts.figtree(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.green[700],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              Text(
+                                '\$${course.price.toStringAsFixed(2)}',
+                                style: GoogleFonts.figtree(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.green[700],
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.person,
+                              size: 16,
+                              color: Colors.blue[700],
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                course.author ?? "Author",
+                                style: GoogleFonts.figtree(fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (course.description.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Flexible(
+                            child: Text(
+                              course.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.figtree(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                        ],
+                        const Spacer(),
+                        _buildCourseDetails(context),
+                        if (showControls) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _buildEditButton(context),
+                              const SizedBox(width: 8),
+                              _buildToggleButton(context),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTagList() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [
+            Colors.black.withOpacity(0.8),
+            Colors.black.withOpacity(0.0),
           ],
         ),
       ),
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        children: tags!
+            .take(2) // Limit to 2 tags to prevent overflow
+            .map((tag) => TagChip(
+                  tag: tag,
+                  onTap: () {},
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildCourseDetails(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.book, size: 16, color: Colors.blue[700]),
+        const SizedBox(width: 4),
+        Text(
+          '${course.lessonCount} lessons',
+          style: GoogleFonts.figtree(fontSize: 12),
+        ),
+        const SizedBox(width: 40),
+        Icon(Icons.star, size: 16, color: Colors.amber[700]),
+        const SizedBox(width: 4),
+        Text(
+          '${course.rating}',
+          style: GoogleFonts.figtree(fontSize: 12),
+        ),
+      ],
     );
   }
 
@@ -184,7 +310,7 @@ class CoursesListItem extends StatelessWidget {
                 'Edit',
                 style: GoogleFonts.figtree(
                   color: AppColors.primary,
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -220,10 +346,10 @@ class CoursesListItem extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                isActive ? 'Active' : 'Inactive',
+                isActive ? 'Deactivate' : 'Activate',
                 style: GoogleFonts.figtree(
                   color: isActive ? Colors.red : Colors.green,
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: FontWeight.w500,
                 ),
               ),

@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:code_bolanon/app/app.bottomsheets.dart';
 import 'package:code_bolanon/app/app.dialog.dart';
 import 'package:code_bolanon/app/app.dialogs.dart';
@@ -10,6 +8,7 @@ import 'package:code_bolanon/ui/common/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:media_kit/media_kit.dart' show MediaKit;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:stacked_services/stacked_services.dart';
 
@@ -32,9 +31,14 @@ void main() async {
   String initialRoute = Routes.onboardingView;
 
   try {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
     final isLoggedIn = await authService.isLoggedIn();
+
     if (isLoggedIn) {
       initialRoute = Routes.mainBodyView;
+    } else if (hasSeenOnboarding) {
+      initialRoute = Routes.authView;
     }
   } catch (e) {
     // Handle any errors that occur during the check

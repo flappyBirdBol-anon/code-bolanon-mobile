@@ -30,6 +30,7 @@ class OnboardingView extends StackedView<OnboardingViewModel> {
                       height: 100,
                       width: 100,
                       child: SvgPicture.asset(
+                        color: AppColors.primary,
                         PngImages.logo,
                         fit: BoxFit.cover,
                         clipBehavior: Clip.hardEdge,
@@ -80,8 +81,7 @@ class OnboardingView extends StackedView<OnboardingViewModel> {
   }
 
   Widget _buildButtons(OnboardingViewModel viewModel, BuildContext context) {
-    const buttonTextStyle = TextStyle(
-      fontFamily: 'Poppins',
+    var buttonTextStyle = GoogleFonts.figtree(
       fontSize: 18,
     );
 
