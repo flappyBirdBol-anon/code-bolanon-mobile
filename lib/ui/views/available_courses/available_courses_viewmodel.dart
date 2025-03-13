@@ -4,13 +4,28 @@ import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
-
+import 'package:code_bolanon/services/registration_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/common/base/course_base_view_model.dart';
+import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 class AvailableCoursesViewModel extends CourseBaseViewModel {
   final CourseService courseService;
+  final _registrationService = locator<RegistrationService>();
+
+  // Add getter for user role
+  bool get isLearner => userService.currentUser?.role == 'learner';
+
+  // Add method to check if course is registered
+  bool isCourseRegistered(String courseId) {
+    if (!isLearner) return false;
+    final stringId = courseId.toString();
+    final isRegistered = _registrationService.isRegistered(stringId);
+    print(
+        'Checking registration for course $stringId: $isRegistered'); // Debug log
+    return isRegistered;
+  }
 
   @override
   List<String> get availableFilters => [
@@ -51,16 +66,53 @@ class AvailableCoursesViewModel extends CourseBaseViewModel {
     required CourseService courseService,
     required ImageService imageService,
   })  : courseService = courseService,
-        super(courseService, imageService: imageService);
+        super(courseService, imageService: imageService) {
+    // Initialize courses when view model is created
+    loadInitialCourses();
+  }
+
+  Future<void> loadInitialCourses() async {
+    setBusy(true);
+    try {
+      // Always load registrations for learners, even if it returns empty
+      if (isLearner) {
+        print('Loading registered courses...'); // Debug log
+        await _registrationService.loadRegisteredCourses();
+      }
+
+      final initialCourses = await loadCourses();
+      print('Loaded ${initialCourses.length} courses'); // Debug log
+
+      // Debug log registered courses
+      if (isLearner) {
+        print('Registered courses: ${_registrationService.registeredCourses}');
+      }
+
+      updateCourses(initialCourses);
+      notifyListeners();
+    } catch (e) {
+      print('Error loading courses: $e'); // Debug log
+      snackbarService.showSnackbar(message: 'Failed to load courses');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   @override
   Future<List<CourseModel>> loadCourses(
       {int page = 1, int pageSize = 10}) async {
-    return await courseService.getCourses(
-      page: page,
-      pageSize: pageSize,
-      filters: activeFilters.toList(),
-    );
+    try {
+      final fetchedCourses = await courseService.getCourses(
+        page: page,
+        pageSize: pageSize,
+        filters: activeFilters.toList(),
+      );
+      return fetchedCourses;
+    } catch (e) {
+      // Handle error
+      snackbarService.showSnackbar(message: 'Failed to load courses');
+      return [];
+    }
   }
 
   @override
@@ -104,5 +156,12 @@ class AvailableCoursesViewModel extends CourseBaseViewModel {
 
   void navigateToMyCourses() {
     navigationService.navigateToLearnerCoursesView();
+  }
+
+  @override
+  void navigateToCourseDetails(CourseModel course) async {
+    await navigationService.navigateToView(CourseDetailsView(course: course));
+    // Refresh courses when returning from CourseDetailsView
+    loadInitialCourses();
   }
 }

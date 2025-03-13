@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {
-  final String text;
+  final String? text; // Make text nullable
   final VoidCallback onPressed;
   final Color? backgroundColor;
   final Color? textColor;
@@ -20,7 +20,7 @@ class CustomButton extends StatelessWidget {
 
   const CustomButton({
     Key? key,
-    required this.text,
+    this.text,
     required this.onPressed,
     this.backgroundColor,
     this.textColor,
@@ -62,10 +62,10 @@ class CustomButton extends StatelessWidget {
             size: iconSize,
             color: iconColor ?? textColor ?? Colors.white,
           ),
-          if (text.isNotEmpty) SizedBox(width: spacing),
-          if (text.isNotEmpty)
+          if (text != null && text!.isNotEmpty) SizedBox(width: spacing),
+          if (text != null && text!.isNotEmpty)
             Text(
-              text,
+              text!,
               style: TextStyle(
                 color: textColor ?? Colors.white,
                 fontSize: fontSize ?? 16,
@@ -76,7 +76,7 @@ class CustomButton extends StatelessWidget {
       );
     } else {
       buttonChild = Text(
-        text,
+        text ?? '', // Provide a default value if text is null
         style: TextStyle(
           color: textColor ?? Colors.white,
           fontSize: fontSize ?? 16,

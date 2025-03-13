@@ -1,6 +1,7 @@
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/services/wishlist_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/ui_helpers.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
@@ -144,6 +145,7 @@ class LearnerWishlistsView extends StackedView<LearnerWishlistsViewModel> {
   LearnerWishlistsViewModel viewModelBuilder(BuildContext context) =>
       LearnerWishlistsViewModel(
         courseService: locator<CourseService>(),
+        wishlistService: locator<WishlistService>(),
         imageService: locator<ImageService>(),
       )..init();
 }

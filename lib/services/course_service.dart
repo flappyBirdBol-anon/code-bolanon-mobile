@@ -1,8 +1,6 @@
 // course_service.dart
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course_model.dart';
-import 'package:code_bolanon/models/registration_model.dart';
-import 'package:code_bolanon/models/wishlist_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:dio/dio.dart';
@@ -218,116 +216,6 @@ class CourseService {
       }
     } catch (e) {
       throw Exception('Failed to delete course: ${e.toString()}');
-    }
-  }
-
-  Future<List<RegistrationModel>> getUserRegistrations() async {
-    try {
-      final response = await _apiService.get('/registrations');
-
-      if (response.statusCode == 200) {
-        final List<dynamic> registrationsJson = response.data['data'];
-        return registrationsJson
-            .map((json) => RegistrationModel.fromJson(json))
-            .toList();
-      } else {
-        throw Exception(
-            'Failed to load registrations: ${response.data['message']}');
-      }
-    } catch (e) {
-      throw Exception('Failed to get user registrations: ${e.toString()}');
-    }
-  }
-
-  Future<List<CourseModel>> getRegisteredCourses(
-      List<RegistrationModel> registrations) async {
-    try {
-      List<CourseModel> courses = [];
-      List<Future<CourseModel>> futures = [];
-
-      // Create futures for parallel execution
-      for (var registration in registrations) {
-        futures.add(_fetchRegisteredCourse(registration));
-      }
-
-      // Wait for all futures to complete
-      final results = await Future.wait(futures);
-      courses.addAll(results);
-
-      return courses;
-    } catch (e) {
-      throw Exception('Failed to get registered courses: ${e.toString()}');
-    }
-  }
-
-  Future<CourseModel> _fetchRegisteredCourse(
-      RegistrationModel registration) async {
-    final response = await _apiService.get('/courses/${registration.courseId}');
-    if (response.statusCode == 200) {
-      final courseJson = response.data['data'];
-      courseJson['registration'] = registration.toJson();
-      return CourseModel.fromJson(courseJson);
-    }
-    throw Exception(
-        'Failed to fetch registered course: ${registration.courseId}');
-  }
-
-  Future<List<WishlistModel>> getUserWishlists() async {
-    try {
-      final response = await _apiService.get('/wishlists');
-
-      if (response.statusCode == 200) {
-        final List<dynamic> registrationsJson = response.data['data'];
-        return registrationsJson
-            .map((json) => WishlistModel.fromJson(json))
-            .toList();
-      } else {
-        throw Exception(
-            'Failed to load wishlists: ${response.data['message']}');
-      }
-    } catch (e) {
-      throw Exception('Failed to get user wishlists: ${e.toString()}');
-    }
-  }
-
-  Future<List<CourseModel>> getWishlistCourses(
-      List<WishlistModel> wishlists) async {
-    try {
-      List<CourseModel> courses = [];
-      List<Future<CourseModel>> futures = [];
-
-      // Create futures for parallel execution
-      for (var wishlist in wishlists) {
-        futures.add(_fetchWishlistedCourse(wishlist));
-      }
-
-      // Wait for all futures to complete
-      final results = await Future.wait(futures);
-      courses.addAll(results);
-
-      return courses;
-    } catch (e) {
-      throw Exception('Failed to get wishlisted courses: ${e.toString()}');
-    }
-  }
-
-  Future<CourseModel> _fetchWishlistedCourse(WishlistModel wishlist) async {
-    final response = await _apiService.get('/courses/${wishlist.courseId}');
-    if (response.statusCode == 200) {
-      final courseJson = response.data['data'];
-      courseJson['wishlist'] = wishlist.toJson();
-      return CourseModel.fromJson(courseJson);
-    }
-    throw Exception('Failed to fetch wishlisted course: ${wishlist.courseId}');
-  }
-
-  Future<bool> removeFromWishlist(int wishlistId) async {
-    try {
-      final response = await _apiService.delete('/wishlists/$wishlistId');
-      return response.statusCode == 200;
-    } catch (e) {
-      debugPrint('Error removing from wishlist: $e');
-      return false;
     }
   }
 }

@@ -2,12 +2,14 @@ import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/wishlist_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/services/wishlist_service.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
 class LearnerWishlistsViewModel extends BaseViewModel {
   final CourseService _courseService;
+  final WishlistService _wishlistService; // Add WishlistService
   final ImageService _imageService;
 
   List<CourseModel> _wishlistedCourses = [];
@@ -23,7 +25,7 @@ class LearnerWishlistsViewModel extends BaseViewModel {
       thumbnail: PngImages.image1,
       lessons: 10,
       wishlist: WishlistModel(
-        id: 1,
+        id: '1',
         courseId: 1,
         userId: 1,
       ),
@@ -36,7 +38,7 @@ class LearnerWishlistsViewModel extends BaseViewModel {
       thumbnail: PngImages.image2,
       lessons: 15,
       wishlist: WishlistModel(
-        id: 2,
+        id: '2',
         courseId: 2,
         userId: 1,
       ),
@@ -45,8 +47,10 @@ class LearnerWishlistsViewModel extends BaseViewModel {
 
   LearnerWishlistsViewModel({
     required CourseService courseService,
+    required WishlistService wishlistService,
     required ImageService imageService,
   })  : _courseService = courseService,
+        _wishlistService = wishlistService,
         _imageService = imageService;
 
   Future<void> init() async {
@@ -56,8 +60,8 @@ class LearnerWishlistsViewModel extends BaseViewModel {
   Future<void> refreshCourses() async {
     setBusy(true);
     try {
-      final wishlists = await _courseService.getUserWishlists();
-      _wishlistedCourses = await _courseService.getWishlistCourses(wishlists);
+      final wishlists = await _wishlistService.getUserWishlist();
+      _wishlistedCourses = await _wishlistService.getWishlistCourses(wishlists);
     } catch (e) {
       debugPrint('Error refreshing wishlists: $e');
       // Fallback to sample data when API fails
@@ -73,7 +77,7 @@ class LearnerWishlistsViewModel extends BaseViewModel {
       if (course.wishlist == null) return;
 
       final success =
-          await _courseService.removeFromWishlist(course.wishlist!.id);
+          await _wishlistService.removeFromWishlist(course.wishlist!.id);
       if (success) {
         _wishlistedCourses.removeWhere((c) => c.id == course.id);
         notifyListeners();

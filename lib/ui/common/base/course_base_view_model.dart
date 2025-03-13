@@ -2,14 +2,11 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/course_model.dart';
-import 'package:code_bolanon/models/course_param.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
-
 import 'package:code_bolanon/services/tag_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
-
 import 'package:code_bolanon/ui/common/base/filterable_view_model.dart';
 import 'package:code_bolanon/ui/common/widgets/tag_selection_dialog.dart';
 import 'package:flutter/material.dart';
@@ -23,12 +20,19 @@ abstract class CourseBaseViewModel extends BaseViewModel
   final TagService _tagService = locator<TagService>();
 
   List<CourseModel> _courses = [];
+  List<CourseModel> get courses => _courses;
+
+  void updateCourses(List<CourseModel> newCourses) {
+    _courses = newCourses;
+    notifyListeners();
+  }
+
   List<CourseModel> _filteredCourses = [];
 
-  List<CourseModel> get courses => _filteredCourses;
   List<String> get allTags => _tagService.getAllTags();
 
   String _searchQuery = '';
+  @override
   String get searchQuery => _searchQuery;
   set searchQuery(String value) => _searchQuery = value;
 
@@ -39,7 +43,7 @@ abstract class CourseBaseViewModel extends BaseViewModel
   bool _isLoadingMore = false;
   bool get isLoadingMore => _isLoadingMore;
 
-  Set<String> _activeFilters = {'All'};
+  final Set<String> _activeFilters = {'All'};
   @override
   Set<String> get activeFilters => _activeFilters;
 
@@ -117,20 +121,20 @@ abstract class CourseBaseViewModel extends BaseViewModel
   Future<List<CourseModel>> loadCourses({int page = 1, int pageSize = 10});
 
   void navigateToCourseDetails(CourseModel course) {
-    // navigationService.navigateToCourseDetailsView(
-    //   course: course,
-    // );
-    navigationService.navigateToPaymentView(
-      course: CourseParam(
-        id: "7",
-        title: "Firebase ",
-        description:
-            "Connect your Flutter app to Firebase for authentication, database, and cloud functions.",
-        price: 100,
-        taxRate: 0.06,
-        discountPercentage: 0.20,
-      ),
+    navigationService.navigateToCourseDetailsView(
+      course: course,
     );
+    // navigationService.navigateToPaymentView(
+    //   course: CourseParam(
+    //     id: "7",
+    //     title: "Firebase ",
+    //     description:
+    //         "Connect your Flutter app to Firebase for authentication, database, and cloud functions.",
+    //     price: 100,
+    //     taxRate: 0.06,
+    //     discountPercentage: 0.20,
+    //   ),
+    // );
   }
 
   // Get tags for a specific course
@@ -165,6 +169,7 @@ abstract class CourseBaseViewModel extends BaseViewModel
     notifyListeners();
   }
 
+  @override
   void onSearchChanged(String value) {
     searchQuery = value;
     if (searchQuery.isEmpty) {

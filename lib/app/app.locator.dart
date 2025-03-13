@@ -19,10 +19,12 @@ import '../services/file_service.dart';
 import '../services/image_service.dart';
 import '../services/lesson_service.dart';
 import '../services/payment_service.dart';
+import '../services/registration_service.dart';
 import '../services/stripe_service.dart';
 import '../services/tag_service.dart';
 import '../services/theme_service.dart';
 import '../services/user_service.dart';
+import '../services/wishlist_service.dart';
 
 final locator = StackedLocator.instance;
 
@@ -50,4 +52,6 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => TagService());
   locator.registerLazySingleton(() => PaymentService());
   locator.registerLazySingleton(() => StripeService());
+  locator.registerLazySingleton(() => WishlistService());
+  locator.registerLazySingleton(() => RegistrationService());
 }

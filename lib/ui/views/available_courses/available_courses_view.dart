@@ -44,6 +44,7 @@ class AvailableCoursesView extends StackedView<AvailableCoursesViewModel> {
               onTap: () => viewModel.navigateToCourseDetails(course),
               imageService: viewModel.imageService,
               tags: viewModel.getCourseTags(course.id),
+              isRegistered: viewModel.isCourseRegistered(course.id),
             );
           },
           crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,

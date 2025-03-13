@@ -14,6 +14,7 @@ class CoursesListItem extends StatelessWidget {
   final List<String>? tags;
   final VoidCallback? onEditTap;
   final VoidCallback? onToggleTap;
+  final bool isRegistered;
 
   const CoursesListItem({
     super.key,
@@ -25,6 +26,7 @@ class CoursesListItem extends StatelessWidget {
     this.tags,
     this.onEditTap,
     this.onToggleTap,
+    this.isRegistered = false,
   });
 
   @override
@@ -37,81 +39,142 @@ class CoursesListItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: Colors.grey.shade200),
       ),
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
+      child: Stack(
+        children: [
+          InkWell(
+            onTap: onTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AspectRatio(
-                  aspectRatio: 16 / 8,
-                  child: _buildCourseImage(),
-                ),
-                if (showStatus ?? false)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: _buildStatusBadge(),
-                  ),
-              ],
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Stack(
                   children: [
-                    Text(
-                      course.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.figtree(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    AspectRatio(
+                      aspectRatio: 16 / 8,
+                      child: _buildCourseImage(),
                     ),
-                    if (course.description.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(course.description,
+                    if (showStatus ?? false)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: _buildStatusBadge(),
+                      ),
+                  ],
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          course.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.grey[600],
-                          )),
-                    ],
-                    if (tags != null && tags!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: tags!
-                            .map((tag) => TagChip(
-                                  tag: tag,
-                                  onTap: () {},
-                                ))
-                            .toList(),
-                      ),
-                    ],
-                    const Spacer(),
-                    if (showControls) ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          _buildEditButton(context),
-                          const SizedBox(width: 8),
-                          _buildToggleButton(context),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (course.description.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(course.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.grey[600],
+                              )),
                         ],
+                        if (tags != null && tags!.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: tags!
+                                .map((tag) => TagChip(
+                                      tag: tag,
+                                      onTap: () {},
+                                    ))
+                                .toList(),
+                          ),
+                        ],
+                        const Spacer(),
+                        if (showControls) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _buildEditButton(context),
+                              const SizedBox(width: 8),
+                              _buildToggleButton(context),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isRegistered)
+            Positioned(
+              top: 12,
+              right: 12,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Enrolled',
+                      style: GoogleFonts.figtree(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
             ),
-          ],
-        ),
+          if (isRegistered)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 4,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.green.withOpacity(0.5),
+                      Colors.green.withOpacity(0.2),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

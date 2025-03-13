@@ -12,6 +12,7 @@ class Lesson {
   final String? fileUrl;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final bool isCompleted;
 
   Lesson({
     required this.id,
@@ -25,6 +26,7 @@ class Lesson {
     this.fileUrl,
     this.createdAt,
     this.updatedAt,
+    this.isCompleted = false,
   });
 
   factory Lesson.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,7 @@ class Lesson {
       fileUrl: json['file_url'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
+      isCompleted: json['is_completed'] ?? false,
     );
   }
 
@@ -56,6 +59,7 @@ class Lesson {
       'file_url': fileUrl,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'is_completed': isCompleted,
     };
   }
 
@@ -68,6 +72,7 @@ class Lesson {
     String? fileUrl,
     String? fileName,
     String? fileType,
+    bool? isCompleted,
   }) {
     return Lesson(
       id: id ?? this.id,
@@ -78,6 +83,7 @@ class Lesson {
       fileUrl: fileUrl ?? this.fileUrl,
       fileName: fileName ?? this.fileName,
       fileType: fileType ?? this.fileType,
+      isCompleted: isCompleted ?? this.isCompleted,
     );
   }
 

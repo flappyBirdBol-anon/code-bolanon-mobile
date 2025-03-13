@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:code_bolanon/ui/common/base/filterable_view_model.dart';
+import 'package:flutter/material.dart';
 
 class FilterableGridView extends StatefulWidget {
   final FilterableViewModel viewModel;
@@ -107,6 +107,8 @@ class _FilterableGridViewState extends State<FilterableGridView> {
 
   @override
   Widget build(BuildContext context) {
+    print('FilterableGridView - itemCount: ${widget.itemCount}');
+    print('FilterableGridView - isBusy: ${widget.viewModel.isBusy}');
     return Column(
       children: [
         if (widget.showFilters && widget.viewModel.availableFilters.isNotEmpty)

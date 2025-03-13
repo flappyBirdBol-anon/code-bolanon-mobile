@@ -1,5 +1,5 @@
 class WishlistModel {
-  final int id;
+  final String id;
   final int courseId;
   final int userId;
   final DateTime? createdAt;
@@ -32,7 +32,7 @@ class WishlistModel {
   }
 
   WishlistModel copyWith({
-    int? id,
+    String? id,
     int? courseId,
     int? userId,
     DateTime? createdAt,

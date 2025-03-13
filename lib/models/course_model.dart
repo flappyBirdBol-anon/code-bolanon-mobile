@@ -1,5 +1,6 @@
 // lib/models/course.dart
 import 'dart:convert';
+
 import 'package:code_bolanon/models/registration_model.dart';
 import 'package:code_bolanon/models/wishlist_model.dart';
 

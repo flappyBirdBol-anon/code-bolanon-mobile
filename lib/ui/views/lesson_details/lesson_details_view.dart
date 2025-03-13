@@ -1,12 +1,11 @@
-import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
-import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/ui_helpers.dart';
 import 'package:code_bolanon/ui/common/widgets/file_viewer.dart';
 import 'package:flutter/material.dart';
-import 'package:stacked/stacked.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stacked/stacked.dart';
+
 import 'lesson_details_viewmodel.dart';
 
 class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
@@ -30,14 +29,22 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
             ? _buildLoadingState()
             : !viewModel.hasValidLesson
                 ? _buildErrorState(context, viewModel)
-                : _buildMainContent(context, viewModel),
+                : Column(
+                    children: [
+                      _buildAppBar(context, viewModel,
+                          title: viewModel.lesson.label),
+                      Expanded(
+                        child: _buildMainContent(context, viewModel),
+                      ),
+                    ],
+                  ),
       ),
       floatingActionButton: viewModel.canPlayFile && !viewModel.isBusy
           ? FloatingActionButton(
               onPressed: viewModel.playLesson,
               backgroundColor: AppColors.primary,
-              child: const Icon(Icons.play_arrow, color: Colors.white),
               tooltip: 'Play Lesson',
+              child: const Icon(Icons.play_arrow, color: Colors.white),
             )
           : null,
     );
@@ -48,7 +55,7 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
+          const CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
           verticalSpaceMedium,
@@ -127,8 +134,7 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
       BuildContext context, LessonDetailsViewModel viewModel) {
     return Column(
       children: [
-        // Custom App Bar
-        _buildAppBar(context, viewModel, title: viewModel.lesson.label),
+        // Remove the _buildAppBar here since it's now in the main builder
 
         // Lesson Description
         if (viewModel.lesson.description.isNotEmpty)
@@ -207,7 +213,24 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
               ],
             ),
           ),
-          if (viewModel.hasValidLesson)
+          if (viewModel.hasValidLesson) ...[
+            // Only show completion toggle for learners
+            if (viewModel.showCompletionToggle)
+              IconButton(
+                icon: Icon(
+                  viewModel.isLessonCompleted
+                      ? Icons.check_circle
+                      : Icons.check_circle_outline,
+                  color:
+                      viewModel.isLessonCompleted ? Colors.green : Colors.grey,
+                  size: 28,
+                ),
+                onPressed: viewModel.toggleLessonCompletion,
+                tooltip: viewModel.isLessonCompleted
+                    ? 'Mark as incomplete'
+                    : 'Mark as complete',
+              ),
+            // The menu button remains visible for all users
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
               onSelected: (value) {
@@ -270,6 +293,7 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
                 ),
               ],
             ),
+          ],
         ],
       ),
     );
@@ -384,7 +408,7 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
                         ? null
                         : viewModel.prefetchLessonFile),
                 icon: viewModel.isDownloading
-                    ? SizedBox(
+                    ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
@@ -427,7 +451,7 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
             child: ElevatedButton.icon(
               onPressed: viewModel.isFileLoading ? null : viewModel.openLesson,
               icon: viewModel.isFileLoading
-                  ? SizedBox(
+                  ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(

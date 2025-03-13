@@ -133,7 +133,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
               SliverToBoxAdapter(
                 child: Column(
                   children: [
-                    // Course Title and Rating
+                    // Course Title and Buttons
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                       child: Row(
@@ -147,29 +147,139 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                               ),
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.star,
-                                    color: Colors.amber, size: 18),
-                                const SizedBox(width: 4),
-                                Text(
-                                  course!.rating.toString(),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                          // Action Buttons
+                          Row(
+                            children: [
+                              // Wishlist Button - only show if not registered
+                              if (viewModel.showWishlistButton)
+                                Container(
+                                  height: 48,
+                                  width: 48,
+                                  decoration: BoxDecoration(
+                                    color: viewModel.isInWishlist
+                                        ? Colors.red.withOpacity(0.15)
+                                        : Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: viewModel.isInWishlist
+                                            ? Colors.red.withOpacity(0.2)
+                                            : Colors.grey.withOpacity(0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(12),
+                                      onTap: () {
+                                        viewModel.toggleWishlist();
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              viewModel.isInWishlist
+                                                  ? 'Added to Wishlist'
+                                                  : 'Removed from Wishlist',
+                                              style: GoogleFonts.figtree(),
+                                            ),
+                                            duration:
+                                                const Duration(seconds: 1),
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      },
+                                      child: AnimatedSwitcher(
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        transitionBuilder: (child, animation) {
+                                          return ScaleTransition(
+                                            scale: animation,
+                                            child: child,
+                                          );
+                                        },
+                                        child: Icon(
+                                          viewModel.isInWishlist
+                                              ? Icons.favorite_rounded
+                                              : Icons.favorite_border_rounded,
+                                          color: viewModel.isInWishlist
+                                              ? Colors.red
+                                              : Colors.grey[600],
+                                          size: 24,
+                                          key: ValueKey(viewModel.isInWishlist),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(width: 12),
+                              // Register/Enrolled Button
+                              if (viewModel.showEnrollButton) ...[
+                                Container(
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: viewModel.isRegistered
+                                          ? [
+                                              Colors.green,
+                                              Colors.green.shade600
+                                            ]
+                                          : [
+                                              AppColors.primary,
+                                              AppColors.primary.withBlue(255)
+                                            ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: viewModel.isRegistered
+                                            ? Colors.green.withOpacity(0.3)
+                                            : AppColors.primary
+                                                .withOpacity(0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(12),
+                                      onTap: viewModel.isRegistered
+                                          ? null
+                                          : viewModel.showRegistrationDialog,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 12,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              viewModel.enrollButtonIcon,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              viewModel.enrollButtonText,
+                                              style: GoogleFonts.figtree(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
-                            ),
+                            ],
                           ),
                         ],
                       ),
@@ -256,7 +366,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             children: [
               _buildOverviewTab(viewModel),
               _buildLessonsTab(viewModel, context),
-              _buildReviewsTab(viewModel),
+              _buildReviewsTab(viewModel, context),
             ],
           ),
         ),
@@ -504,6 +614,8 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
   Widget _buildLessonItem(
       int index, BuildContext context, CourseDetailsViewModel viewModel) {
     final lesson = viewModel.lessons[index];
+    final isLocked = viewModel.isLearner && !viewModel.isRegistered;
+
     return ExpansionTile(
       backgroundColor: Colors.white,
       leading: _buildBeautifiedFileIcon(index, viewModel),
@@ -515,45 +627,68 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           fontSize: 16,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.3,
-          color: Colors.black87,
+          color: isLocked ? Colors.grey : Colors.black87,
         ),
       ),
-      subtitle: lesson.description != null
-          ? Text.rich(
-              TextSpan(
-                style: GoogleFonts.figtree(color: Colors.grey[600]),
-                children: [
-                  TextSpan(
-                    text: lesson.description.split(' ').take(3).join(' '),
-                  ),
-                  if ((lesson.description.split(' ').length > 3))
-                    TextSpan(
-                      text: '...',
-                      style: GoogleFonts.figtree(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                ],
-              ),
-            )
-          : Text(
-              'No description available',
-              style: GoogleFonts.figtree(),
+      subtitle: Text.rich(
+        TextSpan(
+          style: GoogleFonts.figtree(color: Colors.grey[600]),
+          children: [
+            TextSpan(
+              text: isLocked
+                  ? 'Enroll to access this lesson'
+                  : lesson.description.split(' ').take(3).join(' '),
             ),
+            if (!isLocked && lesson.description.split(' ').length > 3)
+              TextSpan(
+                text: '...',
+                style: GoogleFonts.figtree(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
+        ),
+      ),
       trailing: IconButton(
-        icon: const Icon(Icons.arrow_forward_ios, size: 16),
+        icon: Icon(
+          isLocked ? Icons.lock_outline : Icons.arrow_forward_ios,
+          size: 16,
+          color: isLocked ? Colors.grey : null,
+        ),
         onPressed: () => viewModel.navigateToLessonDetails(lesson),
       ),
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text(
-            lesson.description,
-            style: GoogleFonts.figtree(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isLocked)
+                Row(
+                  children: [
+                    Icon(Icons.lock_outline, size: 16, color: Colors.grey[400]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Please enroll in this course to access the full lesson content.',
+                        style: GoogleFonts.figtree(
+                          color: Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Text(
+                  lesson.description,
+                  style: GoogleFonts.figtree(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+            ],
           ),
         ),
       ],
@@ -617,7 +752,8 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
     );
   }
 
-  Widget _buildReviewsTab(CourseDetailsViewModel viewModel) {
+  Widget _buildReviewsTab(
+      CourseDetailsViewModel viewModel, BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -629,6 +765,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           ),
         ),
         const SizedBox(height: 16),
+        // Overall Rating Card
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -677,6 +814,130 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           ),
         ),
         const SizedBox(height: 16),
+
+        // Write Review ExpansionTile (Only for registered learners)
+        if (viewModel.canWriteReview)
+          Card(
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ExpansionTile(
+              title: Text(
+                'Write a Review',
+                style: GoogleFonts.figtree(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              leading: const Icon(Icons.rate_review),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Rate this course',
+                        style: GoogleFonts.figtree(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: List.generate(
+                          5,
+                          (index) => IconButton(
+                            onPressed: () => viewModel.setRating(index + 1.0),
+                            icon: Icon(
+                              index < viewModel.userRating
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              color: Colors.amber,
+                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: viewModel.reviewController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Share your experience...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton.icon(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Report Course',
+                                      style: GoogleFonts.figtree()),
+                                  content: TextField(
+                                    controller:
+                                        viewModel.reportReasonController,
+                                    maxLines: 3,
+                                    decoration: InputDecoration(
+                                      hintText: 'Reason for reporting...',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        viewModel.submitReport();
+                                        Navigator.pop(context);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                      ),
+                                      child: const Text('Report'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.flag, color: Colors.red),
+                            label: Text('Report',
+                                style: GoogleFonts.figtree(color: Colors.red)),
+                          ),
+                          ElevatedButton(
+                            onPressed: viewModel.submitReview,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                            ),
+                            child: Text('Submit',
+                                style:
+                                    GoogleFonts.figtree(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Existing reviews
         ...List.generate(
           3,
           (index) => _buildReviewItem(),

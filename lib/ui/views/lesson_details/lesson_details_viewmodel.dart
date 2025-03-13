@@ -1,9 +1,9 @@
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
-import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/file_service.dart';
-
+import 'package:code_bolanon/services/lesson_service.dart';
+import 'package:code_bolanon/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as path;
@@ -16,6 +16,7 @@ class LessonDetailsViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final _dialogService = locator<DialogService>();
   final _fileService = locator<FileService>();
+  final _userService = locator<UserService>();
 
   Lesson? _lesson;
   final fileService = locator<FileService>();
@@ -54,6 +55,13 @@ class LessonDetailsViewModel extends BaseViewModel {
 
   bool _canPlayFile = false;
   bool get canPlayFile => _canPlayFile;
+
+  // Add these properties
+  bool _isLessonCompleted = false;
+  bool get isLessonCompleted => _isLessonCompleted;
+
+  bool get isLearner => _userService.currentUser?.role == 'learner';
+  bool get showCompletionToggle => isLearner;
 
   Lesson _createEmptyLesson() {
     return Lesson(
@@ -132,6 +140,9 @@ class LessonDetailsViewModel extends BaseViewModel {
       // Update file status and playability
       await _checkFileStatus();
       _determineFilePlayability();
+
+      // TODO: Load saved completion status
+      _isLessonCompleted = false; // Default to false for now
     } catch (e) {
       print('Error initializing lesson details: $e');
     } finally {
@@ -447,6 +458,15 @@ class LessonDetailsViewModel extends BaseViewModel {
       _isDownloading = false;
       notifyListeners();
     }
+  }
+
+  // Add this method to handle completion toggle
+  void toggleLessonCompletion() {
+    if (!isLearner) return;
+    _isLessonCompleted = !_isLessonCompleted;
+    // TODO: In the future, you'll want to persist this state
+    // using a service to save to local storage or backend
+    notifyListeners();
   }
 
   // Helper method to get file type icon and color

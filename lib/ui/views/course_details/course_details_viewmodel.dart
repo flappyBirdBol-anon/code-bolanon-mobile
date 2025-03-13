@@ -3,11 +3,11 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
-
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
+import 'package:code_bolanon/services/registration_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
-
+import 'package:code_bolanon/services/wishlist_service.dart';
 import 'package:code_bolanon/ui/views/lessons_full/lessons_full_view.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -21,9 +21,16 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   final _lessonsService = locator<LessonsService>();
   final _navigationService = locator<NavigationService>();
   final _dialogService = locator<DialogService>();
+  final _wishlistService = locator<WishlistService>();
+  final _registrationService = locator<RegistrationService>();
+
+  final TextEditingController reviewController = TextEditingController();
+  final TextEditingController reportReasonController = TextEditingController();
+  double userRating = 0;
 
   @override
-  List<ReactiveServiceMixin> get reactiveServices => [_lessonsService];
+  List<ReactiveServiceMixin> get reactiveServices =>
+      [_lessonsService, _wishlistService];
 
   // Filter lessons for this course
   List<Lesson> get courseLessons =>
@@ -51,12 +58,22 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     _course = course;
     setBusy(true);
 
-    if (_course != null) {
-      // Prefetch the course image to ensure it's cached
-      final imageUrl =
-          _imageService.getCourseThumbnailFromPath(_course!.thumbnail);
-      await _imageService.prefetchImage(imageUrl, courseId: _course!.id);
+    if (_course != null && isLearner) {
+      // Load registrations first
+      await _registrationService.loadRegisteredCourses();
+      _isRegistered = _registrationService.isRegistered(_course!.id);
+
+      // Only check wishlist if not registered
+      if (!_isRegistered) {
+        await _wishlistService.getUserWishlist();
+        _isInWishlist = _wishlistService.isInWishlist(_course!.id);
+      }
     }
+
+    // Prefetch the course image to ensure it's cached
+    final imageUrl =
+        _imageService.getCourseThumbnailFromPath(_course!.thumbnail);
+    await _imageService.prefetchImage(imageUrl, courseId: _course!.id);
 
     // Load lessons
     await _loadLessons();
@@ -164,6 +181,17 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   }
 
   void navigateToLessonDetails(Lesson lesson) {
+    // Remove the isLearner check to allow trainers to navigate
+    if (isLearner && !isRegistered) {
+      _dialogService.showDialog(
+        title: 'Access Restricted',
+        description:
+            'Please enroll in this course first to access the learning materials.',
+        buttonTitle: 'OK',
+      );
+      return;
+    }
+
     _navigationService.navigateToLessonDetailsView(lesson: lesson);
   }
 
@@ -226,4 +254,135 @@ class CourseDetailsViewModel extends ReactiveViewModel {
       return '$hours h ${minutes > 0 ? '$minutes min' : ''}';
     }
   }
+
+  bool _isInWishlist = false;
+  bool get isInWishlist => _isInWishlist;
+
+  Future<void> toggleWishlist() async {
+    if (_course == null) return;
+
+    setBusy(true);
+    try {
+      bool success;
+      if (_isInWishlist) {
+        success = await _wishlistService.removeFromWishlist(_course!.id);
+      } else {
+        success = await _wishlistService.addToWishlist(_course!.id);
+      }
+
+      if (success) {
+        _isInWishlist = !_isInWishlist;
+        notifyListeners();
+      } else {
+        throw Exception('Failed to update wishlist');
+      }
+    } catch (e) {
+      await _dialogService.showDialog(
+        title: 'Error',
+        description: 'Failed to update wishlist: ${e.toString()}',
+      );
+    }
+    setBusy(false);
+  }
+
+  Future<void> showRegistrationDialog() async {
+    final response = await _dialogService.showConfirmationDialog(
+      title: 'Register for Course',
+      description: 'Are you sure you want to register for "${course!.title}"?',
+      confirmationTitle: 'Register',
+      cancelTitle: 'Cancel',
+    );
+
+    if (response?.confirmed == true) {
+      try {
+        setBusy(true);
+        final registration =
+            await _registrationService.createRegistration(course!.id);
+
+        await _dialogService.showDialog(
+          title: 'Success',
+          description: 'You have successfully registered for the course!',
+        );
+
+        // Reload the page after successful registration
+        await initialize(course);
+      } catch (e) {
+        await _dialogService.showDialog(
+          title: 'Error',
+          description: 'Failed to register for course: ${e.toString()}',
+        );
+      } finally {
+        setBusy(false);
+      }
+    }
+  }
+
+  void setRating(double rating) {
+    userRating = rating;
+    notifyListeners();
+  }
+
+  Future<void> submitReview() async {
+    if (reviewController.text.isEmpty || userRating == 0) {
+      // Show error message
+      return;
+    }
+    // TODO: Implement review submission logic
+    reviewController.clear();
+    userRating = 0;
+    notifyListeners();
+  }
+
+  Future<void> submitReport() async {
+    if (reportReasonController.text.isEmpty) {
+      // Show error message
+      return;
+    }
+    // TODO: Implement report submission logic
+    reportReasonController.clear();
+    notifyListeners();
+  }
+
+  bool _isReviewSectionExpanded = false;
+  bool get isReviewSectionExpanded => _isReviewSectionExpanded;
+
+  void toggleReviewSection() {
+    _isReviewSectionExpanded = !_isReviewSectionExpanded;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    reviewController.dispose();
+    reportReasonController.dispose();
+    super.dispose();
+  }
+
+  bool get isLearner => _userService.currentUser?.role == 'learner';
+  bool _isRegistered = false;
+  bool get isRegistered => _isRegistered;
+
+  // Add this getter to control review section visibility
+  bool get canWriteReview => isLearner && isRegistered;
+
+  // Add this getter to control visibility of wishlist button
+  bool get showWishlistButton => isLearner && !isRegistered;
+
+  // Update the showEnrollButton getter to check if user is learner
+  bool get showEnrollButton => isLearner;
+
+  // Update the button text based on registration status
+  String get enrollButtonText {
+    if (!isLearner) return '';
+    return isRegistered ? 'Enrolled' : 'Enroll';
+  }
+
+  // Get button icon based on registration status
+  IconData get enrollButtonIcon {
+    if (!isLearner) return Icons.error;
+    return isRegistered ? Icons.check_circle : Icons.shopping_cart_rounded;
+  }
+
+  // Update getter to allow trainers full access
+  bool get canAccessLessons => !isLearner || isRegistered;
 }

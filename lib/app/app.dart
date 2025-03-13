@@ -34,6 +34,8 @@ import 'package:code_bolanon/ui/views/learner_wishlists/learner_wishlists_view.d
 import 'package:code_bolanon/ui/views/payment/payment_view.dart';
 import 'package:code_bolanon/services/payment_service.dart';
 import 'package:code_bolanon/services/stripe_service.dart';
+import 'package:code_bolanon/services/wishlist_service.dart';
+import 'package:code_bolanon/services/registration_service.dart';
 // @stacked-import
 
 @StackedApp(
@@ -73,6 +75,8 @@ import 'package:code_bolanon/services/stripe_service.dart';
     LazySingleton(classType: TagService),
     LazySingleton(classType: PaymentService),
     LazySingleton(classType: StripeService),
+    LazySingleton(classType: WishlistService),
+    LazySingleton(classType: RegistrationService),
 // @stacked-service
   ],
   bottomsheets: [
