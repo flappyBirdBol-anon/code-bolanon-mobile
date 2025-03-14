@@ -220,7 +220,6 @@ class LessonsService with ReactiveServiceMixin {
     }
   }
 
-// Update an existing lesson
   Future<Lesson> updateLesson({
     required int id,
     required String label,

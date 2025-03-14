@@ -57,9 +57,8 @@ class SignupView extends StackedView<SignupViewModel> {
                 controller: viewModel.firstNameController,
                 labelText: 'First name',
                 prefixIcon: Icons.person,
-                validator: (value) => value?.isEmpty ?? true
-                    ? 'Please enter your first name'
-                    : null,
+                errorText: viewModel.firstNameError,
+                onChanged: viewModel.validateFirstName,
               ),
             ),
             const SizedBox(width: 16),
@@ -68,9 +67,8 @@ class SignupView extends StackedView<SignupViewModel> {
                 controller: viewModel.lastNameController,
                 labelText: 'Last name',
                 prefixIcon: Icons.person,
-                validator: (value) => value?.isEmpty ?? true
-                    ? 'Please enter your last name'
-                    : null,
+                errorText: viewModel.lastNameError,
+                onChanged: viewModel.validateLastName,
               ),
             ),
           ],
@@ -81,8 +79,8 @@ class SignupView extends StackedView<SignupViewModel> {
           labelText: 'Enter your email',
           prefixIcon: Icons.email,
           keyboardType: TextInputType.emailAddress,
-          validator: (value) =>
-              value?.isEmpty ?? true ? 'Please enter your email' : null,
+          errorText: viewModel.emailError,
+          onChanged: viewModel.validateEmail,
         ),
         const SizedBox(height: 20), // Increased spacing
         CustomTextField(
@@ -91,10 +89,14 @@ class SignupView extends StackedView<SignupViewModel> {
           prefixIcon: Icons.lock,
           isPassword: true,
           obscureText: !viewModel.isPasswordVisible,
-          onChanged: (p0) => viewModel.notifyListeners(),
+          onChanged: (value) {
+            viewModel.validatePassword(value);
+            viewModel.notifyListeners();
+          },
           onToggleVisibility: viewModel.togglePasswordVisibility,
           focusNode: viewModel.passwordFocusNode,
           onFocusChange: viewModel.updatePasswordFocus,
+          errorText: viewModel.passwordError,
         ),
         const SizedBox(height: 20), // Increased spacing
         CustomTextField(
@@ -102,11 +104,15 @@ class SignupView extends StackedView<SignupViewModel> {
           labelText: 'Confirm your password',
           prefixIcon: Icons.lock,
           isPassword: true,
-          onChanged: (p0) => viewModel.notifyListeners(),
+          onChanged: (value) {
+            viewModel.validateConfirmPassword(value);
+            viewModel.notifyListeners();
+          },
           obscureText: !viewModel.isConfirmPasswordVisible,
           onToggleVisibility: viewModel.toggleConfirmPasswordVisibility,
           focusNode: viewModel.confirmPasswordFocusNode,
           onFocusChange: viewModel.updateConfirmPasswordFocus,
+          errorText: viewModel.confirmPasswordError,
         ),
         const SizedBox(height: 12),
         Visibility(
@@ -151,7 +157,7 @@ class SignupView extends StackedView<SignupViewModel> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary, // Consistent text color
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -165,26 +171,42 @@ class SignupView extends StackedView<SignupViewModel> {
                   'Selected: ${viewModel.selectedTechStacks.length}',
                   style: GoogleFonts.figtree(
                     fontSize: 14,
-                    color: AppColors.primary, // Use darker blue
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 10),
               ],
-              Wrap(
-                spacing: 10.0, // Increased spacing
-                runSpacing: 10.0, // Increased spacing
-                children: [
-                  for (String stack in viewModel.availableTechStacks)
-                    CustomStackChip(
-                      label: stack,
-                      selected: viewModel.selectedTechStacks.contains(stack),
-                      onTap: () => viewModel.toggleTechStack(stack),
-                      icon: Icons.code,
-                      isOutlined: true,
+              if (viewModel.isBusy)
+                const Center(
+                  child: CircularProgressIndicator(),
+                )
+              else
+                Wrap(
+                  spacing: 10.0,
+                  runSpacing: 10.0,
+                  children: [
+                    for (String stack in viewModel.availableTechStacks)
+                      CustomStackChip(
+                        label: stack,
+                        selected: viewModel.isStackSelected(stack),
+                        onTap: () => viewModel.toggleTechStack(stack),
+                        icon: Icons.code,
+                        isOutlined: true,
+                      ),
+                  ],
+                ),
+              if (viewModel.techStackError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    viewModel.techStackError!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 12,
                     ),
-                ],
-              ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -209,17 +231,16 @@ class SignupView extends StackedView<SignupViewModel> {
           controller: viewModel.organizationController,
           labelText: 'Organization',
           prefixIcon: Icons.school,
-          validator: (value) =>
-              value?.isEmpty ?? true ? 'Please enter your organization' : null,
+          errorText: viewModel.organizationError,
+          onChanged: viewModel.validateOrganization,
         ),
         const SizedBox(height: 20), // Increased spacing
         CustomTextField(
           controller: viewModel.specializationController,
           labelText: 'Specialization',
           prefixIcon: Icons.work,
-          validator: (value) => value?.isEmpty ?? true
-              ? 'Please enter your specialization'
-              : null,
+          errorText: viewModel.specializationError,
+          onChanged: viewModel.validateSpecialization,
         ),
         const SizedBox(height: 24),
       ],
@@ -259,7 +280,7 @@ class SignupView extends StackedView<SignupViewModel> {
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
-                      // Navigate to terms and conditions
+                      viewModel.navigateToTermsAndConditions();
                     },
                 ),
                 TextSpan(
@@ -281,10 +302,20 @@ class SignupView extends StackedView<SignupViewModel> {
         children: [
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: () => viewModel.setRole('trainee'),
-              icon: const Icon(Icons.person),
-              label: const Text('Switch to Trainee'),
+              onPressed: () => viewModel.setRole('learner'),
+              icon: const Icon(
+                Icons.person,
+                color: AppColors.primary,
+              ),
+              label: Text(
+                'Switch to Learner', // Updated from 'Trainee' to 'Learner'
+                style: GoogleFonts.figtree(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               style: OutlinedButton.styleFrom(
+                elevation: 1,
                 foregroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 side: BorderSide(color: Colors.grey[400]!),
@@ -299,8 +330,14 @@ class SignupView extends StackedView<SignupViewModel> {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () => viewModel.setRole('trainer'),
-              icon: const Icon(Icons.school),
-              label: const Text('Switch to Trainer'),
+              icon: const Icon(Icons.school, color: AppColors.primary),
+              label: Text(
+                'Switch to Trainer',
+                style: GoogleFonts.figtree(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -336,57 +373,15 @@ class SignupView extends StackedView<SignupViewModel> {
               ),
               elevation: 2,
             ),
-            child: const Text(
+            child: Text(
               'Sign Up',
-              style: TextStyle(
+              style: GoogleFonts.figtree(
                 fontSize: 16, // Larger text
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Divider(
-                  color: Colors.grey[400],
-                  thickness: 1,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'OR',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Divider(
-                  color: Colors.grey[400],
-                  thickness: 1,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: viewModel.signupWithGoogle,
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.grey[400]!),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(Icons.login),
-            label: const Text(
-              'Continue with Google',
-              style: TextStyle(fontSize: 15),
-            ),
-          ),
         ],
       ],
     );

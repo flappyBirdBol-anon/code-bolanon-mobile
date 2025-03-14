@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:code_bolanon/models/user_model.dart';
+import 'package:code_bolanon/models/tech_stack_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stacked/stacked.dart';
@@ -14,22 +15,41 @@ class UserService with ListenableServiceMixin {
       ReactiveValue<UserModel?>(null);
   UserModel? get loggedInUser => _loggedInUser.value;
 
+  final ReactiveValue<List<TechStackModel>> _userTechStacks =
+      ReactiveValue<List<TechStackModel>>([]);
+  List<TechStackModel> get userTechStacks => _userTechStacks.value;
+
   UserService() {
-    listenToReactiveValues([_currentUser]);
+    listenToReactiveValues([_currentUser, _userTechStacks]);
   }
 
   Future<void> fetchUserProfile() async {
     try {
-      final profileData = await getProfile();
-      if (profileData != null) {
-        _currentUser.value = UserModel.fromJson(profileData);
+      final profileResponse = await getProfile();
+      if (profileResponse != null) {
+        // Handle user profile data
+        if (profileResponse['userData'] != null) {
+          _currentUser.value = UserModel.fromJson(profileResponse['userData']);
 
-        // Save to SharedPreferences
+          // Save to SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          final userJson = json.encode(_currentUser.value?.toJson());
+          await prefs.setString('current_user', userJson);
+          _loggedInUser.value = await getUserFromPrefs();
+        }
 
-        final prefs = await SharedPreferences.getInstance();
-        final userJson = json.encode(_currentUser.value?.toJson());
-        await prefs.setString('current_user', userJson);
-        _loggedInUser.value = await getUserFromPrefs();
+        // Handle tech stacks data
+        if (profileResponse['stacks'] != null) {
+          _userTechStacks.value = (profileResponse['stacks'] as List)
+              .map((stack) => TechStackModel.fromJson(stack))
+              .toList();
+
+          // Save tech stacks to SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          final stacksJson = json.encode(
+              _userTechStacks.value.map((stack) => stack.toJson()).toList());
+          await prefs.setString('user_tech_stacks', stacksJson);
+        }
       }
     } catch (e) {
       print('Error fetching user profile: $e');
@@ -53,12 +73,41 @@ class UserService with ListenableServiceMixin {
     }
   }
 
+  Future<TechStackModel?> getUserTechStackFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString('user_tech_stacks');
+
+      if (userJson != null) {
+        final userData = json.decode(userJson);
+
+        return TechStackModel.fromJson(userData);
+      }
+      return null;
+    } catch (e) {
+      print('Error retrieving user tech stack from SharedPreferences: $e');
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> getProfile() async {
     try {
       final response = await ApiService().get('/profile');
 
       if (response.statusCode == 200) {
-        return response.data['data'];
+        final Map<String, dynamic> result = {};
+
+        // Extract user data
+        if (response.data['data'] != null) {
+          result['userData'] = response.data['data'];
+        }
+
+        // Extract tech stacks (if available)
+        if (response.data['stacks'] != null) {
+          result['stacks'] = response.data['stacks'];
+        }
+
+        return result;
       }
       return null;
     } catch (e) {
@@ -67,8 +116,27 @@ class UserService with ListenableServiceMixin {
     }
   }
 
-  Future<Map<String, dynamic>> updatePassword(String oldPassword,
-      String newPassword, String newPasswordConfirmation) async {
+  // Get tech stacks from shared preferences
+  Future<List<TechStackModel>> getTechStacksFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final stacksJson = prefs.getString('user_tech_stacks');
+
+      if (stacksJson != null) {
+        final List<dynamic> stacksData = json.decode(stacksJson);
+        return stacksData
+            .map((stack) => TechStackModel.fromJson(stack))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error retrieving tech stacks from SharedPreferences: $e');
+      return [];
+    }
+  }
+
+  Future<bool> updatePassword(String oldPassword, String newPassword,
+      String newPasswordConfirmation) async {
     try {
       final userId = _currentUser.value?.id;
       if (userId == null) {

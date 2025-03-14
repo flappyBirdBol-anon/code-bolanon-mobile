@@ -3,6 +3,7 @@ import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingViewModel extends BaseViewModel {
   final _navigationService = NavigationService();
@@ -46,8 +47,9 @@ class OnboardingViewModel extends BaseViewModel {
     );
   }
 
-  void navigateToAuth() {
-    // Replace with your actual route name
+  void navigateToAuth() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_onboarding', true);
     _navigationService.navigateTo(Routes.authView);
   }
 

@@ -7,8 +7,6 @@ import 'package:stacked_services/stacked_services.dart';
 import '../../../../app/app.locator.dart';
 import '../../../../services/auth_service.dart';
 
-// Import the SnackbarType enum
-
 class LoginViewModel extends BaseViewModel {
   final _authService = locator<AuthService>();
   final _navigationService = locator<NavigationService>();
@@ -16,6 +14,9 @@ class LoginViewModel extends BaseViewModel {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
+  String? emailError;
+  String? passwordError;
 
   bool _isPasswordVisible = false;
   bool get isPasswordVisible => _isPasswordVisible;
@@ -28,7 +29,28 @@ class LoginViewModel extends BaseViewModel {
     notifyListeners();
   }
 
+  void validateEmailField(String value) {
+    if (emailError != null && value.isNotEmpty) {
+      emailError = null;
+      notifyListeners();
+    }
+  }
+
+  void validatePasswordField(String value) {
+    if (passwordError != null && value.isNotEmpty) {
+      passwordError = null;
+      notifyListeners();
+    }
+  }
+
+  void clearErrors() {
+    emailError = null;
+    passwordError = null;
+    notifyListeners();
+  }
+
   Future<void> login() async {
+    clearErrors();
     setBusy(true);
     if (!_validateInputs()) {
       setBusy(false);
@@ -47,7 +69,7 @@ class LoginViewModel extends BaseViewModel {
         );
 
         // Wait a moment to show the success message before navigating
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 1000));
         await _navigationService.clearStackAndShow(Routes.mainBodyView);
       } else {
         // Show error message with custom error snackbar
@@ -61,9 +83,18 @@ class LoginViewModel extends BaseViewModel {
     } catch (e) {
       // Handle any errors with custom error snackbar
       print('An error occurred during login: $e');
+      String errorMessage;
+
+      if (e is Exception) {
+        var message = e.toString().split('\n')[0]; // Extract first line
+        errorMessage = message.replaceAll("Exception", "");
+      } else {
+        errorMessage = 'An unexpected error occurred.';
+      }
+
       _snackbarService.showCustomSnackBar(
         variant: SnackbarType.error,
-        message: 'Login error: ${e.toString().split('\n')[0]}',
+        message: 'Login error: $errorMessage',
         duration: const Duration(seconds: 3),
       );
     } finally {
@@ -104,19 +135,23 @@ class LoginViewModel extends BaseViewModel {
   }
 
   void navigateToForgotPassword() {
-    _navigationService.navigateTo('/forgot-password');
+    _navigationService.navigateTo(Routes.forgotPasswordView);
   }
 
   bool _validateInputs() {
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      _snackbarService.showCustomSnackBar(
-        variant: SnackbarType.info,
-        message: 'Please fill in all fields',
-        duration: const Duration(seconds: 2),
-      );
-      return false;
+    bool isValid = true;
+    if (emailController.text.isEmpty) {
+      emailError = 'Please enter your email';
+      isValid = false;
     }
-    return true;
+
+    if (passwordController.text.isEmpty) {
+      passwordError = 'Please enter your password';
+      isValid = false;
+    }
+
+    notifyListeners();
+    return isValid;
   }
 
   @override

@@ -1,20 +1,34 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ThemeService {
+class ThemeService extends ChangeNotifier {
   static const String _themeKey = 'dark_theme';
-  final _prefs = SharedPreferences.getInstance();
-
+  SharedPreferences? _prefs;
   bool _isDarkTheme = false;
+
   bool get isDarkTheme => _isDarkTheme;
 
   Future<void> initialize() async {
-    final prefs = await _prefs;
-    _isDarkTheme = prefs.getBool(_themeKey) ?? false;
+    try {
+      _prefs = await SharedPreferences.getInstance();
+      _isDarkTheme = _prefs?.getBool(_themeKey) ?? false;
+      notifyListeners();
+    } catch (e) {
+      print('Error initializing theme service: $e');
+      _isDarkTheme = false;
+    }
   }
 
   Future<void> toggleTheme() async {
-    final prefs = await _prefs;
-    _isDarkTheme = !_isDarkTheme;
-    await prefs.setBool(_themeKey, _isDarkTheme);
+    try {
+      _isDarkTheme = !_isDarkTheme;
+      await _prefs?.setBool(_themeKey, _isDarkTheme);
+      notifyListeners();
+    } catch (e) {
+      print('Error toggling theme: $e');
+      // Revert the change if saving fails
+      _isDarkTheme = !_isDarkTheme;
+      notifyListeners();
+    }
   }
 }

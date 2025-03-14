@@ -14,6 +14,9 @@ import 'test_helpers.mocks.dart';
 import 'package:code_bolanon/services/file_service.dart';
 import 'package:code_bolanon/services/payment_service.dart';
 import 'package:code_bolanon/services/stripe_service.dart';
+import 'package:code_bolanon/services/forgot_password_service.dart';
+import 'package:code_bolanon/services/tech_stack_service.dart';
+import 'package:code_bolanon/services/analytics_service.dart';
 import 'package:code_bolanon/services/wishlist_service.dart';
 import 'package:code_bolanon/services/registration_service.dart';
 // @stacked-import
@@ -34,6 +37,9 @@ import 'package:code_bolanon/services/registration_service.dart';
     MockSpec<FileService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<PaymentService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<StripeService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<ForgotPasswordService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<TechStackService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<AnalyticsService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<WishlistService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<RegistrationService>(onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
@@ -53,6 +59,9 @@ void registerServices() {
   getAndRegisterFileService();
   getAndRegisterPaymentService();
   getAndRegisterStripeService();
+  getAndRegisterForgotPasswordService();
+  getAndRegisterTechStackService();
+  getAndRegisterAnalyticsService();
   getAndRegisterWishlistService();
   getAndRegisterRegistrationService();
 // @stacked-mock-register
@@ -179,6 +188,27 @@ MockStripeService getAndRegisterStripeService() {
   _removeRegistrationIfExists<StripeService>();
   final service = MockStripeService();
   locator.registerSingleton<StripeService>(service);
+  return service;
+}
+
+MockForgotPasswordService getAndRegisterForgotPasswordService() {
+  _removeRegistrationIfExists<ForgotPasswordService>();
+  final service = MockForgotPasswordService();
+  locator.registerSingleton<ForgotPasswordService>(service);
+  return service;
+}
+
+MockTechStackService getAndRegisterTechStackService() {
+  _removeRegistrationIfExists<TechStackService>();
+  final service = MockTechStackService();
+  locator.registerSingleton<TechStackService>(service);
+  return service;
+}
+
+MockAnalyticsService getAndRegisterAnalyticsService() {
+  _removeRegistrationIfExists<AnalyticsService>();
+  final service = MockAnalyticsService();
+  locator.registerSingleton<AnalyticsService>(service);
   return service;
 }
 

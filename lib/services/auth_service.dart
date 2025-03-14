@@ -2,6 +2,7 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stacked/stacked.dart';
 
@@ -26,23 +27,47 @@ class AuthService with ListenableServiceMixin {
       });
 
       if (response.statusCode == 200) {
-        final token = response.data['token'] ?? response.data['access_token'];
+        final token = response.data['token'];
         if (token != null) {
           await _apiService.setAuthToken(token);
           await _userService.fetchUserProfile();
           return true;
+        } else {
+          // Token is unexpectedly null, handle this case
+          print('Login successful but token is null');
+          return false;
         }
+      } else if (response.statusCode == 401) {
+        // Incorrect credentials
+        print('Login failed: Incorrect credentials');
+        print('Response data: ${response.data}');
+        throw Exception(response.data['message'] ??
+            'Incorrect credentials'); // Or a custom exception
+      } else if (response.statusCode == 403) {
+        // Unverified user
+        print('Login failed: User unverified');
+        print('Response data: ${response.data}');
+        throw Exception(response.data['message'] ??
+            'User unverified'); // Or a custom exception
+      } else {
+        // Other error codes
+        print('Login failed with status: ${response.statusCode}');
+        print('Response data: ${response.data}');
+        throw Exception(
+            'Login failed with status code: ${response.statusCode}'); // Generic exception
       }
-      print('Login failed with status: ${response.statusCode}');
-      print('Response data: ${response.data}');
-      return false;
+    } on DioException catch (e) {
+      // DioError handles network errors, timeouts, etc.
+      print('DioError during login: $e');
+      rethrow; // Re-throw to allow the calling code to handle the error
     } catch (e) {
+      // Catch any other unexpected errors
       print('Login error: $e');
       rethrow;
     }
   }
 
-  Future<bool> register(
+  Future<Map<String, dynamic>> register(
       String firstName,
       String lastName,
       String email,
@@ -60,23 +85,70 @@ class AuthService with ListenableServiceMixin {
         'role': role,
         'specialization': specialization,
         'organization': organization,
-        'tech_stacks': selectedTechStacks,
+        'stack_ids':
+            selectedTechStacks.map((stack) => int.parse(stack)).toList(),
       });
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final token = response.data['token'] ?? response.data['access_token'];
-        if (token != null) {
-          await _apiService.setAuthToken(token);
-          // Fetch user profile after successful registration
-          await _userService.fetchUserProfile();
-          return true;
-        }
+      return handleRegistrationResponse(response);
+    } on DioException catch (e) {
+      print('Registration DioError: $e');
+      // Extract error message from response if available
+      if (e.response != null) {
+        return {
+          'success': false,
+          'message': e.response?.data['message'] ?? 'Registration failed',
+          'errors': e.response?.data['errors']
+        };
       }
-      return false;
+      return {
+        'success': false,
+        'message': e.message ?? 'Network error during registration'
+      };
     } catch (e) {
       print('Registration error: $e');
-      rethrow;
+      return {'success': false, 'message': 'An unexpected error occurred'};
     }
+  }
+
+  Map<String, dynamic> handleRegistrationResponse(dynamic response) {
+    if (response.statusCode == 201) {
+      // Registration successful, but user needs to verify email
+      return {
+        'success': true,
+        'message': response.data['message'] ??
+            'Registration successful, please verify your email'
+      };
+    }
+
+    //not 201 response, validation error or endpoint error
+    String errorMessage = 'An unexpected error occurred.';
+    if (response.data is List && response.data.isNotEmpty) {
+      //if it has message key
+      final firstError = response.data.first;
+      if (firstError is Map) {
+        //get first err
+        final firstKey = firstError.keys.first;
+        if (firstError[firstKey] is List &&
+            (firstError[firstKey] as List).isNotEmpty) {
+          errorMessage = (firstError[firstKey] as List).first;
+        } else if (firstError[firstKey] is String) {
+          errorMessage = firstError[firstKey];
+        } else {
+          errorMessage = firstError.toString();
+        }
+      } else {
+        errorMessage = firstError.toString();
+      }
+    } else if (response.data is String) {
+      errorMessage = response.data;
+    } else {
+      errorMessage = response.data.toString();
+    }
+//return data, safe since it has default value
+    return {
+      'success': false,
+      'message': errorMessage,
+    };
   }
 
   Future<bool> logout() async {

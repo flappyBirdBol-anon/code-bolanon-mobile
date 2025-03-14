@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomStackChip extends StatelessWidget {
@@ -44,7 +45,7 @@ class CustomStackChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected
                 ? (isDark
-                    ? defaultColor.withOpacity(0.2)
+                    ? AppColors.primary.withOpacity(0.2)
                     : defaultColor.withOpacity(0.1))
                 : isOutlined
                     ? Colors.transparent
@@ -53,7 +54,7 @@ class CustomStackChip extends StatelessWidget {
             border: isOutlined
                 ? Border.all(
                     color: selected
-                        ? defaultColor.withOpacity(isDark ? 0.5 : 0.3)
+                        ? AppColors.primary.withOpacity(isDark ? 0.5 : 0.3)
                         : Colors.grey.withOpacity(0.5),
                     width: 1,
                   )
@@ -61,7 +62,7 @@ class CustomStackChip extends StatelessWidget {
             boxShadow: isOutlined
                 ? [
                     BoxShadow(
-                      color: defaultColor.withOpacity(0.1),
+                      color: AppColors.primary.withOpacity(0.1),
                       offset: const Offset(0, 1),
                       blurRadius: 2,
                     ),
@@ -76,7 +77,9 @@ class CustomStackChip extends StatelessWidget {
                   icon,
                   size: 16,
                   color: selected
-                      ? (isDark ? defaultColor.withOpacity(0.9) : defaultColor)
+                      ? (isDark
+                          ? AppColors.primary.withOpacity(0.9)
+                          : AppColors.primary)
                       : Colors.grey[600],
                 ),
                 const SizedBox(width: 8),
@@ -85,7 +88,9 @@ class CustomStackChip extends StatelessWidget {
                 label,
                 style: effectiveTextStyle?.copyWith(
                   color: selected
-                      ? (isDark ? defaultColor.withOpacity(0.9) : defaultColor)
+                      ? (isDark
+                          ? AppColors.primary.withOpacity(0.9)
+                          : AppColors.primary)
                       : Colors.grey[800],
                 ),
               ),

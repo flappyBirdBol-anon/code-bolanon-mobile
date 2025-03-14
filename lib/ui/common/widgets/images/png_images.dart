@@ -9,6 +9,8 @@ class PngImages {
 
   static const String mentorAnim = '${_anim_root}mentor_animation.json';
 
+  static const String forgotAnim = '${_anim_root}forgot_pass_animation.json';
+
   static const String codingAnim = '${_anim_root}coding_animation.json';
 
   static const String logo = '${_root}logo.svg';

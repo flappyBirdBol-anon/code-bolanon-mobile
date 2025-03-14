@@ -34,8 +34,13 @@ import 'package:code_bolanon/ui/views/learner_wishlists/learner_wishlists_view.d
 import 'package:code_bolanon/ui/views/payment/payment_view.dart';
 import 'package:code_bolanon/services/payment_service.dart';
 import 'package:code_bolanon/services/stripe_service.dart';
-import 'package:code_bolanon/services/wishlist_service.dart';
-import 'package:code_bolanon/services/registration_service.dart';
+import 'package:code_bolanon/ui/views/forgot_password/forgot_password_view.dart';
+import 'package:code_bolanon/services/forgot_password_service.dart';
+import 'package:code_bolanon/ui/views/tos/tos_view.dart';
+import 'package:code_bolanon/services/tech_stack_service.dart';
+import 'package:code_bolanon/ui/views/trainer_analytics/trainer_analytics_view.dart';
+import 'package:code_bolanon/services/analytics_service.dart';
+import 'package:code_bolanon/ui/dialogs/metric_selection/metric_selection_dialog.dart';
 // @stacked-import
 
 @StackedApp(
@@ -57,6 +62,9 @@ import 'package:code_bolanon/services/registration_service.dart';
     MaterialRoute(page: LearnerCoursesView),
     MaterialRoute(page: LearnerWishlistsView),
     MaterialRoute(page: PaymentView),
+    MaterialRoute(page: ForgotPasswordView),
+    MaterialRoute(page: TosView),
+    MaterialRoute(page: TrainerAnalyticsView),
 // @stacked-route
   ],
   dependencies: [
@@ -75,8 +83,9 @@ import 'package:code_bolanon/services/registration_service.dart';
     LazySingleton(classType: TagService),
     LazySingleton(classType: PaymentService),
     LazySingleton(classType: StripeService),
-    LazySingleton(classType: WishlistService),
-    LazySingleton(classType: RegistrationService),
+    LazySingleton(classType: ForgotPasswordService),
+    LazySingleton(classType: TechStackService),
+    LazySingleton(classType: AnalyticsService),
 // @stacked-service
   ],
   bottomsheets: [
@@ -89,6 +98,7 @@ import 'package:code_bolanon/services/registration_service.dart';
     StackedDialog(classType: SuccessDialog),
     StackedDialog(classType: ErrorDialog),
     StackedDialog(classType: WarningDialog),
+    StackedDialog(classType: MetricSelectionDialog),
     // @stacked-dialog
   ],
 )

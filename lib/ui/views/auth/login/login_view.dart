@@ -1,6 +1,7 @@
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 
 import 'login_viewmodel.dart';
@@ -29,13 +30,9 @@ class LoginView extends StackedView<LoginViewModel> {
                 controller: viewModel.emailController,
                 labelText: 'Enter your email',
                 prefixIcon: Icons.email,
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Please enter your email';
-                  }
-                  return null;
-                },
                 keyboardType: TextInputType.emailAddress,
+                errorText: viewModel.emailError,
+                onChanged: viewModel.validateEmailField,
               ),
               const SizedBox(height: 20), // Increased spacing
               CustomTextField(
@@ -45,6 +42,8 @@ class LoginView extends StackedView<LoginViewModel> {
                 isPassword: true,
                 obscureText: !viewModel.isPasswordVisible,
                 onToggleVisibility: viewModel.togglePasswordVisibility,
+                errorText: viewModel.passwordError,
+                onChanged: viewModel.validatePasswordField,
               ),
               Align(
                 alignment: Alignment.centerRight,
@@ -83,9 +82,9 @@ class LoginView extends StackedView<LoginViewModel> {
                     ),
                     elevation: 2,
                   ),
-                  child: const Text(
+                  child: Text(
                     'Login',
-                    style: TextStyle(
+                    style: GoogleFonts.figtree(
                       fontSize: 16, // Larger text
                       fontWeight: FontWeight.bold,
                     ),

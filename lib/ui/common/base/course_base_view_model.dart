@@ -2,6 +2,7 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/course_model.dart';
+// import 'package:code_bolanon/models/course_param.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
@@ -191,13 +192,11 @@ abstract class CourseBaseViewModel extends BaseViewModel
   // Template method to be implemented by subclasses
   bool filterCourse(CourseModel course);
 
-  @override
   Future<void> handleInitialItems(List<CourseModel> items) async {
     _courses = items;
     applyFilters();
   }
 
-  @override
   Future<void> handleMoreItems(List<CourseModel> items) async {
     _courses.addAll(items);
     applyFilters();

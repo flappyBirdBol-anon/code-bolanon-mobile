@@ -25,7 +25,7 @@ class FileService {
       {}; // Track file paths with extensions
 
   FileService({
-    this.baseUrl = 'http://143.198.197.240/api',
+    this.baseUrl = 'http://codebolanon.commesr.io/api',
     ApiService? apiService,
     Dio? dioo,
     this.enableCache = true,
@@ -53,7 +53,6 @@ class FileService {
     return getFileUrl(lesson.fileName!);
   }
 
-  // Helper method to get file extension
   String _getFileExtension(String fileName) {
     return path.extension(fileName).toLowerCase();
   }

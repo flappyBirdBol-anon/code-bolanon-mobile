@@ -21,6 +21,7 @@ class CourseModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final int? lessonCount;
+  final String? author;
 
   CourseModel({
     required this.id,
@@ -39,6 +40,7 @@ class CourseModel {
     this.createdAt,
     this.updatedAt,
     this.lessonCount,
+    this.author,
   });
 
   factory CourseModel.fromJson(Map<String, dynamic> json) {
@@ -68,6 +70,7 @@ class CourseModel {
           ? DateTime.parse(json['updated_at'])
           : null,
       lessonCount: json['lessons_count'],
+      author: json['author'],
     );
   }
 
@@ -102,6 +105,7 @@ class CourseModel {
     DateTime? createdAt,
     DateTime? updatedAt,
     int? lessonCount,
+    String? author,
   }) {
     return CourseModel(
       id: id ?? this.id,
@@ -118,6 +122,7 @@ class CourseModel {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lessonCount: lessonCount ?? this.lessonCount,
+      author: author ?? this.author,
     );
   }
 

@@ -1,4 +1,3 @@
-// lib/services/api_service.dart
 import 'dart:math';
 
 import 'package:dio/dio.dart';
@@ -11,7 +10,7 @@ import '../models/transaction_model.dart';
 
 class ApiService {
   static ApiService? _instance;
-  final String baseUrl = 'http://143.198.197.240/api';
+  final String baseUrl = 'http://codebolanon.commesr.io/api';
   late Dio _dio;
   Dio get dio => _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();

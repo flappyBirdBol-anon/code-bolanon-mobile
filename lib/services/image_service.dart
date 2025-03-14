@@ -1,4 +1,3 @@
-// lib/services/image_service.dart
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:code_bolanon/app/app.locator.dart';
@@ -28,7 +27,7 @@ class ImageService {
   bool _isBatchCaching = false;
 
   ImageService({
-    this.baseUrl = 'http://143.198.197.240/api',
+    this.baseUrl = 'http://codebolanon.commesr.io/api',
     ApiService? apiService,
     Dio? dioo,
     this.enableCache = true,

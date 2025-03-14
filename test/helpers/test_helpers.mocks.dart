@@ -12,18 +12,22 @@ import 'package:code_bolanon/models/course_model.dart' as _i3;
 import 'package:code_bolanon/models/course_param.dart' as _i28;
 import 'package:code_bolanon/models/lessons_model.dart' as _i6;
 import 'package:code_bolanon/models/registration_model.dart' as _i18;
+import 'package:code_bolanon/models/tech_stack_model.dart' as _i32;
 import 'package:code_bolanon/models/transaction_model.dart' as _i16;
 import 'package:code_bolanon/models/user_model.dart' as _i24;
 import 'package:code_bolanon/models/wishlist_model.dart' as _i19;
+import 'package:code_bolanon/services/analytics_service.dart' as _i33;
 import 'package:code_bolanon/services/api_service.dart' as _i4;
 import 'package:code_bolanon/services/auth_service.dart' as _i12;
 import 'package:code_bolanon/services/course_service.dart' as _i17;
 import 'package:code_bolanon/services/file_service.dart' as _i26;
+import 'package:code_bolanon/services/forgot_password_service.dart' as _i30;
 import 'package:code_bolanon/services/image_service.dart' as _i20;
 import 'package:code_bolanon/services/lesson_service.dart' as _i25;
 import 'package:code_bolanon/services/payment_service.dart' as _i27;
 import 'package:code_bolanon/services/registration_service.dart' as _i31;
 import 'package:code_bolanon/services/stripe_service.dart' as _i29;
+import 'package:code_bolanon/services/tech_stack_service.dart' as _i31;
 import 'package:code_bolanon/services/theme_service.dart' as _i13;
 import 'package:code_bolanon/services/user_service.dart' as _i23;
 import 'package:code_bolanon/services/wishlist_service.dart' as _i30;
@@ -822,7 +826,7 @@ class MockAuthService extends _i1.Mock implements _i12.AuthService {
       ) as _i10.Future<bool>);
 
   @override
-  _i10.Future<bool> register(
+  _i10.Future<Map<String, dynamic>> register(
     String? firstName,
     String? lastName,
     String? email,
@@ -846,9 +850,22 @@ class MockAuthService extends _i1.Mock implements _i12.AuthService {
             organization,
           ],
         ),
-        returnValue: _i10.Future<bool>.value(false),
-        returnValueForMissingStub: _i10.Future<bool>.value(false),
-      ) as _i10.Future<bool>);
+        returnValue:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+        returnValueForMissingStub:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i10.Future<Map<String, dynamic>>);
+
+  @override
+  Map<String, dynamic> handleRegistrationResponse(dynamic response) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #handleRegistrationResponse,
+          [response],
+        ),
+        returnValue: <String, dynamic>{},
+        returnValueForMissingStub: <String, dynamic>{},
+      ) as Map<String, dynamic>);
 
   @override
   _i10.Future<bool> logout() => (super.noSuchMethod(
@@ -930,6 +947,13 @@ class MockThemeService extends _i1.Mock implements _i13.ThemeService {
       ) as bool);
 
   @override
+  bool get hasListeners => (super.noSuchMethod(
+        Invocation.getter(#hasListeners),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
   _i10.Future<void> initialize() => (super.noSuchMethod(
         Invocation.method(
           #initialize,
@@ -948,6 +972,42 @@ class MockThemeService extends _i1.Mock implements _i13.ThemeService {
         returnValue: _i10.Future<void>.value(),
         returnValueForMissingStub: _i10.Future<void>.value(),
       ) as _i10.Future<void>);
+
+  @override
+  void addListener(_i11.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(_i11.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [ApiService].
@@ -1261,6 +1321,7 @@ class MockApiService extends _i1.Mock implements _i4.ApiService {
     required String? currency,
     required String? courseId,
     String? paymentMethodId,
+    String? paymentMethodId,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -1270,6 +1331,7 @@ class MockApiService extends _i1.Mock implements _i4.ApiService {
             #amount: amount,
             #currency: currency,
             #courseId: courseId,
+            #paymentMethodId: paymentMethodId,
             #paymentMethodId: paymentMethodId,
           },
         ),
@@ -2906,10 +2968,38 @@ class MockPaymentService extends _i1.Mock implements _i27.PaymentService {
     required String? cvv,
     required String? cardHolderName,
     bool? useGooglePay = false,
+    bool? useGooglePay = false,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
           #processStripePayment,
+          [],
+          {
+            #course: course,
+            #cardNumber: cardNumber,
+            #expiryDate: expiryDate,
+            #cvv: cvv,
+            #cardHolderName: cardHolderName,
+            #useGooglePay: useGooglePay,
+          },
+        ),
+        returnValue:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+        returnValueForMissingStub:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i10.Future<Map<String, dynamic>>);
+
+  @override
+  _i10.Future<Map<String, dynamic>> processManualCardPayment({
+    required _i28.CourseParam? course,
+    required String? cardNumber,
+    required String? expiryDate,
+    required String? cvv,
+    required String? cardHolderName,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #processManualCardPayment,
           [],
           {
             #course: course,
@@ -2995,6 +3085,15 @@ class MockPaymentService extends _i1.Mock implements _i27.PaymentService {
   void cleanUp() => super.noSuchMethod(
         Invocation.method(
           #cleanUp,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
           [],
         ),
         returnValueForMissingStub: null,

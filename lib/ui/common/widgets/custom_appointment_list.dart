@@ -10,7 +10,7 @@ class CustomAppointmentList extends StatelessWidget {
   final VoidCallback onTap;
   final bool isLoading;
   final Color? customColor;
-  final int? studentsEnrolled; // Optional - only for trainer view
+  final int? learnersEnrolled; // Optional - only for trainer view
   final bool isTrainerView; // New property to determine view type
 
   const CustomAppointmentList({
@@ -22,7 +22,7 @@ class CustomAppointmentList extends StatelessWidget {
     required this.onTap,
     this.isLoading = false,
     this.customColor,
-    this.studentsEnrolled,
+    this.learnersEnrolled,
     this.isTrainerView = false, // Default to learner view
   }) : super(key: key);
 
@@ -177,7 +177,7 @@ class CustomAppointmentList extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${studentsEnrolled ?? 0} students enrolled',
+                  '${learnersEnrolled ?? 0} learners enrolled',
                   style: GoogleFonts.inter(
                     color: isDark
                         ? Colors.white.withOpacity(0.8)
