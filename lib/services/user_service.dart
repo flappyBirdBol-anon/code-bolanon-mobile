@@ -135,8 +135,8 @@ class UserService with ListenableServiceMixin {
     }
   }
 
-  Future<bool> updatePassword(String oldPassword, String newPassword,
-      String newPasswordConfirmation) async {
+  Future<Map<String, dynamic>> updatePassword(String oldPassword,
+      String newPassword, String newPasswordConfirmation) async {
     try {
       final userId = _currentUser.value?.id;
       if (userId == null) {

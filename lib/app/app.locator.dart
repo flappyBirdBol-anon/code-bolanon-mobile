@@ -58,4 +58,6 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => ForgotPasswordService());
   locator.registerLazySingleton(() => TechStackService());
   locator.registerLazySingleton(() => AnalyticsService());
+  locator.registerLazySingleton(() => WishlistService());
+  locator.registerLazySingleton(() => RegistrationService());
 }

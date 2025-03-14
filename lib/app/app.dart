@@ -41,6 +41,9 @@ import 'package:code_bolanon/services/tech_stack_service.dart';
 import 'package:code_bolanon/ui/views/trainer_analytics/trainer_analytics_view.dart';
 import 'package:code_bolanon/services/analytics_service.dart';
 import 'package:code_bolanon/ui/dialogs/metric_selection/metric_selection_dialog.dart';
+
+import 'package:code_bolanon/services/wishlist_service.dart';
+import 'package:code_bolanon/services/registration_service.dart';
 // @stacked-import
 
 @StackedApp(
@@ -86,6 +89,9 @@ import 'package:code_bolanon/ui/dialogs/metric_selection/metric_selection_dialog
     LazySingleton(classType: ForgotPasswordService),
     LazySingleton(classType: TechStackService),
     LazySingleton(classType: AnalyticsService),
+
+    LazySingleton(classType: WishlistService),
+    LazySingleton(classType: RegistrationService),
 // @stacked-service
   ],
   bottomsheets: [

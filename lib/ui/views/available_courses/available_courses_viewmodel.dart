@@ -5,6 +5,7 @@ import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/registration_service.dart';
+
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/common/base/course_base_view_model.dart';
 import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';

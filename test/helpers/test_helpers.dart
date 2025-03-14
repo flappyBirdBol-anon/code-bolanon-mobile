@@ -10,15 +10,17 @@ import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
 
-import 'test_helpers.mocks.dart';
 import 'package:code_bolanon/services/file_service.dart';
 import 'package:code_bolanon/services/payment_service.dart';
 import 'package:code_bolanon/services/stripe_service.dart';
 import 'package:code_bolanon/services/forgot_password_service.dart';
 import 'package:code_bolanon/services/tech_stack_service.dart';
 import 'package:code_bolanon/services/analytics_service.dart';
+
 import 'package:code_bolanon/services/wishlist_service.dart';
 import 'package:code_bolanon/services/registration_service.dart';
+
+import 'test_helpers.mocks.dart';
 // @stacked-import
 
 @GenerateMocks(
@@ -40,6 +42,7 @@ import 'package:code_bolanon/services/registration_service.dart';
     MockSpec<ForgotPasswordService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<TechStackService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<AnalyticsService>(onMissingStub: OnMissingStub.returnDefault),
+
     MockSpec<WishlistService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<RegistrationService>(onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
@@ -61,7 +64,7 @@ void registerServices() {
   getAndRegisterStripeService();
   getAndRegisterForgotPasswordService();
   getAndRegisterTechStackService();
-  getAndRegisterAnalyticsService();
+
   getAndRegisterWishlistService();
   getAndRegisterRegistrationService();
 // @stacked-mock-register
@@ -204,28 +207,6 @@ MockTechStackService getAndRegisterTechStackService() {
   locator.registerSingleton<TechStackService>(service);
   return service;
 }
-
-MockAnalyticsService getAndRegisterAnalyticsService() {
-  _removeRegistrationIfExists<AnalyticsService>();
-  final service = MockAnalyticsService();
-  locator.registerSingleton<AnalyticsService>(service);
-  return service;
-}
-
-MockWishlistService getAndRegisterWishlistService() {
-  _removeRegistrationIfExists<WishlistService>();
-  final service = MockWishlistService();
-  locator.registerSingleton<WishlistService>(service);
-  return service;
-}
-
-MockRegistrationService getAndRegisterRegistrationService() {
-  _removeRegistrationIfExists<RegistrationService>();
-  final service = MockRegistrationService();
-  locator.registerSingleton<RegistrationService>(service);
-  return service;
-}
-// @stacked-mock-create
 
 void _removeRegistrationIfExists<T extends Object>() {
   if (locator.isRegistered<T>()) {
