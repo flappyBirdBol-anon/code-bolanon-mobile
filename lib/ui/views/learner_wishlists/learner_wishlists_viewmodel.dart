@@ -26,7 +26,7 @@ class LearnerWishlistsViewModel extends BaseViewModel {
       lessons: 10,
       wishlist: WishlistModel(
         id: '1',
-        courseId: 1,
+        courseId: '1', // Changed from int to String
         userId: 1,
       ),
     ),
@@ -39,7 +39,7 @@ class LearnerWishlistsViewModel extends BaseViewModel {
       lessons: 15,
       wishlist: WishlistModel(
         id: '2',
-        courseId: 2,
+        courseId: '2', // Changed from int to String
         userId: 1,
       ),
     ),
@@ -71,19 +71,33 @@ class LearnerWishlistsViewModel extends BaseViewModel {
     }
   }
 
-  Future<void> removeFromWishlist(CourseModel course) async {
+  Future<void> toggleWishlist(CourseModel course) async {
     try {
-      if (course.wishlist == null) return;
-
-      final success =
-          await _wishlistService.removeFromWishlist(course.wishlist!.id);
-      if (success) {
-        _wishlistedCourses.removeWhere((c) => c.id == course.id);
-        notifyListeners();
+      final result = await _wishlistService.toggleWishlist(course.id);
+      if (result['success']) {
+        await refreshCourses();
+        // You can use the message here if needed
+        debugPrint(result['message']);
       }
     } catch (e) {
-      debugPrint('Error removing from wishlist: $e');
+      debugPrint('Error toggling wishlist: $e');
       setError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> removeFromWishlist(CourseModel course) async {
+    try {
+      setBusy(true);
+      await _wishlistService.removeFromWishlist(course.id);
+      // Update local list instead of refreshing
+      _wishlistedCourses.removeWhere((c) => c.id == course.id);
+      notifyListeners();
+      return {'success': true, 'message': 'Successfully removed from wishlist'};
+    } catch (e) {
+      debugPrint('Error removing from wishlist: $e');
+      return {'success': false, 'message': 'Failed to remove from wishlist'};
+    } finally {
+      setBusy(false);
     }
   }
 

@@ -1,6 +1,6 @@
 class WishlistModel {
   final String id;
-  final int courseId;
+  final String courseId;
   final int userId;
   final DateTime? createdAt;
 
@@ -13,9 +13,11 @@ class WishlistModel {
 
   factory WishlistModel.fromJson(Map<String, dynamic> json) {
     return WishlistModel(
-      id: json['id'],
-      courseId: json['course_id'],
-      userId: json['user_id'],
+      id: json['id'].toString(),
+      courseId: json['course_id'].toString(),
+      userId: json['user_id'] is String
+          ? int.parse(json['user_id'])
+          : json['user_id'],
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : null,
@@ -33,7 +35,7 @@ class WishlistModel {
 
   WishlistModel copyWith({
     String? id,
-    int? courseId,
+    String? courseId,
     int? userId,
     DateTime? createdAt,
   }) {

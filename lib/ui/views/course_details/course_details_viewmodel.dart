@@ -258,31 +258,26 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   bool _isInWishlist = false;
   bool get isInWishlist => _isInWishlist;
 
-  Future<void> toggleWishlist() async {
-    if (_course == null) return;
+  Future<Map<String, dynamic>?> toggleWishlist() async {
+    if (_course == null) return null;
 
     setBusy(true);
     try {
-      bool success;
-      if (_isInWishlist) {
-        success = await _wishlistService.removeFromWishlist(_course!.id);
-      } else {
-        success = await _wishlistService.addToWishlist(_course!.id);
-      }
-
-      if (success) {
+      final result = await _wishlistService.toggleWishlist(_course!.id);
+      if (result['success']) {
         _isInWishlist = !_isInWishlist;
         notifyListeners();
-      } else {
-        throw Exception('Failed to update wishlist');
       }
+      setBusy(false);
+      return result;
     } catch (e) {
+      setBusy(false);
       await _dialogService.showDialog(
         title: 'Error',
         description: 'Failed to update wishlist: ${e.toString()}',
       );
+      return null;
     }
-    setBusy(false);
   }
 
   Future<void> showRegistrationDialog() async {

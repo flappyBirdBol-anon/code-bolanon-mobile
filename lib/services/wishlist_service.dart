@@ -24,19 +24,52 @@ class WishlistService with ReactiveServiceMixin {
         _wishlists =
             wishlistsJson.map((json) => WishlistModel.fromJson(json)).toList();
         notifyListeners();
-        return _wishlists!;
+        return _wishlists ?? [];
       } else {
+        _wishlists = [];
+        notifyListeners();
         throw Exception(
             'Failed to load wishlists: ${response.data['message']}');
       }
     } catch (e) {
       debugPrint('Error loading wishlists: $e');
+      _wishlists = [];
+      notifyListeners();
       return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> toggleWishlist(String courseId) async {
+    try {
+      if (isInWishlist(courseId)) {
+        final result = await removeFromWishlist(courseId);
+        return {
+          'success': result,
+          'message': result
+              ? 'Removed from wishlist'
+              : 'Failed to remove from wishlist'
+        };
+      } else {
+        final result = await addToWishlist(courseId);
+        return {
+          'success': result,
+          'message': result ? 'Added to wishlist' : 'Failed to add to wishlist'
+        };
+      }
+    } catch (e) {
+      debugPrint('Error toggling wishlist: $e');
+      return {'success': false, 'message': 'Error updating wishlist'};
     }
   }
 
   Future<bool> addToWishlist(String courseId) async {
     try {
+      // Check for existing wishlist first
+      if (isInWishlist(courseId)) {
+        debugPrint('Course already in wishlist');
+        return false;
+      }
+
       final response = await _apiService.post('/wishlists', data: {
         'course_id': courseId,
       });
@@ -59,10 +92,19 @@ class WishlistService with ReactiveServiceMixin {
 
   Future<bool> removeFromWishlist(String courseId) async {
     try {
-      final response = await _apiService.delete('/wishlists/$courseId');
+      // Find the wishlist item with matching courseId
+      final wishlistItem = _wishlists?.firstWhere(
+        (item) => item.courseId.toString() == courseId.toString(),
+        orElse: () => throw Exception('Wishlist item not found'),
+      );
+
+      if (wishlistItem == null) return false;
+
+      final response =
+          await _apiService.delete('/wishlists/${wishlistItem.id}');
 
       if (response.statusCode == 200) {
-        _wishlists?.removeWhere((item) => item.courseId == courseId);
+        _wishlists?.removeWhere((item) => item.id == wishlistItem.id);
         notifyListeners();
         return true;
       } else {
@@ -76,7 +118,9 @@ class WishlistService with ReactiveServiceMixin {
   }
 
   bool isInWishlist(String courseId) {
-    return _wishlists?.any((item) => item.courseId == courseId) ?? false;
+    if (_wishlists == null) return false;
+    return _wishlists!
+        .any((item) => item.courseId.toString() == courseId.toString());
   }
 
   Future<List<CourseModel>> getWishlistCourses(

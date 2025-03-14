@@ -124,8 +124,22 @@ class LearnerWishlistsView extends StackedView<LearnerWishlistsViewModel> {
                                 IconButton(
                                   icon: const Icon(Icons.delete_outline),
                                   color: Colors.red,
-                                  onPressed: () =>
-                                      viewModel.removeFromWishlist(course),
+                                  onPressed: () async {
+                                    final result = await viewModel
+                                        .removeFromWishlist(course);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(result['message']),
+                                          backgroundColor: result['success']
+                                              ? Colors.green
+                                              : Colors.red,
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                    }
+                                  },
                                 ),
                               ],
                             ),

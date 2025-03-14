@@ -174,22 +174,25 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                                     color: Colors.transparent,
                                     child: InkWell(
                                       borderRadius: BorderRadius.circular(12),
-                                      onTap: () {
-                                        viewModel.toggleWishlist();
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              viewModel.isInWishlist
-                                                  ? 'Added to Wishlist'
-                                                  : 'Removed from Wishlist',
-                                              style: GoogleFonts.figtree(),
+                                      onTap: () async {
+                                        final result =
+                                            await viewModel.toggleWishlist();
+                                        if (result != null) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                result['message'] ??
+                                                    'Error updating wishlist',
+                                                style: GoogleFonts.figtree(),
+                                              ),
+                                              duration:
+                                                  const Duration(seconds: 1),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
                                             ),
-                                            duration:
-                                                const Duration(seconds: 1),
-                                            behavior: SnackBarBehavior.floating,
-                                          ),
-                                        );
+                                          );
+                                        }
                                       },
                                       child: AnimatedSwitcher(
                                         duration:
