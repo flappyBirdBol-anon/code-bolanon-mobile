@@ -126,11 +126,22 @@ class ProfileViewModel extends AppBaseViewModel {
     notifyListeners();
   }
 
+  void resetPasswordControllers() {
+    oldPasswordController.clear();
+    newPasswordController.clear();
+    confirmNewPasswordController.clear();
+    _isOldPasswordVisible = false;
+    _isNewPasswordVisible = false;
+    _isConfirmNewPasswordVisible = false;
+    notifyListeners();
+  }
+
   Future<void> showChangePasswordModal(BuildContext context) async {
-    showDialog(
+    await showDialog(
       context: context,
       builder: (context) => ChangePasswordModal(viewModel: this),
     );
+    resetPasswordControllers();
   }
 
   void changePassword() async {
@@ -140,18 +151,18 @@ class ProfileViewModel extends AppBaseViewModel {
     final newPassword = newPasswordController.text;
     final newPasswordConfirmation = confirmNewPasswordController.text;
 
-    final success = await userService.updatePassword(
+    final response = await userService.updatePassword(
         oldPassword, newPassword, newPasswordConfirmation);
 
-    if (success) {
+    if (response['success']) {
       snackbarService.showSnackbar(
-        message: 'Password updated successfully',
-        duration: const Duration(seconds: 2),
+        message: response['message'] ?? 'Password updated successfully',
+        duration: const Duration(seconds: 3),
       );
     } else {
       snackbarService.showSnackbar(
-        message: 'Failed to update password',
-        duration: const Duration(seconds: 2),
+        message: response['message'] ?? 'Failed to update password',
+        duration: const Duration(seconds: 3),
       );
     }
   }
@@ -231,6 +242,24 @@ class ProfileViewModel extends AppBaseViewModel {
       return {'success': false};
     }
 
+    // Check if any data has changed
+    final isDataUnchanged = firstNameController.text ==
+            (userService.currentUser?.firstName ?? '') &&
+        lastNameController.text == (userService.currentUser?.lastName ?? '') &&
+        specializationController.text ==
+            (userService.currentUser?.specialization ?? '') &&
+        organizationController.text ==
+            (userService.currentUser?.organization ?? '') &&
+        selectedProfileImage == null;
+
+    if (isDataUnchanged) {
+      snackbarService.showSnackbar(
+        message: 'No changes were made to update',
+        duration: const Duration(seconds: 2),
+      );
+      return {'success': false};
+    }
+
     final firstName = firstNameController.text;
     final lastName = lastNameController.text;
     const profilePicture = '';
@@ -253,7 +282,6 @@ class ProfileViewModel extends AppBaseViewModel {
           'organization': organizationController.text,
           'specialization': specializationController.text,
         },
-        if (newImageUrl != null) 'profilePicture': newImageUrl,
       };
 
       // Add your profile update API call here

@@ -33,10 +33,9 @@ class LearnerWishlistsView extends StackedView<LearnerWishlistsViewModel> {
       body: viewModel.isBusy
           ? const Center(child: CircularProgressIndicator())
           : viewModel.wishlistedCourses.isEmpty
-              ? Center(
+              ? const Center(
                   child: Text(
                     'No items in wishlist',
-                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                 )
               : ListView.builder(
@@ -120,9 +119,7 @@ class LearnerWishlistsView extends StackedView<LearnerWishlistsViewModel> {
                                 IconButton(
                                   icon: const Icon(Icons.shopping_cart),
                                   color: Theme.of(context).primaryColor,
-                                  onPressed: () {
-                                    // TODO: Implement checkout
-                                  },
+                                  onPressed: () {},
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.delete_outline),

@@ -9,7 +9,7 @@ import 'package:stacked/stacked.dart';
 
 class LearnerWishlistsViewModel extends BaseViewModel {
   final CourseService _courseService;
-  final WishlistService _wishlistService; // Add WishlistService
+  final WishlistService _wishlistService;
   final ImageService _imageService;
 
   List<CourseModel> _wishlistedCourses = [];
@@ -64,7 +64,6 @@ class LearnerWishlistsViewModel extends BaseViewModel {
       _wishlistedCourses = await _wishlistService.getWishlistCourses(wishlists);
     } catch (e) {
       debugPrint('Error refreshing wishlists: $e');
-      // Fallback to sample data when API fails
       _wishlistedCourses = _sampleData;
       setError(e);
     } finally {

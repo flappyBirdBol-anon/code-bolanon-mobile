@@ -67,27 +67,25 @@ class UserService with ListenableServiceMixin {
     }
   }
 
-  Future<bool> updatePassword(String oldPassword, String newPassword,
-      String newPasswordConfirmation) async {
+  Future<Map<String, dynamic>> updatePassword(String oldPassword,
+      String newPassword, String newPasswordConfirmation) async {
     try {
-      final userId =
-          _currentUser.value?.id; // Assuming UserModel has an 'id' field
+      final userId = _currentUser.value?.id;
       if (userId == null) {
-        print('User ID is null');
-        return false;
+        return {'success': false, 'message': 'User ID is null'};
       }
-      final response = await ApiService().patch('/change-password', data: {
+      final response = await ApiService().post('/change-password', data: {
         'current_password': oldPassword,
         'new_password': newPassword,
         'new_password_confirmation': newPasswordConfirmation
       });
       if (response.statusCode == 200) {
-        return true;
+        return {'success': true, 'message': response.data['message']};
       }
-      return false;
+      return {'success': false, 'message': response.data['message']};
     } catch (e) {
       print('Update error: $e');
-      return false;
+      return {'success': false, 'message': 'Failed to update password'};
     }
   }
 
