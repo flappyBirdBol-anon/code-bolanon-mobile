@@ -1,7 +1,10 @@
 import 'package:carousel_slider/carousel_slider.dart';
+
 import 'package:code_bolanon/models/course_model.dart';
+
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/utils/tech_stack_colors.dart';
+import 'package:code_bolanon/ui/common/widgets/courses_list_item.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_list_item.dart';
@@ -105,12 +108,13 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         // Changed header background to a gradient
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
-              : [theme.primaryColor, theme.primaryColor.withOpacity(0.8)],
+          colors: [
+            AppColors.primary,
+            AppColors.primary,
+          ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -360,10 +364,10 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
           Row(
             children: [
               _buildStatItem(
-                'Students',
+                'Learners',
                 viewModel.isLoading
                     ? null
-                    : viewModel.activeStudents.toString(),
+                    : viewModel.activeLearners.toString(),
                 Icons.people_outline,
                 theme,
                 bodyStyle,
@@ -690,7 +694,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Student Progress", style: headingStyle),
+        Text("Learners Progress", style: headingStyle),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(16),
@@ -713,7 +717,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                     _buildProgressItem(
                       "JavaScript Fundamentals",
                       0.78,
-                      "78% of students completed",
+                      "78% of learners completed",
                       Colors.blue,
                       theme,
                       bodyStyle,
@@ -722,7 +726,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                     _buildProgressItem(
                       "React Components",
                       0.45,
-                      "45% of students completed",
+                      "45% of learners completed",
                       Colors.purple,
                       theme,
                       bodyStyle,
@@ -731,7 +735,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                     _buildProgressItem(
                       "API Integration",
                       0.32,
-                      "32% of students completed",
+                      "32% of learners completed",
                       Colors.green,
                       theme,
                       bodyStyle,
@@ -919,54 +923,6 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     );
   }
 
-  // Widget _buildFeatureCourses(
-  //     TrainerHomeViewModel viewModel, ThemeData theme, TextStyle bodyStyle) {
-  //   if (viewModel.isLoading) {
-  //     return CustomCard(
-  //       text: '',
-  //       onPressed: () {},
-  //       isHorizontalCard: true,
-  //       isLoading: true,
-  //       itemCount: 3,
-  //     );
-  //   }
-
-  //   final isDark = theme.brightness == Brightness.dark;
-  //   final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-
-  //   return CarouselSlider(
-  //     options: CarouselOptions(
-  //       height: 200,
-  //       viewportFraction: 0.6,
-  //       enableInfiniteScroll: false,
-  //       padEnds: false,
-  //     ),
-  //     items: viewModel.courseList.map((course) {
-  //       return Builder(
-  //         builder: (BuildContext context) {
-  //           return GestureDetector(
-  //             onTap: () => viewModel.openCourse(course.id),
-  //             child: CustomCard(
-  //               text: course.title,
-  //               onPressed: () => viewModel.openCourse(course.id),
-  //               isHorizontalCard: true,
-  //               isLoading: false,
-  //               backgroundColor: cardColor,
-  //               height: 200,
-  //               width: 260,
-  //               imageUrl: course.thumbnail,
-  //               lessons: course.lessons,
-  //               rating: course.rating,
-  //               reviews: course.reviews,
-  //               price: '\$${course.price}',
-  //               instructorName: 'Sample',
-  //             ),
-  //           );
-  //         },
-  //       );
-  //     }).toList(),
-  //   );
-  // }
   Widget _buildFeatureCourses(
       TrainerHomeViewModel viewModel, ThemeData theme, TextStyle bodyStyle) {
     if (viewModel.isLoading) {
@@ -981,138 +937,39 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     final isDark = theme.brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
 
-    return CarouselSlider(
-      options: CarouselOptions(
-        height: 200,
-        viewportFraction: 0.6,
-        enableInfiniteScroll: false,
-        padEnds: false,
+    // Wrap CarouselSlider with SizedBox to ensure stable dimensions
+    return SizedBox(
+      height: 250, // Fixed height to prevent layout jumps
+      child: CarouselSlider.builder(
+        itemCount: viewModel.courseList.length,
+        itemBuilder: (BuildContext context, int index, int realIndex) {
+          final course = viewModel.courseList[index];
+          return CoursesListItem(
+            course: course,
+            onTap: () => viewModel.navigateToCourseDetails(course),
+            imageService: viewModel.imageService,
+            showStatus: true,
+            showControls: false,
+            tags: viewModel.getCourseTags(course.id),
+          );
+        },
+        options: CarouselOptions(
+          height: 250,
+          viewportFraction: 0.45,
+          // Disable autoplay initially - will help prevent rendering issues
+          autoPlay: false,
+          enableInfiniteScroll: viewModel.courseList.length > 1,
+          padEnds: true,
+          // Add initialPage to ensure consistent starting position
+          initialPage: 0,
+          // Add pauseAutoPlayOnTouch to prevent scroll conflicts
+          pauseAutoPlayOnTouch: true,
+          // Add pauseAutoPlayOnManualNavigate to prevent scroll conflicts
+          pauseAutoPlayInFiniteScroll: true,
+          // Increased page view port to ensure better rendering
+          enlargeCenterPage: false,
+        ),
       ),
-      items: viewModel.courseList.map((course) {
-        return Builder(
-          builder: (BuildContext context) {
-            return GestureDetector(
-              onTap: () => viewModel.openCourse(course.id),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 6.0),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      offset: const Offset(0, 4),
-                      blurRadius: 8,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12),
-                          ),
-                          child: AspectRatio(
-                            aspectRatio: 16 / 9,
-                            child: _buildCourseImage(viewModel, course),
-                          ),
-                        ),
-                        Positioned(
-                          top: 10,
-                          left: 10,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.7),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.play_circle_outline,
-                                  color: Colors.white,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "${course.lessonCount} Lessons",
-                                  style: bodyStyle.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            course.title,
-                            style: GoogleFonts.figtree(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Text(
-                                '\$${course.price}',
-                                style: GoogleFonts.figtree(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.primaryColor,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const Spacer(),
-                              const Icon(
-                                Icons.star,
-                                color: Colors.amber,
-                                size: 15,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${course.rating}',
-                                style: GoogleFonts.figtree(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                ' (${course.rating})',
-                                style: GoogleFonts.figtree(
-                                  fontSize: 12,
-                                  color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      }).toList(),
     );
   }
 
@@ -1268,7 +1125,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                   contextDetails: 'Flutter Debugging',
                   startAt: 'Today at 3:00 PM',
                   endAt: '4:00 PM',
-                  studentsEnrolled: 5,
+                  learnersEnrolled: 5,
                   onTap: () {}, // Fixed null callback
                   isLoading: true,
                 ),
@@ -1283,7 +1140,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                     contextDetails: appointment.contextDetails,
                     startAt: appointment.availability?.startAt ?? '',
                     endAt: appointment.availability?.endAt ?? '',
-                    studentsEnrolled: 23, // Get actual data from your model
+                    learnersEnrolled: 23, // Get actual data from your model
                     isTrainerView: true, // Specify trainer view
                     onTap: () =>
                         viewModel.openSession(appointment.id.toString()),

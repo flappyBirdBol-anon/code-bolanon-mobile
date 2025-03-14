@@ -156,7 +156,7 @@ class SignupViewModel extends BaseViewModel {
     notifyListeners();
 
     try {
-      final success = await _authService.register(
+      final response = await _authService.register(
         firstNameController.text,
         lastNameController.text,
         emailController.text,
@@ -166,16 +166,31 @@ class SignupViewModel extends BaseViewModel {
         selectedRole == 'trainer' ? specializationController.text : null,
         selectedRole == 'trainer' ? organizationController.text : null,
       );
+      print('DATA: ${response.toString()}');
 
-      if (success) {
+      if (response['success']) {
+        if (response.containsKey('message')) {
+          _snackbarService.showCustomSnackBar(
+            variant: SnackbarType.success,
+            message: response['message'],
+            duration: const Duration(seconds: 4),
+          );
+
+          await _navigationService.clearStackAndShow(Routes.authView);
+        }
+      } else if (response['success'] == false) {
+        // Handle errors
+        String errorMessage = '';
+
+        if (response.containsKey('message')) {
+          // Show detailed validation errors
+          errorMessage = getErrorMessage(response);
+        }
         _snackbarService.showCustomSnackBar(
-          variant: SnackbarType.success,
-          message:
-              'Registration successful! Please check your email to verify your account.',
-          duration: const Duration(seconds: 4),
+          variant: SnackbarType.error,
+          message: errorMessage,
+          duration: const Duration(seconds: 3),
         );
-
-        await _navigationService.clearStackAndShow(Routes.authView);
       }
     } catch (e) {
       String errorMessage = 'Registration failed. ';
@@ -193,6 +208,27 @@ class SignupViewModel extends BaseViewModel {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  String getErrorMessage(dynamic response) {
+    String errorMessage = 'Registration failed';
+
+    if (response != null && response['message'] != null) {
+      final message = response['message'];
+
+      if (message is String) {
+        // If message is a simple string
+        errorMessage = message;
+      } else if (message is Map<String, dynamic>) {
+        // If message contains validation errors as a map
+        errorMessage += '\n\nValidation errors:\n${message.values.join('\n')}';
+      } else if (message is List) {
+        // If message is a list of errors
+        errorMessage += '\n\nValidation errors:\n${message.join('\n')}';
+      }
+    }
+
+    return errorMessage;
   }
 
   Future<void> signupWithGoogle() async {
@@ -245,6 +281,13 @@ class SignupViewModel extends BaseViewModel {
     if (emailController.text.isEmpty) {
       emailError = 'Please enter your email';
       isValid = false;
+    }
+    if (emailController.text.isNotEmpty) {
+      if (!emailController.text.contains('@') ||
+          !emailController.text.contains('.')) {
+        emailError = 'Please enter a valid email';
+        isValid = false;
+      }
     }
 
     if (passwordController.text.isEmpty) {

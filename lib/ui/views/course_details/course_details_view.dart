@@ -40,7 +40,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                 floating: false,
                 pinned: true,
                 backgroundColor: Colors.white,
-                elevation: innerBoxIsScrolled ? 4 : 0,
+                elevation: innerBoxIsScrolled ? 4 : 1,
                 leading: IconButton(
                   icon: Icon(
                     Icons.arrow_back,
@@ -123,7 +123,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                         ),
                       ),
                       Positioned(
-                        bottom: 60,
+                        bottom: 20,
                         left: 16,
                         right: 16,
                         child: Column(
@@ -163,7 +163,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                                       const SizedBox(width: 4),
                                       Text(
                                         course!.rating.toString(),
-                                        style: const TextStyle(
+                                        style: GoogleFonts.figtree(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -220,8 +220,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                                 const SizedBox(width: 4),
                                 Text(
                                   course!.rating.toString(),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                  style: GoogleFonts.figtree(
                                     fontSize: 16,
                                   ),
                                 ),
@@ -648,8 +647,15 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             if (course?.author == viewModel.userName) // Only show for trainers
               ElevatedButton.icon(
                 onPressed: () => viewModel.navigateToAddLesson(course!),
-                icon: const Icon(Icons.add, size: 20),
-                label: const Text('New Lesson'),
+                icon: const Icon(
+                  Icons.add,
+                  size: 20,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  'New Lesson',
+                  style: GoogleFonts.figtree(color: Colors.white),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,

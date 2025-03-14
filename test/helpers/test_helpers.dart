@@ -16,6 +16,7 @@ import 'package:code_bolanon/services/payment_service.dart';
 import 'package:code_bolanon/services/stripe_service.dart';
 import 'package:code_bolanon/services/forgot_password_service.dart';
 import 'package:code_bolanon/services/tech_stack_service.dart';
+import 'package:code_bolanon/services/analytics_service.dart';
 // @stacked-import
 
 @GenerateMocks(
@@ -36,6 +37,7 @@ import 'package:code_bolanon/services/tech_stack_service.dart';
     MockSpec<StripeService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<ForgotPasswordService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<TechStackService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<AnalyticsService>(onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
   ],
 )
@@ -55,6 +57,7 @@ void registerServices() {
   getAndRegisterStripeService();
   getAndRegisterForgotPasswordService();
   getAndRegisterTechStackService();
+  getAndRegisterAnalyticsService();
 // @stacked-mock-register
 }
 
@@ -193,6 +196,13 @@ MockTechStackService getAndRegisterTechStackService() {
   _removeRegistrationIfExists<TechStackService>();
   final service = MockTechStackService();
   locator.registerSingleton<TechStackService>(service);
+  return service;
+}
+
+MockAnalyticsService getAndRegisterAnalyticsService() {
+  _removeRegistrationIfExists<AnalyticsService>();
+  final service = MockAnalyticsService();
+  locator.registerSingleton<AnalyticsService>(service);
   return service;
 }
 // @stacked-mock-create

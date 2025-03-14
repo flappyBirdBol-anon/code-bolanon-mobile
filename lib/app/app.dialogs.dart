@@ -10,6 +10,7 @@ import 'app.locator.dart';
 import '../ui/dialogs/basic/basic_dialog.dart';
 import '../ui/dialogs/error/error_dialog.dart';
 import '../ui/dialogs/info_alert/info_alert_dialog.dart';
+import '../ui/dialogs/metric_selection/metric_selection_dialog.dart';
 import '../ui/dialogs/success/success_dialog.dart';
 import '../ui/dialogs/warning/warning_dialog.dart';
 
@@ -19,6 +20,7 @@ enum DialogType {
   success,
   error,
   warning,
+  metricSelection,
 }
 
 void setupDialogUi() {
@@ -35,6 +37,8 @@ void setupDialogUi() {
         ErrorDialog(request: request, completer: completer),
     DialogType.warning: (context, request, completer) =>
         WarningDialog(request: request, completer: completer),
+    DialogType.metricSelection: (context, request, completer) =>
+        MetricSelectionDialog(request: request, completer: completer),
   };
 
   dialogService.registerCustomDialogBuilders(builders);

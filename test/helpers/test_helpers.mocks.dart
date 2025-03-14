@@ -12,9 +12,11 @@ import 'package:code_bolanon/models/course_model.dart' as _i3;
 import 'package:code_bolanon/models/course_param.dart' as _i28;
 import 'package:code_bolanon/models/lessons_model.dart' as _i6;
 import 'package:code_bolanon/models/registration_model.dart' as _i18;
+import 'package:code_bolanon/models/tech_stack_model.dart' as _i32;
 import 'package:code_bolanon/models/transaction_model.dart' as _i16;
 import 'package:code_bolanon/models/user_model.dart' as _i24;
 import 'package:code_bolanon/models/wishlist_model.dart' as _i19;
+import 'package:code_bolanon/services/analytics_service.dart' as _i33;
 import 'package:code_bolanon/services/api_service.dart' as _i4;
 import 'package:code_bolanon/services/auth_service.dart' as _i12;
 import 'package:code_bolanon/services/course_service.dart' as _i17;
@@ -822,7 +824,7 @@ class MockAuthService extends _i1.Mock implements _i12.AuthService {
       ) as _i10.Future<bool>);
 
   @override
-  _i10.Future<bool> register(
+  _i10.Future<Map<String, dynamic>> register(
     String? firstName,
     String? lastName,
     String? email,
@@ -846,9 +848,22 @@ class MockAuthService extends _i1.Mock implements _i12.AuthService {
             organization,
           ],
         ),
-        returnValue: _i10.Future<bool>.value(false),
-        returnValueForMissingStub: _i10.Future<bool>.value(false),
-      ) as _i10.Future<bool>);
+        returnValue:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+        returnValueForMissingStub:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i10.Future<Map<String, dynamic>>);
+
+  @override
+  Map<String, dynamic> handleRegistrationResponse(dynamic response) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #handleRegistrationResponse,
+          [response],
+        ),
+        returnValue: <String, dynamic>{},
+        returnValueForMissingStub: <String, dynamic>{},
+      ) as Map<String, dynamic>);
 
   @override
   _i10.Future<bool> logout() => (super.noSuchMethod(
@@ -930,6 +945,13 @@ class MockThemeService extends _i1.Mock implements _i13.ThemeService {
       ) as bool);
 
   @override
+  bool get hasListeners => (super.noSuchMethod(
+        Invocation.getter(#hasListeners),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
   _i10.Future<void> initialize() => (super.noSuchMethod(
         Invocation.method(
           #initialize,
@@ -948,6 +970,42 @@ class MockThemeService extends _i1.Mock implements _i13.ThemeService {
         returnValue: _i10.Future<void>.value(),
         returnValueForMissingStub: _i10.Future<void>.value(),
       ) as _i10.Future<void>);
+
+  @override
+  void addListener(_i11.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(_i11.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [ApiService].
@@ -3076,8 +3134,8 @@ class MockForgotPasswordService extends _i1.Mock
 
   @override
   _i10.Future<Map<String, dynamic>> verifyResetCode(
-    String email,
-    String code,
+    String? email,
+    String? code,
   ) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -3095,19 +3153,19 @@ class MockForgotPasswordService extends _i1.Mock
 
   @override
   _i10.Future<bool> resetPassword(
-    String email,
-    String code,
-    String newPassword,
-    String confirmPassword,
+    String? email,
+    String? token,
+    String? password,
+    String? passwordConfirmation,
   ) =>
       (super.noSuchMethod(
         Invocation.method(
           #resetPassword,
           [
             email,
-            code,
-            newPassword,
-            confirmPassword,
+            token,
+            password,
+            passwordConfirmation,
           ],
         ),
         returnValue: _i10.Future<bool>.value(false),
@@ -3155,4 +3213,160 @@ class MockForgotPasswordService extends _i1.Mock
 /// A class which mocks [TechStackService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockTechStackService extends _i1.Mock implements _i31.TechStackService {}
+class MockTechStackService extends _i1.Mock implements _i31.TechStackService {
+  @override
+  List<_i32.TechStackModel> get techStacks => (super.noSuchMethod(
+        Invocation.getter(#techStacks),
+        returnValue: <_i32.TechStackModel>[],
+        returnValueForMissingStub: <_i32.TechStackModel>[],
+      ) as List<_i32.TechStackModel>);
+
+  @override
+  int get listenersCount => (super.noSuchMethod(
+        Invocation.getter(#listenersCount),
+        returnValue: 0,
+        returnValueForMissingStub: 0,
+      ) as int);
+
+  @override
+  _i10.Future<List<_i32.TechStackModel>> fetchTechStacks() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #fetchTechStacks,
+          [],
+        ),
+        returnValue: _i10.Future<List<_i32.TechStackModel>>.value(
+            <_i32.TechStackModel>[]),
+        returnValueForMissingStub: _i10.Future<List<_i32.TechStackModel>>.value(
+            <_i32.TechStackModel>[]),
+      ) as _i10.Future<List<_i32.TechStackModel>>);
+
+  @override
+  void listenToReactiveValues(List<dynamic>? reactiveValues) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #listenToReactiveValues,
+          [reactiveValues],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void addListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+}
+
+/// A class which mocks [AnalyticsService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockAnalyticsService extends _i1.Mock implements _i33.AnalyticsService {
+  @override
+  List<Map<String, dynamic>> getEnrollmentData() => (super.noSuchMethod(
+        Invocation.method(
+          #getEnrollmentData,
+          [],
+        ),
+        returnValue: <Map<String, dynamic>>[],
+        returnValueForMissingStub: <Map<String, dynamic>>[],
+      ) as List<Map<String, dynamic>>);
+
+  @override
+  List<Map<String, dynamic>> getCoursePerformanceData() => (super.noSuchMethod(
+        Invocation.method(
+          #getCoursePerformanceData,
+          [],
+        ),
+        returnValue: <Map<String, dynamic>>[],
+        returnValueForMissingStub: <Map<String, dynamic>>[],
+      ) as List<Map<String, dynamic>>);
+
+  @override
+  Map<String, dynamic> getRevenueMetrics() => (super.noSuchMethod(
+        Invocation.method(
+          #getRevenueMetrics,
+          [],
+        ),
+        returnValue: <String, dynamic>{},
+        returnValueForMissingStub: <String, dynamic>{},
+      ) as Map<String, dynamic>);
+
+  @override
+  Map<String, dynamic> getLearnerDemographics() => (super.noSuchMethod(
+        Invocation.method(
+          #getLearnerDemographics,
+          [],
+        ),
+        returnValue: <String, dynamic>{},
+        returnValueForMissingStub: <String, dynamic>{},
+      ) as Map<String, dynamic>);
+
+  @override
+  List<Map<String, dynamic>> getCourseEngagementData() => (super.noSuchMethod(
+        Invocation.method(
+          #getCourseEngagementData,
+          [],
+        ),
+        returnValue: <Map<String, dynamic>>[],
+        returnValueForMissingStub: <Map<String, dynamic>>[],
+      ) as List<Map<String, dynamic>>);
+
+  @override
+  List<_i11.Color> generateChartColors(int? count) => (super.noSuchMethod(
+        Invocation.method(
+          #generateChartColors,
+          [count],
+        ),
+        returnValue: <_i11.Color>[],
+        returnValueForMissingStub: <_i11.Color>[],
+      ) as List<_i11.Color>);
+
+  @override
+  _i10.Future<String> exportToExcel({List<String>? selectedMetrics}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #exportToExcel,
+          [],
+          {#selectedMetrics: selectedMetrics},
+        ),
+        returnValue: _i10.Future<String>.value(_i9.dummyValue<String>(
+          this,
+          Invocation.method(
+            #exportToExcel,
+            [],
+            {#selectedMetrics: selectedMetrics},
+          ),
+        )),
+        returnValueForMissingStub:
+            _i10.Future<String>.value(_i9.dummyValue<String>(
+          this,
+          Invocation.method(
+            #exportToExcel,
+            [],
+            {#selectedMetrics: selectedMetrics},
+          ),
+        )),
+      ) as _i10.Future<String>);
+}

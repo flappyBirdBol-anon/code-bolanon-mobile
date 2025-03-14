@@ -59,6 +59,11 @@ dependencies:
   cached_network_image: ^3.4.1
   flutter_stripe: ^11.4.0
   in_app_purchase: ^3.2.1
+  fl_chart: ^0.70.2
+  syncfusion_flutter_charts: ^28.2.11
+  syncfusion_officechart: ^28.2.11
+  syncfusion_flutter_xlsio: ^28.2.11
+  flutter_staggered_animations: ^1.1.1
 
 dev_dependencies:
   build_runner: ^2.4.5

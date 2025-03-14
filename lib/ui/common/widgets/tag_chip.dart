@@ -69,22 +69,30 @@ class TagChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(3),
+            topRight: Radius.circular(3),
+            bottomLeft: Radius.circular(3),
+            bottomRight: Radius.circular(3)),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           decoration: BoxDecoration(
             color: backgroundColor ?? bgColor,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(3),
+                topRight: Radius.circular(3),
+                bottomLeft: Radius.circular(3),
+                bottomRight: Radius.circular(3)),
             border: Border.all(
               color: isSelected ? textColor : Colors.transparent,
               width: 1,
             ),
           ),
           child: Text(
-            tag,
+            '<$tag/>',
             style: GoogleFonts.firaCode(
               color: labelColor ?? textColor,
-              fontSize: 11,
+              fontSize: 8,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               letterSpacing: -0.3,
             ),

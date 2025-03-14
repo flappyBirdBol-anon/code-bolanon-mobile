@@ -102,6 +102,14 @@ class MenuView extends StackedView<MenuViewModel> {
             onTap: () {},
           ),
           _buildSettingsTile(
+            icon: Icons.analytics,
+            iconColor: const Color.fromARGB(255, 248, 189, 40),
+            title: 'Analytics',
+            onTap: () {
+              viewModel.navigateToAnalytics();
+            },
+          ),
+          _buildSettingsTile(
             icon: Icons.help,
             iconColor: Colors.red,
             title: 'Help Center',

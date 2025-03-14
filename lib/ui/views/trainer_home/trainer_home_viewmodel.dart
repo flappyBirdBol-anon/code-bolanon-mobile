@@ -3,8 +3,10 @@ import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/models/tech_stack_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/services/tag_service.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked_services/stacked_services.dart';
 
@@ -19,26 +21,32 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   String get userRole => userService.loggedInUser?.role ?? 'Guest';
   String get userImage => userService.loggedInUser?.profileImage ?? '';
   String get userEmail => userService.loggedInUser?.email ?? '';
+
+  List<TechStackModel> get userTopics => userService.userTechStacks;
   bool isLoading = true;
   String profileImageUrl = 'assets/images/1.jpg';
-  int activeStudents = 150;
+  int activeLearners = 150;
   int totalCourses = 12;
   double totalRevenue = 15000;
   final _courseService = locator<CourseService>();
   final _imageService = locator<ImageService>();
   final _navigationService = locator<NavigationService>();
+  final TagService _tagService = locator<TagService>();
   List<AppointmentModel> _upcomingAppointments = [];
   List<AppointmentModel> get upcomingAppointments => _upcomingAppointments;
 
+  List<String> getCourseTags(String courseId) =>
+      _tagService.getCourseTags(courseId);
+
   TrainerHomeViewModel() {
-    _init();
     init();
+    _init();
   }
 
   List<RecentActivity> recentActivities = [
     RecentActivity(
       id: '1',
-      title: 'New student enrolled in UX Design',
+      title: 'New learner enrolled in UX Design',
       timestamp: '2 hours ago',
       icon: Icons.person_add,
     ),
@@ -50,24 +58,13 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     ),
     RecentActivity(
       id: '3',
-      title: 'New message from student',
+      title: 'New message from learner',
       timestamp: '1 day ago',
       icon: Icons.message,
     ),
   ];
 
-  List<String> topics = [
-    'JavaScript',
-    'Python',
-    'React',
-    'Development',
-    'Design',
-    'Tech',
-    'Marketing',
-    'Business',
-    'Sports',
-    'IT Software',
-  ];
+  List<String> topics = [];
 
   List<CourseModel> _courses = [];
   List<CourseModel> get courseList => _courses;
@@ -77,10 +74,14 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     try {
       // Fetch courses from API using CourseService
       _courses = await _courseService.getCourses();
+      topics = userTopics.map((e) => e.tags).toList();
+
+      notifyListeners();
     } catch (e) {
       _showErrorMessage('Failed to load courses: ${e.toString()}');
     } finally {
       setBusy(false);
+      notifyListeners();
     }
   }
 
@@ -135,6 +136,12 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     );
   }
 
+  void navigateToCourseDetails(CourseModel course) {
+    navigationService.navigateToCourseDetailsView(
+      course: course,
+    );
+  }
+
   // Header actions
   void showNotifications() {
     debugPrint('Showing notifications');
@@ -157,8 +164,9 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   }
 
   void openAnalytics() {
-    debugPrint('Opening analytics dashboard');
+    // debugPrint('Opening analytics dashboard');
     // Navigate to analytics screen
+    _navigationService.navigateToTrainerAnalyticsView();
   }
 
   void openSchedule() {
@@ -173,7 +181,7 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   }
 
   void viewAllCourses() {
-    debugPrint('Viewing all courses');
+    _navigationService.navigateToTrainerCoursesView();
     // Navigate to courses list
   }
 
@@ -201,7 +209,7 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     // In a real app, you would fetch actual data for the selected month
     // For now, let's vary the stats based on the month for demonstration
     final monthSeed = month * 10;
-    activeStudents = 120 + monthSeed;
+    activeLearners = 120 + monthSeed;
     totalCourses = 8 + (month % 5);
     totalRevenue = 12000 + (month * 500) + (year - 2023) * 2000;
 

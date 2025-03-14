@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/services/auth_service.dart';
@@ -7,6 +9,7 @@ import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/common/base/course_base_view_model.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart';
+import 'package:code_bolanon/ui/views/trainer_courses/add_course.dart';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,6 +19,20 @@ import 'package:stacked_services/stacked_services.dart';
 class TrainerCoursesViewModel extends CourseBaseViewModel {
   final CourseService courseService;
   XFile? _selectedImage;
+
+  // Added controllers and variables for scroll behavior
+  final ScrollController scrollController = ScrollController();
+  bool _showStats = true;
+  bool get showStats => _showStats;
+
+  // Timer for throttling scroll updates
+  Timer? _scrollThrottleTimer;
+  double _lastScrollPosition = 0;
+
+  // Timer for auto-hiding header
+  Timer? _headerHideTimer;
+  bool _showHeader = true;
+  bool get showHeader => _showHeader;
 
   @override
   List<String> get availableFilters => ['All', 'Active', 'Inactive'];
@@ -49,8 +66,79 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
     required CourseService courseService,
     required ImageService imageService,
   })  : courseService = courseService,
-        super(courseService, imageService: imageService) {
-    init();
+        super(courseService, imageService: imageService);
+
+  @override
+  Future<void> init() async {
+    await super.init();
+    // Start timer to hide header after 3 seconds
+    _startHeaderHideTimer();
+
+    // Setup scroll listener with throttling
+    scrollController.addListener(_throttledScrollListener);
+  }
+
+  void _startHeaderHideTimer() {
+    _headerHideTimer?.cancel();
+    _headerHideTimer = Timer(const Duration(seconds: 3), () {
+      _showHeader = false;
+      notifyListeners();
+    });
+  }
+
+  // Throttled scroll listener to prevent excessive UI updates
+  void _throttledScrollListener() {
+    final currentPosition = scrollController.offset;
+
+    // Only update if we've scrolled more than 15 pixels since last update
+    // This reduces the number of UI updates while scrolling
+    if ((_lastScrollPosition - currentPosition).abs() < 15) {
+      return;
+    }
+
+    _lastScrollPosition = currentPosition;
+
+    // Cancel any pending timer
+    _scrollThrottleTimer?.cancel();
+
+    // Set a throttle timer to limit UI updates
+    _scrollThrottleTimer = Timer(const Duration(milliseconds: 100), () {
+      updateStatsVisibility(currentPosition);
+    });
+  }
+
+  // Update stats visibility based on scroll position
+  void updateStatsVisibility(double scrollPosition) {
+    final shouldShow = scrollPosition < 200;
+    if (shouldShow != _showStats) {
+      _showStats = shouldShow;
+      notifyListeners();
+    }
+  }
+
+  // New stat method for Total Learners Enrolled
+  int getTotalLearnersEnrolled() {
+    // Sum all enrolled learners across all courses
+    return courses.fold<int>(
+        0, (previousValue, course) => previousValue + (10));
+    //  (previousValue, course) => previousValue + (course.enrolledCount ?? 0));
+  }
+
+  // New stat method for Lessons Created
+  int getTotalLessonsCreated() {
+    // Sum all lessons across all courses
+    return courses.fold<int>(
+        0, (previousValue, course) => previousValue + (11));
+    //  (previousValue, course) => previousValue + (course.lessonsCount ?? 0));
+  }
+
+  @override
+  void dispose() {
+    _headerHideTimer?.cancel();
+    _scrollThrottleTimer?.cancel();
+    scrollController.removeListener(_throttledScrollListener);
+    scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -71,15 +159,17 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
     return false;
   }
 
-  void showAddCourseDialog(BuildContext context) async {
-    final result = await showDialog(
-      context: context,
-      builder: (context) => CourseDialog(
-        title: 'Add New Course',
-        onSave: (title, description, price, image) async {
-          _selectedImage = image;
-          await _addCourse(title, description, price);
-        },
+  void navigateToAddCourse(BuildContext context) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CourseCreationView(
+          onSave: (title, description, price, image) async {
+            _selectedImage = image;
+            await _addCourse(title, description, price);
+            return true; // Indicate success
+          },
+        ),
       ),
     );
 
@@ -104,18 +194,21 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
     }
   }
 
-  void showEditCourseDialog(BuildContext context, CourseModel course) async {
-    final result = await showDialog(
-      context: context,
-      builder: (context) => CourseDialog(
-        title: 'Edit Course',
-        initialCourseName: course.title,
-        initialDescription: course.description,
-        initialPrice: course.price,
-        onSave: (title, description, price, image) async {
-          _selectedImage = image;
-          await _updateCourse(course.id, title, description, price);
-        },
+  void navigateToEditCourse(BuildContext context, CourseModel course) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CourseCreationView(
+          isEditing: true,
+          initialCourseName: course.title,
+          initialDescription: course.description,
+          initialPrice: course.price,
+          onSave: (title, description, price, image) async {
+            _selectedImage = image;
+            await _updateCourse(course.id, title, description, price);
+            return true; // Indicate success
+          },
+        ),
+        fullscreenDialog: true,
       ),
     );
 

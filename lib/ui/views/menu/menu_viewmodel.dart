@@ -1,9 +1,11 @@
+import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
+import 'package:code_bolanon/services/theme_service.dart';
 
 class MenuViewModel extends AppBaseViewModel {
-  bool _isDarkMode = false;
-  bool get isDarkMode => _isDarkMode;
+  final _themeService = locator<ThemeService>();
+  bool get isDarkMode => _themeService.isDarkTheme;
 
   String get userName => userService.currentUser?.fullName ?? 'User';
   String get userRole => userService.currentUser?.role ?? 'Guest';
@@ -12,26 +14,34 @@ class MenuViewModel extends AppBaseViewModel {
 
   MenuViewModel() {
     userService.addListener(_onUserChanged);
+    _themeService.addListener(_onThemeChanged);
   }
 
   void _onUserChanged() {
     notifyListeners();
   }
 
-  @override
-  void dispose() {
-    if (!isBusy) {
-      super.dispose();
-    }
+  void _onThemeChanged() {
+    notifyListeners();
   }
 
-  void toggleDarkMode(bool value) {
-    _isDarkMode = value;
-    notifyListeners();
+  @override
+  void dispose() {
+    userService.removeListener(_onUserChanged);
+    _themeService.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  Future<void> toggleDarkMode(bool value) async {
+    await _themeService.toggleTheme();
   }
 
   Future<void> profile() async {
     await navigationService.navigateToProfileView();
+  }
+
+  Future<void> navigateToAnalytics() async {
+    await navigationService.navigateToTrainerAnalyticsView();
   }
 
   Future<void> logout() async {
@@ -39,17 +49,8 @@ class MenuViewModel extends AppBaseViewModel {
 
     setBusy(true);
     try {
-      final success = await authService.logout();
-      if (success) {
-        // Wait for cleanup before navigation
-        await Future.microtask(() {});
-
-        // Use clearStackAndShow to ensure clean navigation
-        await navigationService.clearStackAndShow(Routes.authView);
-      }
-    } catch (e) {
-      setError(e.toString());
-      print('Error during logout: $e');
+      await authService.logout();
+      await navigationService.clearStackAndShow(Routes.authView);
     } finally {
       setBusy(false);
     }
