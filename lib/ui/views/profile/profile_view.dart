@@ -67,16 +67,26 @@ class ProfileView extends StackedView<ProfileViewModel> {
                         child: CircleAvatar(
                           radius: 35,
                           backgroundColor: Colors.white.withOpacity(0.2),
-                          backgroundImage:
-                              viewModel.formattedProfilePictureUrl.isNotEmpty
-                                  ? NetworkImage(
-                                      viewModel.formattedProfilePictureUrl)
-                                  : null,
-                          child: viewModel.formattedProfilePictureUrl.isEmpty
-                              ? Icon(Icons.person,
-                                  size: 35,
-                                  color: Colors.white.withOpacity(0.7))
-                              : null,
+                          child: ClipOval(
+                            child: viewModel.formattedProfilePictureUrl.isEmpty
+                                ? Icon(Icons.person,
+                                    size: 35,
+                                    color: Colors.white.withOpacity(0.7))
+                                : viewModel.getProfileImageWidget(
+                                    fit: BoxFit.cover,
+                                    placeholder: const Center(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                    errorWidget: Icon(
+                                      Icons.person,
+                                      size: 35,
+                                      color: Colors.white.withOpacity(0.7),
+                                    ),
+                                  ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 20),
@@ -147,7 +157,8 @@ class ProfileView extends StackedView<ProfileViewModel> {
                       child: _buildQuickAction(
                         icon: Icons.lock_outline,
                         label: 'Change Password',
-                        onTap: () => viewModel.showChangePasswordModal(context),
+                        onTap: () =>
+                            viewModel.navigateToChangePassword(context),
                         color: const Color(
                             0xFF6366F1), // Indigo color matching the app theme
                         isDark: isDark,
@@ -387,7 +398,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
     } else if (title == 'Edit Profile') {
       viewModel.showEditProfileModal(context);
     } else if (title == 'Change Password') {
-      viewModel.showChangePasswordModal(context);
+      viewModel.navigateToChangePassword(context);
     }
   }
 

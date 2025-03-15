@@ -14,6 +14,7 @@ class CustomImageField extends StatelessWidget {
   final String placeholder;
   final bool isCircular;
   final Widget? overlayIcon;
+  final Widget? existingImageWidget;
 
   const CustomImageField({
     Key? key,
@@ -25,6 +26,7 @@ class CustomImageField extends StatelessWidget {
     this.placeholder = 'Add Image',
     this.isCircular = false,
     this.overlayIcon,
+    this.existingImageWidget,
   }) : super(key: key);
 
   Future<void> _pickImage() async {
@@ -52,7 +54,53 @@ class CustomImageField extends StatelessWidget {
           border: Border.all(color: Colors.grey[300]!),
         ),
         clipBehavior: Clip.antiAlias, // Add this to ensure proper clipping
-        child: _buildImageContent(),
+        child: selectedImage != null
+            ? Image.file(
+                File(selectedImage!.path),
+                fit: BoxFit.cover,
+                width: width,
+                height: height,
+              )
+            : existingImageWidget ?? // Add this line to show existing image
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (isCircular)
+                        Icon(
+                          Icons.person,
+                          size: height * 0.5,
+                          color: Colors.grey[400],
+                        )
+                      else
+                        Icon(
+                          Icons.image_outlined,
+                          size: height * 0.3,
+                          color: Colors.grey[400],
+                        ),
+                      if (!isCircular) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          placeholder,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Click to browse',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
       ),
     );
   }

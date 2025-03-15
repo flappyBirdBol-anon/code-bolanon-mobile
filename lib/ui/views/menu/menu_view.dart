@@ -65,16 +65,28 @@ class MenuView extends StackedView<MenuViewModel> {
                           ),
                         ),
                         child: CircleAvatar(
-                          radius: 30, // Reduced from 35
+                          radius: 30,
                           backgroundColor: Colors.white.withOpacity(0.2),
-                          backgroundImage: viewModel.userImage.isNotEmpty
-                              ? NetworkImage(viewModel.userImage)
-                              : null,
-                          child: viewModel.userImage.isEmpty
-                              ? Icon(Icons.person,
-                                  size: 30,
-                                  color: Colors.white.withOpacity(0.7))
-                              : null,
+                          child: ClipOval(
+                            child: viewModel.userImage.isEmpty
+                                ? Icon(Icons.person,
+                                    size: 30,
+                                    color: Colors.white.withOpacity(0.7))
+                                : viewModel.getProfileImageWidget(
+                                    fit: BoxFit.cover,
+                                    placeholder: const Center(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                    errorWidget: Icon(
+                                      Icons.person,
+                                      size: 30,
+                                      color: Colors.white.withOpacity(0.7),
+                                    ),
+                                  ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
