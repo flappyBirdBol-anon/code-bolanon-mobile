@@ -11,9 +11,11 @@ import 'dart:ui' as _i11;
 import 'package:code_bolanon/models/course_model.dart' as _i3;
 import 'package:code_bolanon/models/course_param.dart' as _i27;
 import 'package:code_bolanon/models/lessons_model.dart' as _i6;
+import 'package:code_bolanon/models/registration_model.dart' as _i35;
 import 'package:code_bolanon/models/tech_stack_model.dart' as _i22;
 import 'package:code_bolanon/models/transaction_model.dart' as _i16;
 import 'package:code_bolanon/models/user_model.dart' as _i23;
+import 'package:code_bolanon/models/wishlist_model.dart' as _i33;
 import 'package:code_bolanon/services/analytics_service.dart' as _i31;
 import 'package:code_bolanon/services/api_service.dart' as _i4;
 import 'package:code_bolanon/services/auth_service.dart' as _i12;
@@ -23,7 +25,7 @@ import 'package:code_bolanon/services/forgot_password_service.dart' as _i29;
 import 'package:code_bolanon/services/image_service.dart' as _i18;
 import 'package:code_bolanon/services/lesson_service.dart' as _i24;
 import 'package:code_bolanon/services/payment_service.dart' as _i26;
-import 'package:code_bolanon/services/registration_service.dart' as _i33;
+import 'package:code_bolanon/services/registration_service.dart' as _i34;
 import 'package:code_bolanon/services/stripe_service.dart' as _i28;
 import 'package:code_bolanon/services/tech_stack_service.dart' as _i30;
 import 'package:code_bolanon/services/theme_service.dart' as _i13;
@@ -3342,10 +3344,226 @@ class MockAnalyticsService extends _i1.Mock implements _i31.AnalyticsService {
 /// A class which mocks [WishlistService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockWishlistService extends _i1.Mock implements _i32.WishlistService {}
+class MockWishlistService extends _i1.Mock implements _i32.WishlistService {
+  @override
+  _i10.Future<List<_i33.WishlistModel>> getUserWishlist() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getUserWishlist,
+          [],
+        ),
+        returnValue:
+            _i10.Future<List<_i33.WishlistModel>>.value(<_i33.WishlistModel>[]),
+        returnValueForMissingStub:
+            _i10.Future<List<_i33.WishlistModel>>.value(<_i33.WishlistModel>[]),
+      ) as _i10.Future<List<_i33.WishlistModel>>);
+
+  @override
+  _i10.Future<Map<String, dynamic>> toggleWishlist(String? courseId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #toggleWishlist,
+          [courseId],
+        ),
+        returnValue:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+        returnValueForMissingStub:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i10.Future<Map<String, dynamic>>);
+
+  @override
+  _i10.Future<bool> addToWishlist(String? courseId) => (super.noSuchMethod(
+        Invocation.method(
+          #addToWishlist,
+          [courseId],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
+  _i10.Future<bool> removeFromWishlist(String? courseId) => (super.noSuchMethod(
+        Invocation.method(
+          #removeFromWishlist,
+          [courseId],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
+  bool isInWishlist(String? courseId) => (super.noSuchMethod(
+        Invocation.method(
+          #isInWishlist,
+          [courseId],
+        ),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
+  _i10.Future<List<_i3.CourseModel>> getWishlistCourses(
+          List<_i33.WishlistModel>? wishlists) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getWishlistCourses,
+          [wishlists],
+        ),
+        returnValue:
+            _i10.Future<List<_i3.CourseModel>>.value(<_i3.CourseModel>[]),
+        returnValueForMissingStub:
+            _i10.Future<List<_i3.CourseModel>>.value(<_i3.CourseModel>[]),
+      ) as _i10.Future<List<_i3.CourseModel>>);
+
+  @override
+  void listenToReactiveValues(List<dynamic>? reactiveValues) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #listenToReactiveValues,
+          [reactiveValues],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void addListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+}
 
 /// A class which mocks [RegistrationService].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockRegistrationService extends _i1.Mock
-    implements _i33.RegistrationService {}
+    implements _i34.RegistrationService {
+  @override
+  List<_i35.RegistrationModel> get registrations => (super.noSuchMethod(
+        Invocation.getter(#registrations),
+        returnValue: <_i35.RegistrationModel>[],
+        returnValueForMissingStub: <_i35.RegistrationModel>[],
+      ) as List<_i35.RegistrationModel>);
+
+  @override
+  Set<String> get registeredCourses => (super.noSuchMethod(
+        Invocation.getter(#registeredCourses),
+        returnValue: <String>{},
+        returnValueForMissingStub: <String>{},
+      ) as Set<String>);
+
+  @override
+  bool isRegistered(String? courseId) => (super.noSuchMethod(
+        Invocation.method(
+          #isRegistered,
+          [courseId],
+        ),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
+  _i10.Future<bool> createRegistration(String? courseId) => (super.noSuchMethod(
+        Invocation.method(
+          #createRegistration,
+          [courseId],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
+  _i10.Future<void> loadRegisteredCourses() => (super.noSuchMethod(
+        Invocation.method(
+          #loadRegisteredCourses,
+          [],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i10.Future<List<_i35.RegistrationModel>> getUserRegistrations() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getUserRegistrations,
+          [],
+        ),
+        returnValue: _i10.Future<List<_i35.RegistrationModel>>.value(
+            <_i35.RegistrationModel>[]),
+        returnValueForMissingStub:
+            _i10.Future<List<_i35.RegistrationModel>>.value(
+                <_i35.RegistrationModel>[]),
+      ) as _i10.Future<List<_i35.RegistrationModel>>);
+
+  @override
+  _i10.Future<List<_i3.CourseModel>> getRegisteredCourses(
+          List<_i35.RegistrationModel>? registrations) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getRegisteredCourses,
+          [registrations],
+        ),
+        returnValue:
+            _i10.Future<List<_i3.CourseModel>>.value(<_i3.CourseModel>[]),
+        returnValueForMissingStub:
+            _i10.Future<List<_i3.CourseModel>>.value(<_i3.CourseModel>[]),
+      ) as _i10.Future<List<_i3.CourseModel>>);
+
+  @override
+  void listenToReactiveValues(List<dynamic>? reactiveValues) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #listenToReactiveValues,
+          [reactiveValues],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void addListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+}
