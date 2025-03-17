@@ -1952,6 +1952,82 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
           ),
         ),
       ) as _i5.Widget);
+
+  @override
+  _i5.Widget getProfileImageWidget({
+    required String? imageUrl,
+    double? width,
+    double? height,
+    _i5.BoxFit? fit = _i5.BoxFit.cover,
+    _i5.Widget? placeholder,
+    _i5.Widget? errorWidget,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getProfileImageWidget,
+          [],
+          {
+            #imageUrl: imageUrl,
+            #width: width,
+            #height: height,
+            #fit: fit,
+            #placeholder: placeholder,
+            #errorWidget: errorWidget,
+          },
+        ),
+        returnValue: _FakeWidget_5(
+          this,
+          Invocation.method(
+            #getProfileImageWidget,
+            [],
+            {
+              #imageUrl: imageUrl,
+              #width: width,
+              #height: height,
+              #fit: fit,
+              #placeholder: placeholder,
+              #errorWidget: errorWidget,
+            },
+          ),
+        ),
+        returnValueForMissingStub: _FakeWidget_5(
+          this,
+          Invocation.method(
+            #getProfileImageWidget,
+            [],
+            {
+              #imageUrl: imageUrl,
+              #width: width,
+              #height: height,
+              #fit: fit,
+              #placeholder: placeholder,
+              #errorWidget: errorWidget,
+            },
+          ),
+        ),
+      ) as _i5.Widget);
+
+  @override
+  String getProfilePictureUrl(String? imagePath) => (super.noSuchMethod(
+        Invocation.method(
+          #getProfilePictureUrl,
+          [imagePath],
+        ),
+        returnValue: _i9.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getProfilePictureUrl,
+            [imagePath],
+          ),
+        ),
+        returnValueForMissingStub: _i9.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getProfilePictureUrl,
+            [imagePath],
+          ),
+        ),
+      ) as String);
 }
 
 /// A class which mocks [UserService].

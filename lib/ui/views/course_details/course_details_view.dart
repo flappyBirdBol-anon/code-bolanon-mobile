@@ -558,7 +558,8 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.star, color: Colors.amber, size: 16),
+                            const Icon(Icons.star,
+                                color: Colors.amber, size: 16),
                             const SizedBox(width: 4),
                             Text(
                               '4.8',
@@ -635,7 +636,8 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle_outline, size: 20, color: AppColors.primary),
+          const Icon(Icons.check_circle_outline,
+              size: 20, color: AppColors.primary),
           const SizedBox(width: 8),
           Text(
             text,
@@ -654,7 +656,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(Icons.arrow_right, color: AppColors.primary),
+          const Icon(Icons.arrow_right, color: AppColors.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -689,7 +691,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        Icon(Icons.school_outlined,
+                        const Icon(Icons.school_outlined,
                             color: AppColors.primary, size: 28),
                         const SizedBox(height: 8),
                         Text(
@@ -1097,61 +1099,141 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
         // Write Review ExpansionTile (Only for registered learners)
         if (viewModel.canWriteReview)
           Card(
-            elevation: 2,
+            elevation: 4,
             margin: const EdgeInsets.only(bottom: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: ExpansionTile(
+              backgroundColor: Colors.white,
+              collapsedBackgroundColor: Colors.white,
               title: Text(
                 'Write a Review',
                 style: GoogleFonts.figtree(
                   fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
               ),
-              leading: const Icon(Icons.rate_review),
+              subtitle: Text(
+                'Share your experience with other students',
+                style: GoogleFonts.figtree(
+                  color: Colors.grey[600],
+                  fontSize: 13,
+                ),
+              ),
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.rate_review_outlined,
+                  color: AppColors.primary,
+                ),
+              ),
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                    ),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Rate this course',
                         style: GoogleFonts.figtree(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[800],
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: List.generate(
-                          5,
-                          (index) => IconButton(
-                            onPressed: () => viewModel.setRating(index + 1.0),
-                            icon: Icon(
-                              index < viewModel.userRating
-                                  ? Icons.star
-                                  : Icons.star_border,
-                              color: Colors.amber,
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
                             ),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            5,
+                            (index) => Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                              child: InkWell(
+                                onTap: () => viewModel.setRating(index + 1.0),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  child: Icon(
+                                    index < viewModel.userRating
+                                        ? Icons.star_rounded
+                                        : Icons.star_outline_rounded,
+                                    color: index < viewModel.userRating
+                                        ? Colors.amber
+                                        : Colors.grey[400],
+                                    size: 32,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       TextField(
                         controller: viewModel.reviewController,
-                        maxLines: 3,
+                        maxLines: 4,
+                        style: GoogleFonts.figtree(
+                          fontSize: 15,
+                          color: Colors.grey[800],
+                        ),
                         decoration: InputDecoration(
-                          hintText: 'Share your experience...',
+                          hintText: 'Share your thoughts about this course...',
+                          hintStyle: GoogleFonts.figtree(
+                            color: Colors.grey[400],
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.grey[300]!,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.grey[300]!,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.primary,
+                              width: 1.5,
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -1160,52 +1242,116 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                               showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
-                                  title: Text('Report Course',
-                                      style: GoogleFonts.figtree()),
-                                  content: TextField(
-                                    controller:
-                                        viewModel.reportReasonController,
-                                    maxLines: 3,
-                                    decoration: InputDecoration(
-                                      hintText: 'Reason for reporting...',
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  title: Text(
+                                    'Report Course',
+                                    style: GoogleFonts.figtree(
+                                      fontWeight: FontWeight.bold,
                                     ),
+                                  ),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Please provide details about your concerns:',
+                                        style: GoogleFonts.figtree(
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      TextField(
+                                        controller:
+                                            viewModel.reportReasonController,
+                                        maxLines: 3,
+                                        decoration: InputDecoration(
+                                          hintText: 'Describe the issue...',
+                                          filled: true,
+                                          fillColor: Colors.grey[50],
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.pop(context),
-                                      child: const Text('Cancel'),
+                                      child: Text(
+                                        'Cancel',
+                                        style: GoogleFonts.figtree(
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
                                     ),
-                                    ElevatedButton(
+                                    ElevatedButton.icon(
                                       onPressed: () {
                                         viewModel.submitReport();
                                         Navigator.pop(context);
                                       },
+                                      icon: const Icon(
+                                        Icons.flag_outlined,
+                                        size: 18,
+                                      ),
+                                      label: const Text('Submit Report'),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.red,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 8,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
                                       ),
-                                      child: const Text('Report'),
                                     ),
                                   ],
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.flag, color: Colors.red),
-                            label: Text('Report',
-                                style: GoogleFonts.figtree(color: Colors.red)),
+                            icon: Icon(
+                              Icons.flag_outlined,
+                              color: Colors.red[400],
+                              size: 20,
+                            ),
+                            label: Text(
+                              'Report Issue',
+                              style: GoogleFonts.figtree(
+                                color: Colors.red[400],
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                            ),
                           ),
-                          ElevatedButton(
+                          ElevatedButton.icon(
                             onPressed: viewModel.submitReview,
+                            icon: const Icon(
+                              Icons.send_rounded,
+                              size: 18,
+                            ),
+                            label: const Text('Submit Review'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
                             ),
-                            child: Text('Submit',
-                                style:
-                                    GoogleFonts.figtree(color: Colors.white)),
                           ),
                         ],
                       ),

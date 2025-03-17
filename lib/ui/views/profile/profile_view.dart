@@ -171,14 +171,18 @@ class ProfileView extends StackedView<ProfileViewModel> {
               // Tech Stack Section
               _buildSection(
                 context: context,
-                title: 'Technical Skills',
+                title: viewModel.role == 'learner'
+                    ? 'Interested Stacks'
+                    : 'Technical Skills',
                 actionButton: TextButton.icon(
                   onPressed: () =>
                       _showUpdateModal(context, 'Manage Tech Stack', viewModel),
                   icon:
                       const Icon(Icons.add, size: 18, color: AppColors.primary),
                   label: Text(
-                    'Add Skills',
+                    viewModel.role == 'learner'
+                        ? 'Add Interests'
+                        : 'Add Skills',
                     style: GoogleFonts.figtree(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w500,
@@ -193,24 +197,35 @@ class ProfileView extends StackedView<ProfileViewModel> {
                     ),
                   ),
                 ),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: viewModel.techStacks.map((tech) {
-                    return CustomStackChip(
-                      label: tech,
-                      selected: true,
-                      isDark: isDark,
-                      icon: Icons.code,
-                      color: viewModel.getTechColor(tech, theme),
-                      textStyle: GoogleFonts.figtree(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                child: viewModel.techStacks.isEmpty
+                    ? _buildEmptyState(
+                        viewModel.role == 'learner'
+                            ? 'No Interests Added'
+                            : 'No Skills Added',
+                        viewModel.role == 'learner'
+                            ? 'Add the programming languages and technologies you\'re interested in learning'
+                            : 'Add your technical skills and expertise',
+                        Icons.code,
+                        isDark,
+                      )
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: viewModel.techStacks.map((tech) {
+                          return CustomStackChip(
+                            label: tech,
+                            selected: true,
+                            isDark: isDark,
+                            icon: Icons.code,
+                            color: viewModel.getTechColor(tech, theme),
+                            textStyle: GoogleFonts.figtree(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            onTap: () {},
+                          );
+                        }).toList(),
                       ),
-                      onTap: () {},
-                    );
-                  }).toList(),
-                ),
               ),
 
               // Professional Details Section (if trainer)
