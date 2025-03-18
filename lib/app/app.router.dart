@@ -5,15 +5,19 @@
 // **************************************************************************
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:code_bolanon/models/course_model.dart' as _i23;
-import 'package:code_bolanon/models/course_param.dart' as _i25;
-import 'package:code_bolanon/models/lessons_model.dart' as _i24;
+import 'package:code_bolanon/models/course_model.dart' as _i27;
+import 'package:code_bolanon/models/course_param.dart' as _i29;
+import 'package:code_bolanon/models/lessons_model.dart' as _i28;
 import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart' as _i12;
 import 'package:code_bolanon/ui/views/auth/auth_view.dart' as _i5;
 import 'package:code_bolanon/ui/views/available_courses/available_courses_view.dart'
     as _i13;
+import 'package:code_bolanon/ui/views/change_password/change_password_view.dart'
+    as _i22;
 import 'package:code_bolanon/ui/views/course_details/course_details_view.dart'
     as _i11;
+import 'package:code_bolanon/ui/views/edit_profile/edit_profile_view.dart'
+    as _i23;
 import 'package:code_bolanon/ui/views/forgot_password/forgot_password_view.dart'
     as _i19;
 import 'package:code_bolanon/ui/views/home/home_view.dart' as _i2;
@@ -36,12 +40,16 @@ import 'package:code_bolanon/ui/views/startup/startup_view.dart' as _i3;
 import 'package:code_bolanon/ui/views/tos/tos_view.dart' as _i20;
 import 'package:code_bolanon/ui/views/trainer_analytics/trainer_analytics_view.dart'
     as _i21;
+import 'package:code_bolanon/ui/views/trainer_appointment_home/trainer_appointment_home_view.dart'
+    as _i24;
 import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart'
     as _i10;
-import 'package:flutter/material.dart' as _i22;
+import 'package:code_bolanon/ui/views/trainer_schedules/trainer_schedules_view.dart'
+    as _i25;
+import 'package:flutter/material.dart' as _i26;
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart' as _i1;
-import 'package:stacked_services/stacked_services.dart' as _i26;
+import 'package:stacked_services/stacked_services.dart' as _i30;
 
 class Routes {
   static const homeView = '/home-view';
@@ -84,6 +92,14 @@ class Routes {
 
   static const trainerAnalyticsView = '/trainer-analytics-view';
 
+  static const changePasswordView = '/change-password-view';
+
+  static const editProfileView = '/edit-profile-view';
+
+  static const trainerAppointmentHomeView = '/trainer-appointment-home-view';
+
+  static const trainerSchedulesView = '/trainer-schedules-view';
+
   static const all = <String>{
     homeView,
     startupView,
@@ -105,6 +121,10 @@ class Routes {
     forgotPasswordView,
     tosView,
     trainerAnalyticsView,
+    changePasswordView,
+    editProfileView,
+    trainerAppointmentHomeView,
+    trainerSchedulesView,
   };
 }
 
@@ -190,29 +210,45 @@ class StackedRouter extends _i1.RouterBase {
       Routes.trainerAnalyticsView,
       page: _i21.TrainerAnalyticsView,
     ),
+    _i1.RouteDef(
+      Routes.changePasswordView,
+      page: _i22.ChangePasswordView,
+    ),
+    _i1.RouteDef(
+      Routes.editProfileView,
+      page: _i23.EditProfileView,
+    ),
+    _i1.RouteDef(
+      Routes.trainerAppointmentHomeView,
+      page: _i24.TrainerAppointmentHomeView,
+    ),
+    _i1.RouteDef(
+      Routes.trainerSchedulesView,
+      page: _i25.TrainerSchedulesView,
+    ),
   ];
 
   final _pagesMap = <Type, _i1.StackedRouteFactory>{
     _i2.HomeView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i2.HomeView(),
         settings: data,
       );
     },
     _i3.StartupView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i3.StartupView(),
         settings: data,
       );
     },
     _i4.OnboardingView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i4.OnboardingView(),
         settings: data,
       );
     },
     _i5.AuthView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i5.AuthView(),
         settings: data,
       );
@@ -221,31 +257,31 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<MainBodyViewArguments>(
         orElse: () => const MainBodyViewArguments(),
       );
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => _i6.MainBodyView(key: args.key, role: args.role),
         settings: data,
       );
     },
     _i7.ProfileView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i7.ProfileView(),
         settings: data,
       );
     },
     _i8.MenuView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i8.MenuView(),
         settings: data,
       );
     },
     _i9.LearnerHomeView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i9.LearnerHomeView(),
         settings: data,
       );
     },
     _i10.TrainerCoursesView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i10.TrainerCoursesView(),
         settings: data,
       );
@@ -254,7 +290,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<CourseDetailsViewArguments>(
         orElse: () => const CourseDetailsViewArguments(),
       );
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i11.CourseDetailsView(key: args.key, course: args.course),
         settings: data,
@@ -264,14 +300,14 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<AddLessonViewArguments>(
         orElse: () => const AddLessonViewArguments(),
       );
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i12.AddLessonView(key: args.key, course: args.course),
         settings: data,
       );
     },
     _i13.AvailableCoursesView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i13.AvailableCoursesView(),
         settings: data,
       );
@@ -280,7 +316,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<LessonDetailsViewArguments>(
         orElse: () => const LessonDetailsViewArguments(),
       );
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i14.LessonDetailsView(key: args.key, lesson: args.lesson),
         settings: data,
@@ -290,47 +326,71 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<LessonsFullViewArguments>(
         orElse: () => const LessonsFullViewArguments(),
       );
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i15.LessonsFullView(key: args.key, courseId: args.courseId),
         settings: data,
       );
     },
     _i16.LearnerCoursesView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i16.LearnerCoursesView(),
         settings: data,
       );
     },
     _i17.LearnerWishlistsView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i17.LearnerWishlistsView(),
         settings: data,
       );
     },
     _i18.PaymentView: (data) {
       final args = data.getArgs<PaymentViewArguments>(nullOk: false);
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i18.PaymentView(key: args.key, course: args.course),
         settings: data,
       );
     },
     _i19.ForgotPasswordView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i19.ForgotPasswordView(),
         settings: data,
       );
     },
     _i20.TosView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i20.TosView(),
         settings: data,
       );
     },
     _i21.TrainerAnalyticsView: (data) {
-      return _i22.MaterialPageRoute<dynamic>(
+      return _i26.MaterialPageRoute<dynamic>(
         builder: (context) => const _i21.TrainerAnalyticsView(),
+        settings: data,
+      );
+    },
+    _i22.ChangePasswordView: (data) {
+      return _i26.MaterialPageRoute<dynamic>(
+        builder: (context) => const _i22.ChangePasswordView(),
+        settings: data,
+      );
+    },
+    _i23.EditProfileView: (data) {
+      return _i26.MaterialPageRoute<dynamic>(
+        builder: (context) => const _i23.EditProfileView(),
+        settings: data,
+      );
+    },
+    _i24.TrainerAppointmentHomeView: (data) {
+      return _i26.MaterialPageRoute<dynamic>(
+        builder: (context) => const _i24.TrainerAppointmentHomeView(),
+        settings: data,
+      );
+    },
+    _i25.TrainerSchedulesView: (data) {
+      return _i26.MaterialPageRoute<dynamic>(
+        builder: (context) => const _i25.TrainerSchedulesView(),
         settings: data,
       );
     },
@@ -349,7 +409,7 @@ class MainBodyViewArguments {
     this.role,
   });
 
-  final _i22.Key? key;
+  final _i26.Key? key;
 
   final String? role;
 
@@ -376,9 +436,9 @@ class CourseDetailsViewArguments {
     this.course,
   });
 
-  final _i22.Key? key;
+  final _i26.Key? key;
 
-  final _i23.CourseModel? course;
+  final _i27.CourseModel? course;
 
   @override
   String toString() {
@@ -404,9 +464,9 @@ class AddLessonViewArguments {
     _i24.Lesson? lesson,
   });
 
-  final _i22.Key? key;
+  final _i26.Key? key;
 
-  final _i23.CourseModel? course;
+  final _i27.CourseModel? course;
 
   @override
   String toString() {
@@ -431,9 +491,9 @@ class LessonDetailsViewArguments {
     this.lesson,
   });
 
-  final _i22.Key? key;
+  final _i26.Key? key;
 
-  final _i24.Lesson? lesson;
+  final _i28.Lesson? lesson;
 
   @override
   String toString() {
@@ -458,7 +518,7 @@ class LessonsFullViewArguments {
     this.courseId,
   });
 
-  final _i22.Key? key;
+  final _i26.Key? key;
 
   final int? courseId;
 
@@ -485,9 +545,9 @@ class PaymentViewArguments {
     required this.course,
   });
 
-  final _i22.Key? key;
+  final _i26.Key? key;
 
-  final _i25.CourseParam course;
+  final _i29.CourseParam course;
 
   @override
   String toString() {
@@ -506,7 +566,7 @@ class PaymentViewArguments {
   }
 }
 
-extension NavigatorStateExtension on _i26.NavigationService {
+extension NavigatorStateExtension on _i30.NavigationService {
   Future<dynamic> navigateToHomeView([
     int? routerId,
     bool preventDuplicates = true,
@@ -564,7 +624,7 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> navigateToMainBodyView({
-    _i22.Key? key,
+    _i26.Key? key,
     String? role,
     int? routerId,
     bool preventDuplicates = true,
@@ -637,8 +697,8 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> navigateToCourseDetailsView({
-    _i22.Key? key,
-    _i23.CourseModel? course,
+    _i26.Key? key,
+    _i27.CourseModel? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -654,8 +714,8 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> navigateToAddLessonView({
-    _i22.Key? key,
-    _i23.CourseModel? course,
+    _i26.Key? key,
+    _i27.CourseModel? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -685,8 +745,8 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> navigateToLessonDetailsView({
-    _i22.Key? key,
-    _i24.Lesson? lesson,
+    _i26.Key? key,
+    _i28.Lesson? lesson,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -702,7 +762,7 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> navigateToLessonsFullView({
-    _i22.Key? key,
+    _i26.Key? key,
     int? courseId,
     int? routerId,
     bool preventDuplicates = true,
@@ -747,8 +807,8 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> navigateToPaymentView({
-    _i22.Key? key,
-    required _i25.CourseParam course,
+    _i26.Key? key,
+    required _i29.CourseParam course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -799,6 +859,62 @@ extension NavigatorStateExtension on _i26.NavigationService {
         transition,
   ]) async {
     return navigateTo<dynamic>(Routes.trainerAnalyticsView,
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
+  Future<dynamic> navigateToChangePasswordView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return navigateTo<dynamic>(Routes.changePasswordView,
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
+  Future<dynamic> navigateToEditProfileView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return navigateTo<dynamic>(Routes.editProfileView,
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
+  Future<dynamic> navigateToTrainerAppointmentHomeView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return navigateTo<dynamic>(Routes.trainerAppointmentHomeView,
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
+  Future<dynamic> navigateToTrainerSchedulesView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return navigateTo<dynamic>(Routes.trainerSchedulesView,
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -862,7 +978,7 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> replaceWithMainBodyView({
-    _i22.Key? key,
+    _i26.Key? key,
     String? role,
     int? routerId,
     bool preventDuplicates = true,
@@ -935,8 +1051,8 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> replaceWithCourseDetailsView({
-    _i22.Key? key,
-    _i23.CourseModel? course,
+    _i26.Key? key,
+    _i27.CourseModel? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -952,8 +1068,8 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> replaceWithAddLessonView({
-    _i22.Key? key,
-    _i23.CourseModel? course,
+    _i26.Key? key,
+    _i27.CourseModel? course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -983,8 +1099,8 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> replaceWithLessonDetailsView({
-    _i22.Key? key,
-    _i24.Lesson? lesson,
+    _i26.Key? key,
+    _i28.Lesson? lesson,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1000,7 +1116,7 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> replaceWithLessonsFullView({
-    _i22.Key? key,
+    _i26.Key? key,
     int? courseId,
     int? routerId,
     bool preventDuplicates = true,
@@ -1045,8 +1161,8 @@ extension NavigatorStateExtension on _i26.NavigationService {
   }
 
   Future<dynamic> replaceWithPaymentView({
-    _i22.Key? key,
-    required _i25.CourseParam course,
+    _i26.Key? key,
+    required _i29.CourseParam course,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1097,6 +1213,62 @@ extension NavigatorStateExtension on _i26.NavigationService {
         transition,
   ]) async {
     return replaceWith<dynamic>(Routes.trainerAnalyticsView,
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
+  Future<dynamic> replaceWithChangePasswordView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return replaceWith<dynamic>(Routes.changePasswordView,
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
+  Future<dynamic> replaceWithEditProfileView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return replaceWith<dynamic>(Routes.editProfileView,
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
+  Future<dynamic> replaceWithTrainerAppointmentHomeView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return replaceWith<dynamic>(Routes.trainerAppointmentHomeView,
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
+  Future<dynamic> replaceWithTrainerSchedulesView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return replaceWith<dynamic>(Routes.trainerSchedulesView,
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,

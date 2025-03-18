@@ -2,6 +2,7 @@ import 'package:code_bolanon/ui/views/available_courses/available_courses_view.d
 import 'package:code_bolanon/ui/views/home/home_view.dart';
 import 'package:code_bolanon/ui/views/learner_home/learner_home_view.dart';
 import 'package:code_bolanon/ui/views/menu/menu_view.dart';
+import 'package:code_bolanon/ui/views/trainer_appointment_home/trainer_appointment_home_view.dart';
 import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart';
 import 'package:code_bolanon/ui/views/trainer_home/trainer_home_view.dart';
 import 'package:flutter/material.dart';
@@ -78,7 +79,8 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
                   onGenerateRoute: (routeSettings) {
                     return viewModel.role == 'trainer'
                         ? MaterialPageRoute(
-                            builder: (context) => const SizedBox.shrink(),
+                            builder: (context) =>
+                                const TrainerAppointmentHomeView(),
                           )
                         : MaterialPageRoute(
                             builder: (context) => const SizedBox.shrink(),
@@ -192,7 +194,7 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
                             size: 24,
                           ),
                         ),
-                        label: 'Consultations',
+                        label: 'Appointments',
                       ),
                       BottomNavigationBarItem(
                         icon: Container(

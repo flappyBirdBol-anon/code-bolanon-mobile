@@ -44,6 +44,10 @@ import 'package:code_bolanon/ui/dialogs/metric_selection/metric_selection_dialog
 
 import 'package:code_bolanon/services/wishlist_service.dart';
 import 'package:code_bolanon/services/registration_service.dart';
+import 'package:code_bolanon/ui/views/change_password/change_password_view.dart';
+import 'package:code_bolanon/ui/views/edit_profile/edit_profile_view.dart';
+import 'package:code_bolanon/ui/views/trainer_appointment_home/trainer_appointment_home_view.dart';
+import 'package:code_bolanon/ui/views/trainer_schedules/trainer_schedules_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -68,6 +72,10 @@ import 'package:code_bolanon/services/registration_service.dart';
     MaterialRoute(page: ForgotPasswordView),
     MaterialRoute(page: TosView),
     MaterialRoute(page: TrainerAnalyticsView),
+    MaterialRoute(page: ChangePasswordView),
+    MaterialRoute(page: EditProfileView),
+    MaterialRoute(page: TrainerAppointmentHomeView),
+    MaterialRoute(page: TrainerSchedulesView),
 // @stacked-route
   ],
   dependencies: [

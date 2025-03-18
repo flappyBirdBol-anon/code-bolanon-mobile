@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
@@ -7,7 +9,6 @@ import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 class ImageService {
   final String baseUrl;
@@ -450,5 +451,63 @@ class ImageService {
         ),
       ),
     );
+  }
+
+  /// Gets profile image widget
+  Widget getProfileImageWidget({
+    required String imageUrl,
+    double? width,
+    double? height,
+    BoxFit fit = BoxFit.cover,
+    Widget? placeholder,
+    Widget? errorWidget,
+  }) {
+    if (imageUrl.isEmpty) {
+      return errorWidget ?? _buildPlaceholder(width: width, height: height);
+    }
+
+    // For local files
+    if (imageUrl.startsWith('/data/') || imageUrl.startsWith('file://')) {
+      final filePath = imageUrl.replaceAll('file://', '');
+      final file = File(filePath);
+      if (!file.existsSync()) {
+        return errorWidget ?? _buildPlaceholder(width: width, height: height);
+      }
+      return Image.file(
+        file,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) =>
+            errorWidget ?? _buildPlaceholder(width: width, height: height),
+      );
+    }
+
+    // For network images
+    return CachedNetworkImage(
+      imageUrl: getImageUrl(imageUrl),
+      width: width,
+      height: height,
+      fit: fit,
+      placeholder: (context, url) =>
+          placeholder ?? _buildPlaceholder(width: width, height: height),
+      errorWidget: (context, url, error) =>
+          errorWidget ?? _buildPlaceholder(width: width, height: height),
+    );
+  }
+
+  /// Gets the profile picture URL from a path
+  String getProfilePictureUrl(String imagePath) {
+    if (imagePath.isEmpty) return '';
+    if (imagePath.startsWith('http')) return imagePath;
+    if (imagePath.startsWith('assets/')) return imagePath;
+    if (imagePath.startsWith('/data/') || imagePath.startsWith('file://')) {
+      return imagePath.replaceAll('file://', '');
+    }
+
+    // Clean and construct the path for network images
+    final cleanPath =
+        imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    return '$baseUrl/$cleanPath';
   }
 }

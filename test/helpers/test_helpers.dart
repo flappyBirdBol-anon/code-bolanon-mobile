@@ -1,24 +1,22 @@
+import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/services/analytics_service.dart';
+import 'package:code_bolanon/services/api_service.dart';
+import 'package:code_bolanon/services/auth_service.dart';
+import 'package:code_bolanon/services/course_service.dart';
+import 'package:code_bolanon/services/file_service.dart';
+import 'package:code_bolanon/services/forgot_password_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/services/lesson_service.dart';
+import 'package:code_bolanon/services/payment_service.dart';
+import 'package:code_bolanon/services/registration_service.dart';
+import 'package:code_bolanon/services/stripe_service.dart';
+import 'package:code_bolanon/services/tech_stack_service.dart';
+import 'package:code_bolanon/services/theme_service.dart';
+import 'package:code_bolanon/services/user_service.dart';
+import 'package:code_bolanon/services/wishlist_service.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:code_bolanon/app/app.locator.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:code_bolanon/services/auth_service.dart';
-import 'package:code_bolanon/services/theme_service.dart';
-import 'package:code_bolanon/services/api_service.dart';
-import 'package:code_bolanon/services/course_service.dart';
-import 'package:code_bolanon/services/image_service.dart';
-import 'package:code_bolanon/services/user_service.dart';
-import 'package:code_bolanon/services/lesson_service.dart';
-
-import 'package:code_bolanon/services/file_service.dart';
-import 'package:code_bolanon/services/payment_service.dart';
-import 'package:code_bolanon/services/stripe_service.dart';
-import 'package:code_bolanon/services/forgot_password_service.dart';
-import 'package:code_bolanon/services/tech_stack_service.dart';
-import 'package:code_bolanon/services/analytics_service.dart';
-
-import 'package:code_bolanon/services/wishlist_service.dart';
-import 'package:code_bolanon/services/registration_service.dart';
 
 import 'test_helpers.mocks.dart';
 // @stacked-import
@@ -64,9 +62,6 @@ void registerServices() {
   getAndRegisterStripeService();
   getAndRegisterForgotPasswordService();
   getAndRegisterTechStackService();
-
-  getAndRegisterWishlistService();
-  getAndRegisterRegistrationService();
 // @stacked-mock-register
 }
 

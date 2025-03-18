@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
+import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/theme_service.dart';
+import 'package:flutter/material.dart';
 
 class MenuViewModel extends AppBaseViewModel {
   final _themeService = locator<ThemeService>();
+  final _imageService = locator<ImageService>();
   bool get isDarkMode => _themeService.isDarkTheme;
 
   String get userName => userService.currentUser?.fullName ?? 'User';
@@ -54,5 +59,44 @@ class MenuViewModel extends AppBaseViewModel {
     } finally {
       setBusy(false);
     }
+  }
+
+  Widget getProfileImageWidget({
+    BoxFit fit = BoxFit.cover,
+    Widget? placeholder,
+    Widget? errorWidget,
+  }) {
+    if (userImage.isEmpty) {
+      return errorWidget ??
+          const Icon(Icons.person, size: 35, color: Colors.white70);
+    }
+
+    // For local files (from cache/camera)
+    if (userImage.startsWith('/data/')) {
+      return Image.file(
+        File(userImage),
+        width: 60,
+        height: 60,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) =>
+            errorWidget ??
+            const Icon(Icons.person, size: 35, color: Colors.white70),
+      );
+    }
+
+    // For network images
+    return Image.network(
+      userImage,
+      width: 60,
+      height: 60,
+      fit: fit,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return placeholder ?? const CircularProgressIndicator();
+      },
+      errorBuilder: (context, error, stackTrace) =>
+          errorWidget ??
+          const Icon(Icons.person, size: 35, color: Colors.white70),
+    );
   }
 }
