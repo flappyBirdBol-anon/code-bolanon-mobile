@@ -221,14 +221,30 @@ class AddLessonView extends StackedView<AddLessonViewModel> {
                               child: Column(
                                 children: [
                                   const CircularProgressIndicator(),
-                                  const SizedBox(height: 10),
+                                  const SizedBox(height: 12),
                                   Text(
-                                    'Retrieving cached file...',
+                                    viewModel.uploadStatus.isNotEmpty
+                                        ? viewModel.uploadStatus
+                                        : 'Retrieving file from cache...',
                                     style: TextStyle(
-                                      color: Colors.grey[600],
+                                      color: Colors.grey[700],
                                       fontSize: 14,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
+                                  if (viewModel.uploadProgress > 0 &&
+                                      viewModel.uploadProgress < 1.0)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8.0),
+                                      child: LinearProgressIndicator(
+                                        value: viewModel.uploadProgress,
+                                        backgroundColor: Colors.grey[200],
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          Theme.of(context).primaryColor,
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             )

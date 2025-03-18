@@ -214,6 +214,16 @@ class _CourseDialogState extends State<CourseDialog>
         });
       },
       placeholder: 'Add course thumbnail',
+      existingImageWidget: Container(
+        color: Colors.grey[200],
+        child: Center(
+          child: Icon(
+            Icons.image_outlined,
+            size: 50,
+            color: Colors.grey[400],
+          ),
+        ),
+      ),
     );
   }
 

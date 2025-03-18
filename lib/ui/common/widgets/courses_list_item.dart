@@ -73,7 +73,7 @@ class CoursesListItem extends StatelessWidget {
                   child: Stack(
                     children: [
                       AspectRatio(
-                        aspectRatio: 1.5,
+                        aspectRatio: 1.56,
                         child: _buildCourseImage(),
                       ),
                       if (showControls) ...[
@@ -95,7 +95,7 @@ class CoursesListItem extends StatelessWidget {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(4),
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(

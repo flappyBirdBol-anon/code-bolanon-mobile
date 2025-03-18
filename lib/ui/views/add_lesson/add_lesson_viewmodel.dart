@@ -121,6 +121,7 @@ class AddLessonViewModel extends BaseViewModel {
     if (lesson.fileName == null || lesson.fileName!.isEmpty) return;
 
     _isLoadingCachedFile = true;
+    _updateProgress(0.1, 'Checking cache...');
     notifyListeners();
 
     try {
@@ -146,11 +147,55 @@ class AddLessonViewModel extends BaseViewModel {
         );
 
         print('Cached file loaded: ${cachedFile.path}');
+        _updateProgress(1.0, 'File loaded from cache');
       } else {
         print('No cached file found for lesson: ${lesson.id}');
+
+        // If not found in cache, try to download the file
+        _updateProgress(0.3, 'File not in cache, downloading...');
+
+        try {
+          // Try to prefetch the file
+          await _fileService.prefetchFile(
+            fileUrl,
+            lessonId: lesson.id.toString(),
+            fileName: lesson.fileName,
+          );
+
+          // Check if we now have the file
+          final downloadedFile = await _fileService.getCachedFile(
+            fileUrl,
+            fileName: lesson.fileName,
+          );
+
+          if (downloadedFile != null) {
+            // Convert to PlatformFile
+            final fileStats = await downloadedFile.stat();
+            final String extension = lesson.fileName!.contains('.')
+                ? lesson.fileName!.split('.').last
+                : '';
+
+            _selectedFile = PlatformFile(
+              path: downloadedFile.path,
+              name: lesson.fileName!,
+              size: fileStats.size,
+              bytes: null,
+            );
+
+            print('File downloaded and loaded: ${downloadedFile.path}');
+            _updateProgress(1.0, 'File downloaded successfully');
+          } else {
+            _updateProgress(0, 'Could not retrieve file');
+            print('Could not download file for lesson: ${lesson.id}');
+          }
+        } catch (downloadError) {
+          print('Error downloading file: $downloadError');
+          _updateProgress(0, 'Download failed');
+        }
       }
     } catch (e) {
       print('Error loading cached file: $e');
+      _updateProgress(0, 'Error loading file');
     } finally {
       _isLoadingCachedFile = false;
       notifyListeners();

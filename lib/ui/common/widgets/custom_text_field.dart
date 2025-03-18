@@ -86,7 +86,7 @@ class CustomTextField extends StatelessWidget {
           labelText: labelText,
           hintText: hintText,
           errorText: errorText,
-          floatingLabelStyle: GoogleFonts.figtree(),
+          floatingLabelStyle: GoogleFonts.figtree(color: AppColors.primary),
           isDense: isDense,
           filled: filled,
           fillColor: fillColor ?? (isDark ? Colors.grey[900] : Colors.white),

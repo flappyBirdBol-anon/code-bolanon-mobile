@@ -279,8 +279,17 @@ class _CourseCreationViewState extends State<CourseCreationView>
                             height: imageHeight,
                             width: double.infinity,
                             placeholder: 'Add Course Thumbnail',
-                            imageUrl: widget
-                                .initialThumbnail, // Add this line to show initial thumbnail
+                            imageUrl: widget.initialThumbnail,
+                            existingImageWidget: Container(
+                              color: Colors.grey[200],
+                              child: Center(
+                                child: Icon(
+                                  Icons.image_outlined,
+                                  size: 50,
+                                  color: Colors.grey[400],
+                                ),
+                              ),
+                            ),
                             overlayIcon: Material(
                               elevation: 4,
                               borderRadius: BorderRadius.circular(50),
