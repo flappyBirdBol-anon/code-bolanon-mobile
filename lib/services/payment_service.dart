@@ -152,7 +152,7 @@ class PaymentService with ListenableServiceMixin {
         timestamp: DateTime.now(),
         status: 'completed',
         userId: await _getCurrentUserId(),
-        currency: 'usd',
+        currency: 'PHP',
       );
 
       final saveResult = await _apiService.saveTransaction(transaction);
@@ -165,9 +165,10 @@ class PaymentService with ListenableServiceMixin {
         };
       }
 
+      // Return the transaction object directly instead of from the API response
       return {
         'success': true,
-        'transaction': saveResult['transaction'],
+        'transaction': transaction, // Use the local transaction object
         'message': 'Payment successful',
       };
     } catch (e) {

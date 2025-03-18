@@ -42,18 +42,20 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
 
     final bodyStyle = GoogleFonts.figtree(
       fontSize: 14,
+      color: AppColors.primary,
     );
 
     final codeStyle = GoogleFonts.firaCode(
       fontSize: 13,
       fontWeight: FontWeight.w500,
+      color: AppColors.primary,
     );
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
-          color: Colors.grey,
+          color: AppColors.primary,
           backgroundColor: Colors.white,
           onRefresh: () async => viewModel.refreshData(),
           child: SingleChildScrollView(
@@ -748,7 +750,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                         child: Text(
                           "View All Courses",
                           style: bodyStyle.copyWith(
-                            color: theme.primaryColor,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -856,7 +858,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
             Text("Your Stack", style: headingStyle),
             TextButton.icon(
               onPressed: () => viewModel.addToStack(),
-              icon: const Icon(Icons.add, size: 16),
+              icon: const Icon(Icons.add, size: 16, color: AppColors.primary),
               label: Text("Add", style: codeStyle.copyWith(fontSize: 12)),
               style: TextButton.styleFrom(
                 backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
@@ -934,8 +936,8 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
         itemCount: 3,
       );
     }
-    final isDark = theme.brightness == Brightness.dark;
-    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    // final isDark = theme.brightness == Brightness.dark;
+    // final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
 
     // Wrap CarouselSlider with SizedBox to ensure stable dimensions
     return SizedBox(
@@ -954,10 +956,11 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
           );
         },
         options: CarouselOptions(
-          height: 250,
-          viewportFraction: 0.45,
+          height: 350,
+          viewportFraction: 0.52,
+
           // Disable autoplay initially - will help prevent rendering issues
-          autoPlay: false,
+          autoPlay: true,
           enableInfiniteScroll: viewModel.courseList.length > 1,
           padEnds: true,
           // Add initialPage to ensure consistent starting position
@@ -967,7 +970,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
           // Add pauseAutoPlayOnManualNavigate to prevent scroll conflicts
           pauseAutoPlayInFiniteScroll: true,
           // Increased page view port to ensure better rendering
-          enlargeCenterPage: false,
+          enlargeCenterPage: true,
         ),
       ),
     );

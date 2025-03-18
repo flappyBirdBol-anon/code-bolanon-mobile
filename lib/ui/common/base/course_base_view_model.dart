@@ -139,8 +139,8 @@ abstract class CourseBaseViewModel extends BaseViewModel
   }
 
   // Get tags for a specific course
-  List<String> getCourseTags(String courseId) =>
-      _tagService.getCourseTags(courseId);
+  List<String> getCourseTags(CourseModel course) =>
+      course.stacks.map((stack) => stack).toList();
 
   // Check if course has specific tag
   bool courseHasTag(String courseId, String tag) =>
@@ -162,7 +162,7 @@ abstract class CourseBaseViewModel extends BaseViewModel
               course.description
                   .toLowerCase()
                   .contains(searchQuery.toLowerCase()) ||
-              getCourseTags(course.id).any((tag) =>
+              getCourseTags(course).any((tag) =>
                   tag.toLowerCase().contains(searchQuery.toLowerCase())))
           .toList();
     }
@@ -182,7 +182,7 @@ abstract class CourseBaseViewModel extends BaseViewModel
               course.description
                   .toLowerCase()
                   .contains(searchQuery.toLowerCase()) ||
-              getCourseTags(course.id).any((tag) =>
+              getCourseTags(course).any((tag) =>
                   tag.toLowerCase().contains(searchQuery.toLowerCase())))
           .toList();
     }

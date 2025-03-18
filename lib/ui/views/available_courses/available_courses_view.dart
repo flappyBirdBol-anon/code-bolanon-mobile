@@ -43,7 +43,7 @@ class AvailableCoursesView extends StackedView<AvailableCoursesViewModel> {
               course: course,
               onTap: () => viewModel.navigateToCourseDetails(course),
               imageService: viewModel.imageService,
-              tags: viewModel.getCourseTags(course.id),
+              tags: viewModel.getCourseTags(course),
               isRegistered: viewModel.isCourseRegistered(course.id),
             );
           },

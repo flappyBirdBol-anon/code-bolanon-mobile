@@ -6,6 +6,7 @@ import 'package:code_bolanon/models/lessons_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
+import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:stacked/stacked.dart';
@@ -136,7 +137,19 @@ class LessonsFullViewModel extends BaseViewModel {
 
   // Navigation methods
   void navigateToAddLesson() {
-    _navigationService.navigateTo(Routes.addLessonView);
+    if (_course == null) {
+      _dialogService.showDialog(
+        title: 'Error',
+        description: 'Course information is not available.',
+      );
+      return;
+    }
+
+    _navigationService.navigateToView(
+      AddLessonView(
+        course: _course,
+      ),
+    );
   }
 
   void navigateToLessonDetails(Lesson lesson) {
@@ -147,9 +160,19 @@ class LessonsFullViewModel extends BaseViewModel {
   }
 
   void navigateToEditLesson(Lesson lesson) {
-    _navigationService.navigateTo(
-      Routes.addLessonView,
-      arguments: lesson,
+    if (_course == null) {
+      _dialogService.showDialog(
+        title: 'Error',
+        description: 'Course information is not available.',
+      );
+      return;
+    }
+
+    _navigationService.navigateToView(
+      AddLessonView(
+        course: _course,
+        lesson: lesson,
+      ),
     );
   }
 

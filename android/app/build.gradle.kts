@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.code_bolanon"
+    namespace = "com.example.code_bolanon" 
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 

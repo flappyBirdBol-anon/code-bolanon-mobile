@@ -1,11 +1,11 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/services/image_service.dart';
 import '../app_colors.dart';
 
-class CustomImageField extends StatelessWidget {
+class CustomImageField extends StatefulWidget {
   final XFile? selectedImage;
   final Function(XFile?) onImageSelected;
   final double height;
@@ -27,6 +27,57 @@ class CustomImageField extends StatelessWidget {
     this.overlayIcon,
   }) : super(key: key);
 
+  @override
+  State<CustomImageField> createState() => _CustomImageFieldState();
+}
+
+class _CustomImageFieldState extends State<CustomImageField> {
+  final ImageService _imageService = locator<ImageService>();
+  bool _isLoading = false;
+  File? _cachedFile;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedImage();
+  }
+
+  @override
+  void didUpdateWidget(CustomImageField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.imageUrl != widget.imageUrl) {
+      _loadCachedImage();
+    }
+  }
+
+  Future<void> _loadCachedImage() async {
+    if (widget.imageUrl == null || widget.imageUrl!.isEmpty) return;
+    if (widget.imageUrl!.startsWith('assets/')) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Try to get the image from cache
+      final imageUrl =
+          _imageService.getCourseThumbnailFromPath(widget.imageUrl!);
+      final file = await _imageService.getCachedImageFile(imageUrl);
+
+      if (file != null) {
+        setState(() {
+          _cachedFile = file;
+        });
+      }
+    } catch (e) {
+      print('Error loading cached image in CustomImageField: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(
@@ -35,7 +86,10 @@ class CustomImageField extends StatelessWidget {
       maxWidth: 1200,
     );
     if (image != null) {
-      onImageSelected(image);
+      widget.onImageSelected(image);
+      setState(() {
+        _cachedFile = null; // Clear cached file when new image is selected
+      });
     }
   }
 
@@ -44,133 +98,106 @@ class CustomImageField extends StatelessWidget {
     return GestureDetector(
       onTap: _pickImage,
       child: Container(
-        height: height,
-        width: width,
+        height: widget.height,
+        width: widget.width,
         decoration: BoxDecoration(
           color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(isCircular ? height / 2 : 16),
+          borderRadius:
+              BorderRadius.circular(widget.isCircular ? widget.height / 2 : 16),
           border: Border.all(color: Colors.grey[300]!),
         ),
-        clipBehavior: Clip.antiAlias, // Add this to ensure proper clipping
+        clipBehavior: Clip.antiAlias,
         child: _buildImageContent(),
       ),
     );
   }
 
   Widget _buildImageContent() {
-    if (selectedImage != null) {
-      return _buildSelectedImage();
-    } else if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return _buildNetworkImage();
+    // If a selected image is provided
+    if (widget.selectedImage != null) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.file(
+            File(widget.selectedImage!.path),
+            fit: BoxFit.cover,
+          ),
+          _buildOverlay(),
+        ],
+      );
     }
-    return _buildPlaceholder();
-  }
 
-  Widget _buildSelectedImage() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.file(
-          File(selectedImage!.path),
-          fit: BoxFit.cover,
-        ),
-        _buildGradientOverlay(),
-        _buildEditIcon(),
-      ],
-    );
-  }
+    // If we have a cached file
+    if (_cachedFile != null) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.file(
+            _cachedFile!,
+            fit: BoxFit.cover,
+          ),
+          _buildOverlay(),
+        ],
+      );
+    }
 
-  Widget _buildNetworkImage() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.network(
-          imageUrl!,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-        ),
-        _buildGradientOverlay(),
-        _buildEditIcon(),
-      ],
-    );
-  }
+    // If we have an image URL
+    if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) {
+      if (widget.imageUrl!.startsWith('assets/')) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              widget.imageUrl!,
+              fit: BoxFit.cover,
+            ),
+            _buildOverlay(),
+          ],
+        );
+      } else {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            _imageService.loadImage(
+              imageUrl:
+                  _imageService.getCourseThumbnailFromPath(widget.imageUrl!),
+              width: widget.width,
+              height: widget.height,
+              placeholder: _isLoading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
+                    )
+                  : null,
+            ),
+            _buildOverlay(),
+          ],
+        );
+      }
+    }
 
-  Widget _buildPlaceholder() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+    // Default placeholder
+    return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (isCircular)
-            Icon(
-              Icons.person,
-              size: height * 0.5,
-              color: Colors.grey[400],
-            )
-          else
-            Icon(
-              Icons.image_outlined,
-              size: height * 0.3,
-              color: Colors.grey[400],
-            ),
-          if (!isCircular) ...[
-            const SizedBox(height: 8),
-            Text(
-              placeholder,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Click to browse',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGradientOverlay() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [
-            Colors.black.withOpacity(0.6),
-            Colors.transparent,
-          ],
-          stops: const [0.0, 0.5],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEditIcon() {
-    return Positioned(
-      bottom: 8,
-      right: 8,
-      child: overlayIcon ??
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.5),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.edit,
-              color: Colors.white,
-              size: 18,
+          Icon(
+            Icons.add_photo_alternate,
+            size: 40,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            widget.placeholder,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
             ),
           ),
+        ],
+      ),
     );
   }
 
@@ -180,35 +207,14 @@ class CustomImageField extends StatelessWidget {
       left: 0,
       right: 0,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-            colors: [Colors.black.withOpacity(0.7), Colors.transparent],
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            if (selectedImage != null)
-              Expanded(
-                child: Text(
-                  selectedImage!.name,
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                ),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        color: Colors.black.withOpacity(0.4),
+        child: Center(
+          child: widget.overlayIcon ??
+              const Icon(
+                Icons.edit,
+                color: Colors.white,
               ),
-            if (overlayIcon != null)
-              overlayIcon!
-            else
-              IconButton(
-                icon: const Icon(Icons.edit, color: Colors.white, size: 18),
-                onPressed: _pickImage,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-          ],
         ),
       ),
     );

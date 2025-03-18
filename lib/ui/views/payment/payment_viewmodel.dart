@@ -113,8 +113,10 @@ class PaymentViewModel extends BaseViewModel {
   }
 
   // Process payment
-  Future<void> processPayment() async {
-    if (_course == null) return;
+  Future<Map<String, dynamic>> processPayment() async {
+    if (_course == null) {
+      return {'success': false, 'message': 'No course information provided'};
+    }
 
     _isProcessing = true;
     notifyListeners();
@@ -153,28 +155,29 @@ class PaymentViewModel extends BaseViewModel {
             ? Transaction.fromJson(result['transaction'])
             : result['transaction'];
 
-        await _dialogService.showCustomDialog(
-          variant: DialogType.success,
-          title: 'Payment Successful',
-          description:
-              'Your payment for ${_course!.title} was successful. Transaction ID: ${_lastTransaction?.id ?? "Unknown"}',
-        );
-
-        // Navigate back or to a success screen
-        _navigationService.back();
+        // No success dialog here - just navigate back with result
+        _navigationService.back(result: result);
+        return result;
       } else {
         await _dialogService.showCustomDialog(
           variant: DialogType.error,
           title: 'Payment Failed',
           description: result['message'] ?? 'An unknown error occurred',
         );
+        return result;
       }
     } catch (e) {
+      final errorResult = {
+        'success': false,
+        'message': 'An unexpected error occurred: $e'
+      };
+
       await _dialogService.showCustomDialog(
         variant: DialogType.error,
         title: 'Error',
         description: 'An unexpected error occurred: $e',
       );
+      return errorResult;
     } finally {
       _isProcessing = false;
       notifyListeners();
@@ -182,6 +185,6 @@ class PaymentViewModel extends BaseViewModel {
   }
 
   void navigateBack() {
-    _navigationService.back();
+    _navigationService.back(result: {'success': false, 'cancelled': true});
   }
 }

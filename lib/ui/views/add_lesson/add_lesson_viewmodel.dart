@@ -1,12 +1,16 @@
 import 'package:code_bolanon/app/app.dialogs.dart' show DialogType;
 import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/models/lessons_model.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
+import 'package:code_bolanon/services/file_service.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
+import 'dart:io';
 
 class AddLessonViewModel extends BaseViewModel {
 //model
@@ -17,6 +21,25 @@ class AddLessonViewModel extends BaseViewModel {
   final _lessonsService = locator<LessonsService>();
   final _snackbarService = locator<SnackbarService>();
   final _dialogService = locator<DialogService>();
+  final _fileService = locator<FileService>();
+
+  // Edit mode tracking
+  bool _isEditingLesson = false;
+  Lesson? _editingLesson;
+
+  bool get isEditMode => _isEditingLesson;
+
+  dynamic get currentArguments {
+    if (_isEditingLesson && _editingLesson != null) {
+      return _editingLesson;
+    }
+    final args = _navigationService.currentArguments;
+    if (args is AddLessonViewArguments) {
+      course = args.course;
+      return args.course;
+    }
+    return args;
+  }
 
   // Controllers
   final TextEditingController titleController = TextEditingController();
@@ -27,6 +50,8 @@ class AddLessonViewModel extends BaseViewModel {
   // File properties
   PlatformFile? _selectedFile;
   PlatformFile? get selectedFile => _selectedFile;
+  bool _isLoadingCachedFile = false;
+  bool get isLoadingCachedFile => _isLoadingCachedFile;
 
   // Upload status
   bool _isUploading = false;
@@ -45,16 +70,91 @@ class AddLessonViewModel extends BaseViewModel {
       descriptionController.text.isNotEmpty &&
       hasFile;
 
-  Future<void> initialize(CourseModel? courses) async {
-    final args = _navigationService.currentArguments;
+  Future<void> initialize(CourseModel? courses, [Lesson? initialLesson]) async {
+    // Clear any previous state
+    _isEditingLesson = false;
+    _editingLesson = null;
+    clearForm();
 
-    if (args is CourseModel) {
-      print("has course");
-      course = args;
-    } else if (courses != null) {
+    // Handle edit mode if lesson is provided
+    if (initialLesson != null) {
+      _isEditingLesson = true;
+      _editingLesson = initialLesson;
+
+      // Populate form fields
+      titleController.text = initialLesson.label;
+      descriptionController.text = initialLesson.description;
+      durationController.text = initialLesson.duration;
+
+      // Set course from the lesson's courseId if no course provided
+      if (courses == null) {
+        course = CourseModel(
+          id: initialLesson.courseId.toString(),
+          title: 'Course', // Placeholder value
+          price: 0.0, // Default price
+          description: '',
+          thumbnail: '', // Required field
+        );
+      } else {
+        course = courses;
+      }
+
+      // Load the file from cache if available
+      _loadCachedFile(initialLesson);
+
+      // Display edit mode message
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.info,
+        message: 'Editing lesson: ${initialLesson.label}',
+        duration: const Duration(seconds: 2),
+      );
+    } else {
+      // Handle new lesson mode
       course = courses;
     }
+
     notifyListeners();
+  }
+
+  // New method to load file from cache
+  Future<void> _loadCachedFile(Lesson lesson) async {
+    if (lesson.fileName == null || lesson.fileName!.isEmpty) return;
+
+    _isLoadingCachedFile = true;
+    notifyListeners();
+
+    try {
+      final fileUrl = _fileService.getLessonFileUrl(lesson);
+      final cachedFile = await _fileService.getCachedFile(
+        fileUrl,
+        fileName: lesson.fileName,
+      );
+
+      if (cachedFile != null) {
+        // Convert File to PlatformFile
+        final fileStats = await cachedFile.stat();
+        final String extension = lesson.fileName!.contains('.')
+            ? lesson.fileName!.split('.').last
+            : '';
+
+        _selectedFile = PlatformFile(
+          path: cachedFile.path,
+          name: lesson.fileName!,
+          size: fileStats.size,
+          // Use the extracted extension
+          bytes: null,
+        );
+
+        print('Cached file loaded: ${cachedFile.path}');
+      } else {
+        print('No cached file found for lesson: ${lesson.id}');
+      }
+    } catch (e) {
+      print('Error loading cached file: $e');
+    } finally {
+      _isLoadingCachedFile = false;
+      notifyListeners();
+    }
   }
 
   // File handling methods
@@ -89,7 +189,10 @@ class AddLessonViewModel extends BaseViewModel {
       return;
     }
 
-    if (_selectedFile == null || _selectedFile!.path == null) {
+    // Skip file validation when editing and no new file selected
+    final bool isEditMode =
+        _isEditingLesson || _navigationService.currentArguments is Lesson;
+    if (_selectedFile == null && !isEditMode) {
       _showErrorSnackbar('Please select a valid file');
       return;
     }
@@ -103,35 +206,56 @@ class AddLessonViewModel extends BaseViewModel {
       _updateProgress(0.3, 'Processing file...');
       await Future.delayed(const Duration(milliseconds: 300));
 
-      _updateProgress(0.5, 'Uploading lesson content...');
-      await Future.delayed(const Duration(milliseconds: 500));
-      print("course id: ${course!.id}");
+      if (isEditMode) {
+        // Get the lesson being edited
+        final existingLesson = _isEditingLesson && _editingLesson != null
+            ? _editingLesson!
+            : _navigationService.currentArguments as Lesson;
 
-      // Create the lesson with file upload
-      final lesson = await _lessonsService.createLesson(
-        label: titleController.text,
-        description: descriptionController.text,
-        courseId: int.tryParse(course!.id) ?? 0,
-        duration: durationController.text,
-        filePath: _selectedFile!.path!,
-        fileName: _selectedFile!.name,
-        fileType: _getFileType(_selectedFile!.extension),
-        // fileSize: _selectedFile!.size,
-      );
+        // Update existing lesson
+        final updatedLesson = await _lessonsService.updateLesson(
+          id: existingLesson.id,
+          label: titleController.text,
+          description: descriptionController.text,
+          duration: durationController.text,
+          filePath: _selectedFile?.path,
+          fileName: _selectedFile?.name ?? existingLesson.fileName,
+          fileType: _selectedFile != null
+              ? _getFileType(_selectedFile!.extension)
+              : existingLesson.fileType,
+        );
+        _updateProgress(1.0, 'Update complete!');
+        await _showSuccessDialog(updatedLesson.label);
+      } else {
+        // Ensure course is available for creating new lesson
+        if (course == null) {
+          throw Exception(
+              'Cannot create lesson: Course information is missing');
+        }
 
-      _updateProgress(1.0, 'Upload complete!');
-
-      // Show success dialog
-      await _showSuccessDialog(lesson.label);
+        // Create new lesson
+        final lesson = await _lessonsService.createLesson(
+          label: titleController.text,
+          description: descriptionController.text,
+          courseId: int.tryParse(course!.id) ?? 0,
+          duration: durationController.text,
+          filePath: _selectedFile!.path!,
+          fileName: _selectedFile!.name,
+          fileType: _getFileType(_selectedFile!.extension),
+        );
+        _updateProgress(1.0, 'Upload complete!');
+        await _showSuccessDialog(lesson.label);
+      }
 
       // Navigate back
       _navigationService.back(result: true);
     } catch (e) {
-      _updateProgress(0, 'Upload failed');
-      _showErrorSnackbar('Error uploading lesson: ${e.toString()}');
+      _updateProgress(0, 'Failed');
+      _showErrorSnackbar('Error saving lesson: ${e.toString()}');
     } finally {
       _isUploading = false;
       setBusy(false);
+      notifyListeners();
     }
   }
 
@@ -149,11 +273,6 @@ class AddLessonViewModel extends BaseViewModel {
 
     if (descriptionController.text.isEmpty) {
       _showErrorSnackbar('Please enter a lesson description');
-      return false;
-    }
-
-    if (!hasFile) {
-      _showErrorSnackbar('Please select a file');
       return false;
     }
 
@@ -178,30 +297,36 @@ class AddLessonViewModel extends BaseViewModel {
       case 'mov':
       case 'avi':
         return 'Video File';
+      case 'mp3':
+      case 'wav':
+        return 'Audio File';
       case 'ppt':
       case 'pptx':
-        return 'PowerPoint';
+        return 'Presentation';
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+        return 'Image';
       default:
-        return 'Unknown File Type';
+        return 'Unknown';
     }
   }
 
   void _showErrorSnackbar(String message) {
     _snackbarService.showCustomSnackBar(
-      variant: SnackbarType.info,
       message: message,
       duration: const Duration(seconds: 3),
-      title: 'Error',
+      variant: SnackbarType.error,
     );
   }
 
-  Future<void> _showSuccessDialog(String lessonTitle) async {
+  Future<void> _showSuccessDialog(String lessonName) async {
     await _dialogService.showCustomDialog(
       variant: DialogType.success,
-      title: 'Lesson Uploaded Successfully!',
-      description:
-          'Your lesson "$lessonTitle" has been uploaded and is now available for students.',
-      mainButtonTitle: 'Great!',
+      title: 'Success',
+      description: 'Lesson "$lessonName" saved successfully!',
+      mainButtonTitle: 'OK',
     );
   }
 

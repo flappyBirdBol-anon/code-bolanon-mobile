@@ -45,36 +45,39 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
       body: SafeArea(
         child: CustomScrollView(
           controller: viewModel.scrollController,
-          physics: const BouncingScrollPhysics(),
+          physics: const ClampingScrollPhysics(),
           slivers: [
-            // Header Section with auto-hide animation
+            // Header Section with optimized animation
             SliverToBoxAdapter(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeInOut,
-                height: viewModel.showHeader ? null : 0,
-                child: AnimatedOpacity(
-                  opacity: viewModel.showHeader ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 500),
-                  child: viewModel.showHeader
-                      ? _buildHeaderSection(context, viewModel)
-                      : const SizedBox.shrink(),
-                ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                switchInCurve: Curves.easeOutQuart,
+                switchOutCurve: Curves.easeInQuart,
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.0, -0.5),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
+                  );
+                },
+                child: viewModel.showHeader
+                    ? _buildHeaderSection(context, viewModel)
+                    : const SizedBox.shrink(),
               ),
             ),
 
-            // Course Stats
+            // Course Stats with optimized animation
             SliverToBoxAdapter(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                height: viewModel.showStats ? null : 0,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 300),
-                  opacity: viewModel.showStats ? 1.0 : 0.0,
-                  child: viewModel.showStats
-                      ? _buildStatsSection(context, viewModel)
-                      : const SizedBox.shrink(),
-                ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                child: viewModel.showStats
+                    ? _buildStatsSection(context, viewModel)
+                    : const SizedBox.shrink(),
               ),
             ),
 
@@ -160,7 +163,7 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
                             imageService: viewModel.imageService,
                             showStatus: true,
                             showControls: true,
-                            tags: viewModel.getCourseTags(course.id),
+                            tags: viewModel.getCourseTags(course),
                             onEditTap: () =>
                                 viewModel.navigateToEditCourse(context, course),
                             onToggleTap: () =>
@@ -275,7 +278,7 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
           // Total Learners Enrolled
           Expanded(
             child: _buildStatItem(
-              'Total Learners Enrolled',
+              'Learners Enrolled',
               '${viewModel.getTotalLearnersEnrolled()}',
               Icons.people_outline,
               Colors.green,

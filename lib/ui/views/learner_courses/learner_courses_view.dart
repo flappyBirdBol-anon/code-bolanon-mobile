@@ -96,7 +96,7 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
                     reviews: course.reviews ?? 0,
                     onTap: () => viewModel.navigateToCourseDetails(course),
                     imageService: viewModel.imageService,
-                    tags: viewModel.getCourseTags(course.id ?? '0'),
+                    tags: viewModel.getCourseTags(course),
                   );
                 },
               ),

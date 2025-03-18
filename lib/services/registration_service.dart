@@ -1,11 +1,18 @@
+import 'package:code_bolanon/app/app.dialogs.dart';
 import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/models/course_param.dart';
 import 'package:code_bolanon/models/registration_model.dart';
+import 'package:code_bolanon/models/transaction_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:stacked/stacked.dart';
+import 'package:stacked_services/stacked_services.dart';
 
 class RegistrationService with ReactiveServiceMixin {
   final ApiService _apiService;
+  final NavigationService _navigationService = locator<NavigationService>();
+  final DialogService _dialogService = locator<DialogService>();
 
   RegistrationService({ApiService? apiService})
       : _apiService = apiService ?? locator<ApiService>();
@@ -25,24 +32,88 @@ class RegistrationService with ReactiveServiceMixin {
   // Create a new registration
   Future<bool> createRegistration(String courseId) async {
     try {
-      final response = await _apiService.post('/registrations', data: {
-        'course_id': courseId.toString(),
-      });
+      // First get the course details
+      final courseResponse = await _apiService.get('/courses/$courseId');
+      if (courseResponse.statusCode != 200) {
+        throw Exception('Failed to fetch course: ${courseResponse.statusCode}');
+      }
 
-      if (response.statusCode == 201) {
-        final registrationJson = response.data['data'];
-        final newRegistration = RegistrationModel.fromJson(registrationJson);
-        _registrations.add(newRegistration);
-        _registeredCourses.add(courseId.toString());
-        notifyListeners();
-        return true;
+      final courseData = courseResponse.data['data'];
+      final courseModel = CourseModel.fromJson(courseData);
+
+      // Navigate to payment view first with CourseParam
+      final paymentResult = await _navigationService.navigateToPaymentView(
+        course: CourseParam(
+          id: courseModel.id,
+          title: courseModel.title,
+          description: courseModel.description,
+          price: courseModel.price,
+          taxRate: 0.00,
+          discountPercentage: 0.00,
+        ),
+      );
+
+      // If payment was successful, create the registration
+      if (paymentResult != null && paymentResult['success'] == true) {
+        final response = await _apiService.post('/registrations', data: {
+          'course_id': courseId.toString(),
+        });
+
+        if (response.statusCode == 201) {
+          final registrationJson = response.data['data'];
+          final newRegistration = RegistrationModel.fromJson(registrationJson);
+          _registrations.add(newRegistration);
+          _registeredCourses.add(courseId.toString());
+          notifyListeners();
+
+          // Ensure we have transaction data to show in receipt
+          if (paymentResult.containsKey('transaction')) {
+            print('Transaction data found, showing receipt dialog');
+            final transactionData = paymentResult['transaction'];
+
+            Transaction transaction;
+            if (transactionData is Map<String, dynamic>) {
+              print('Parsing transaction from map');
+              transaction = Transaction.fromJson(transactionData);
+            } else {
+              print('Using transaction object directly');
+              transaction = transactionData as Transaction;
+            }
+
+            // Use Future.delayed to ensure the dialog appears after navigation completes
+            await Future.delayed(const Duration(milliseconds: 300));
+            await _showReceiptDialog(courseModel, transaction);
+          } else {
+            print('No transaction data in payment result: $paymentResult');
+          }
+
+          return true;
+        } else {
+          throw Exception(
+              'Failed to create registration: ${response.data['message']}');
+        }
       } else {
-        throw Exception(
-            'Failed to create registration: ${response.data['message']}');
+        return false;
       }
     } catch (e) {
+      print('Error in createRegistration: $e');
       return false;
     }
+  }
+
+  // Show receipt dialog
+  Future<void> _showReceiptDialog(
+      CourseModel course, Transaction transaction) async {
+    await _dialogService.showCustomDialog(
+      variant: DialogType.receipt,
+      title: 'Payment Receipt',
+      description: 'Your payment was successful!',
+      mainButtonTitle: 'Close',
+      data: {
+        'course': course,
+        'transaction': transaction,
+      },
+    );
   }
 
   // Load user's registered courses

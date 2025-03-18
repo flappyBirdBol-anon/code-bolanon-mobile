@@ -8,6 +8,8 @@ import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/registration_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/services/wishlist_service.dart';
+import 'package:code_bolanon/ui/common/app_colors.dart';
+import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart';
 import 'package:code_bolanon/ui/views/lessons_full/lessons_full_view.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -38,6 +40,7 @@ class CourseDetailsViewModel extends ReactiveViewModel {
 
   String get profilePictureUrl => _userService.currentUser?.profileImage ?? '';
   String get userName => _userService.currentUser?.fullName ?? 'User';
+  String get userRole => _userService.currentUser?.role ?? 'User';
   bool _isLoading = true;
   bool get isLoading => _isLoading;
   @override
@@ -87,12 +90,14 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   Future<void> _loadLessons() async {
     try {
       _lessons = await _lessonsService.getLessons(courseId: course!.id);
+
       notifyListeners();
     } catch (e) {
       // Handle error
       await _dialogService.showDialog(
         title: 'Error Loading Lessons',
         description: 'Could not load lessons. Please try again later.',
+        buttonTitleColor: AppColors.primary,
       );
     }
   }
@@ -167,8 +172,23 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     notifyListeners();
   }
 
-  void navigateToAddLesson(CourseModel course) {
-    _navigationService.navigateToAddLessonView(course: course);
+  void navigateToAddLesson(CourseModel course, {Lesson? lesson}) {
+    if (lesson != null) {
+      // Edit mode - pass both course and lesson as separate arguments
+      _navigationService.navigateToView(
+        AddLessonView(
+          course: course,
+          lesson: lesson,
+        ),
+      );
+    } else {
+      // Add mode - pass only course
+      _navigationService.navigateToView(
+        AddLessonView(
+          course: course,
+        ),
+      );
+    }
   }
 
   void navigateToLessonsFullView() {
@@ -281,30 +301,30 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   }
 
   Future<void> showRegistrationDialog() async {
+    if (course == null) return;
+
     final response = await _dialogService.showConfirmationDialog(
       title: 'Register for Course',
-      description: 'Are you sure you want to register for "${course!.title}"?',
-      confirmationTitle: 'Register',
+      description:
+          'Are you sure you want to register for "${course!.title}"?\n\nYou will be directed to the payment page to complete your enrollment.',
+      confirmationTitle: 'Continue to Payment',
       cancelTitle: 'Cancel',
     );
 
     if (response?.confirmed == true) {
       try {
         setBusy(true);
-        final registration =
+        final registrationSuccessful =
             await _registrationService.createRegistration(course!.id);
 
-        await _dialogService.showDialog(
-          title: 'Success',
-          description: 'You have successfully registered for the course!',
-        );
-
-        // Reload the page after successful registration
-        await initialize(course);
+        if (registrationSuccessful) {
+          // Reload the page after successful registration
+          await initialize(course);
+        }
       } catch (e) {
         await _dialogService.showDialog(
           title: 'Error',
-          description: 'Failed to register for course: ${e.toString()}',
+          description: 'Failed to process registration: ${e.toString()}',
         );
       } finally {
         setBusy(false);

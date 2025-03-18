@@ -1,4 +1,5 @@
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/models/lessons_model.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -7,7 +8,8 @@ import 'add_lesson_viewmodel.dart';
 
 class AddLessonView extends StackedView<AddLessonViewModel> {
   final CourseModel? course;
-  const AddLessonView({Key? key, this.course}) : super(key: key);
+  final Lesson? lesson;
+  const AddLessonView({Key? key, this.course, this.lesson}) : super(key: key);
 
   @override
   Widget builder(
@@ -15,15 +17,17 @@ class AddLessonView extends StackedView<AddLessonViewModel> {
     AddLessonViewModel viewModel,
     Widget? child,
   ) {
+    // Check for edit mode from either lesson prop or viewModel
+    final bool isEditMode = lesson != null || viewModel.isEditMode;
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
-        title: const Text(
-          'Add New Lesson',
-          style: TextStyle(fontWeight: FontWeight.w600),
+        title: Text(
+          isEditMode ? 'Edit Lesson' : 'Add New Lesson',
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
@@ -211,113 +215,149 @@ class AddLessonView extends StackedView<AddLessonViewModel> {
                           ),
                           const SizedBox(height: 16),
 
-                          // File selection button
-                          InkWell(
-                            onTap: viewModel.isUploading
-                                ? null
-                                : () async {
-                                    FilePickerResult? result =
-                                        await FilePicker.platform.pickFiles(
-                                      type: FileType.custom,
-                                      allowedExtensions: [
-                                        'pdf',
-                                        'doc',
-                                        'docx',
-                                        'xls',
-                                        'xlsx',
-                                        'txt',
-                                        'mp4',
-                                        'mp3',
-                                        'png',
-                                        'jpeg',
-                                        'jpg',
-                                        'mov',
-                                        'avi',
-                                        'ppt',
-                                        'pptx'
-                                      ],
-                                    );
-
-                                    if (result != null) {
-                                      viewModel
-                                          .setSelectedFile(result.files.first);
-                                    }
-                                  },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: Colors.grey[300]!,
-                                  width: 1,
-                                ),
-                              ),
+                          // Show loading indicator when fetching cached file
+                          if (viewModel.isLoadingCachedFile)
+                            Center(
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.cloud_upload_outlined,
-                                    size: 40,
-                                    color: Theme.of(context).primaryColor,
-                                  ),
-                                  const SizedBox(height: 8),
+                                  const CircularProgressIndicator(),
+                                  const SizedBox(height: 10),
                                   Text(
-                                    viewModel.selectedFile != null
-                                        ? viewModel.selectedFile!.name
-                                        : 'Click to select a file',
+                                    'Retrieving cached file...',
                                     style: TextStyle(
-                                      color: viewModel.selectedFile != null
-                                          ? Colors.black87
-                                          : Colors.grey[600],
-                                      fontWeight: viewModel.selectedFile != null
-                                          ? FontWeight.w500
-                                          : FontWeight.normal,
+                                      color: Colors.grey[600],
+                                      fontSize: 14,
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
-
-                          // Show selected file info if available
-                          if (viewModel.selectedFile != null) ...[
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Icon(
-                                  _getFileIcon(
-                                      viewModel.selectedFile!.extension),
-                                  color: Colors.grey[700],
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    viewModel.selectedFile!.name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
+                            )
+                          else if (viewModel.selectedFile != null)
+                            // Selected file display
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[300]!),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    _getFileIcon(
+                                        viewModel.selectedFile?.extension),
+                                    size: 32,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          viewModel.selectedFile?.name ??
+                                              'Selected File',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${_formatFileSize(viewModel.selectedFile?.size ?? 0)}',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close),
+                                    onPressed: viewModel.isUploading
+                                        ? null
+                                        : viewModel.clearFile,
+                                    color: Colors.red,
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            // File selection button
+                            InkWell(
+                              onTap: viewModel.isUploading
+                                  ? null
+                                  : () async {
+                                      FilePickerResult? result =
+                                          await FilePicker.platform.pickFiles(
+                                        type: FileType.custom,
+                                        allowedExtensions: [
+                                          'pdf',
+                                          'doc',
+                                          'docx',
+                                          'xls',
+                                          'xlsx',
+                                          'txt',
+                                          'mp4',
+                                          'mp3',
+                                          'png',
+                                          'jpeg',
+                                          'jpg',
+                                          'mov',
+                                          'avi',
+                                          'ppt',
+                                          'pptx'
+                                        ],
+                                      );
+
+                                      if (result != null) {
+                                        viewModel.setSelectedFile(
+                                            result.files.first);
+                                      }
+                                    },
+                              child: Container(
+                                width: double.infinity,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.grey[300]!,
+                                    width: 1,
                                   ),
                                 ),
-                                if (!viewModel.isUploading)
-                                  IconButton(
-                                    icon: const Icon(Icons.close, size: 18),
-                                    onPressed: viewModel.clearFile,
-                                    color: Colors.grey[700],
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${(viewModel.selectedFile!.size / 1024 / 1024).toStringAsFixed(2)} MB',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.cloud_upload_outlined,
+                                      size: 40,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      viewModel.selectedFile != null
+                                          ? viewModel.selectedFile!.name
+                                          : 'Click to select a file',
+                                      style: TextStyle(
+                                        color: viewModel.selectedFile != null
+                                            ? Colors.black87
+                                            : Colors.grey[600],
+                                        fontWeight:
+                                            viewModel.selectedFile != null
+                                                ? FontWeight.w500
+                                                : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ],
                         ],
                       ),
                     ),
@@ -498,10 +538,22 @@ class AddLessonView extends StackedView<AddLessonViewModel> {
     }
   }
 
+  String _formatFileSize(int sizeInBytes) {
+    if (sizeInBytes < 1024) {
+      return '$sizeInBytes B';
+    } else if (sizeInBytes < 1024 * 1024) {
+      return '${(sizeInBytes / 1024).toStringAsFixed(2)} KB';
+    } else if (sizeInBytes < 1024 * 1024 * 1024) {
+      return '${(sizeInBytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+    } else {
+      return '${(sizeInBytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+    }
+  }
+
   @override
   AddLessonViewModel viewModelBuilder(BuildContext context) =>
       AddLessonViewModel();
   @override
   void onViewModelReady(AddLessonViewModel viewModel) =>
-      viewModel.initialize(course);
+      viewModel.initialize(course, lesson);
 }

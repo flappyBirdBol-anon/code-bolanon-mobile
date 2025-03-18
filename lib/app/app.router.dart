@@ -401,6 +401,7 @@ class AddLessonViewArguments {
   const AddLessonViewArguments({
     this.key,
     this.course,
+    _i24.Lesson? lesson,
   });
 
   final _i22.Key? key;

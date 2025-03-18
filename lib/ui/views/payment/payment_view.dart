@@ -416,7 +416,11 @@ class PaymentView extends StackedView<PaymentViewModel> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: viewModel.processPayment,
+        onPressed: () async {
+          // Call processPayment but don't need to handle the result here
+          // as the viewmodel will navigate back with the result
+          await viewModel.processPayment();
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF0D47A1),
           foregroundColor: Colors.white,

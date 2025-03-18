@@ -42,7 +42,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         if (showSearchButton)
           IconButton(
             iconSize: 26, // Increased icon size
-            icon: const Icon(Icons.search, color: Color(0xFF4C3575)),
+            icon: const Icon(Icons.search, color: AppColors.primary),
             onPressed: () {
               _showSearchBottomSheet(context);
             },
@@ -51,7 +51,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           IconButton(
             iconSize: 26, // Increased icon size
             icon:
-                const Icon(Icons.notifications_none, color: Color(0xFF4C3575)),
+                const Icon(Icons.notifications_none, color: AppColors.primary),
             onPressed: onNotificationTap ?? () {},
           ),
         if (actions != null) ...actions!,

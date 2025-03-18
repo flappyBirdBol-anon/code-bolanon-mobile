@@ -19,49 +19,6 @@ class CourseService {
   List<CourseModel>? _courses;
   List<CourseModel>? get courseList => _courses;
 
-//  // Initialize with sample course data (for demonstration)
-//   void _initializeSampleData() {
-//     final sampleCourses = [
-//       CourseModel(
-//         id: "1",
-//         title: "Advanced Flutter Development",
-//         description: "Master Flutter app development with real-world projects",
-//         price: 99.99,
-//         thumbnail: "assets/images/1.jpg",
-//         lessons: 24,
-//         rating: 4.8,
-//         reviews: 128,
-//       ),
-//       CourseModel(
-//         id: "2",
-//         title: "Full Stack Web Development",
-//         description: "Learn modern web development from frontend to backend",
-//         price: 149.99,
-//         thumbnail: "assets/images/2.jpg",
-//         lessons: 36,
-//         rating: 4.9,
-//         reviews: 256,
-//       ),
-//       CourseModel(
-//         id: "3",
-//         title: "Python Data Science",
-//         description: "Master data analysis and machine learning with Python",
-//         price: 129.99,
-//         thumbnail: "assets/images/3.jpg",
-//         lessons: 30,
-//         rating: 4.7,
-//         reviews: 189,
-//       ),
-//     ];
-
-//     // Add tags to courses
-//     _tagService.addTagsToCourse("1", ["Flutter", "Mobile Dev", "Frontend"]);
-//     _tagService.addTagsToCourse("2", ["Frontend", "Backend", "Full Stack", "JavaScript"]);
-//     _tagService.addTagsToCourse("3", ["Python", "Data Science", "Machine Learning"]);
-
-//     _courses = sampleCourses;
-//   }
-
   Future<List<CourseModel>> getCourses({
     int page = 1,
     int pageSize = 10,
@@ -125,6 +82,11 @@ class CourseService {
     required String description,
     required double price,
     XFile? image,
+    List<String> learningExpectations = const [],
+    List<String> requirements = const [],
+    String level = 'Beginner',
+    String duration = '4 weeks',
+    List<int> techStackIds = const [], // Add tech stack IDs parameter
   }) async {
     try {
       // Prepare data
@@ -132,7 +94,23 @@ class CourseService {
         'title': title,
         'description': description,
         'price': price.toString(), // Convert to string for form data
+        'level': level,
+        'duration': duration,
       };
+
+      // Add arrays for learning expectations and requirements
+      for (int i = 0; i < learningExpectations.length; i++) {
+        courseData['learning_expectations[$i]'] = learningExpectations[i];
+      }
+
+      for (int i = 0; i < requirements.length; i++) {
+        courseData['requirements[$i]'] = requirements[i];
+      }
+
+      // Add tech stack IDs
+      for (int i = 0; i < techStackIds.length; i++) {
+        courseData['tech_stack_ids[$i]'] = techStackIds[i];
+      }
 
       Response response;
 
@@ -205,41 +183,43 @@ class CourseService {
     String? description,
     int? price,
     XFile? image,
+    List<String>? learningExpectations,
+    List<String>? requirements,
+    String? level,
+    String? duration,
+    List<int>? techStackIds, // Add tech stack IDs parameter
   }) async {
     try {
-      // Prepare update data
-      final Map<String, dynamic> updateData = {};
-      updateData['id'] = courseId;
-      if (title != null) updateData['title'] = title;
-      if (description != null) updateData['description'] = description;
-      if (price != null) updateData['price'] = price.toString();
+      final Map<String, dynamic> updateData = {
+        '_method': 'PUT',
+        if (title != null) 'title': title,
+        if (description != null) 'description': description,
+        if (price != null) 'price': price.toString(),
+        if (learningExpectations != null)
+          'learning_expectations': learningExpectations,
+        if (requirements != null) 'requirements': requirements,
+        if (level != null) 'level': level,
+        if (duration != null) 'duration': duration,
+        if (techStackIds != null) 'tech_stack_ids': techStackIds,
+      };
 
-      // Add method spoofing for Laravel
-      updateData['_method'] = 'PUT';
-
-      Response response;
-
+      var response;
       if (image != null) {
-        // Use the dedicated file upload method
-        print("image null");
+        // Only update image if a new one is provided
         response = await _apiService.uploadFile(
           '/courses/$courseId',
           fields: updateData,
           files: {'thumbnail': image},
         );
       } else {
-        // Regular JSON request for update without file
-        print("no image, just regular json");
+        // Regular JSON request for update without changing image
         response =
             await _apiService.post('/courses/$courseId', data: updateData);
       }
 
       if (response.statusCode == 200) {
         final course = CourseModel.fromJson(response.data['data']);
-
-        // Update the cache for this course
         await _imageService.handleCourseCacheUpdate(course);
-
         return course;
       } else {
         throw Exception('Failed to update course: ${response.data['message']}');

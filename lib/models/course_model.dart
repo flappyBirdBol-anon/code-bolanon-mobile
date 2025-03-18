@@ -22,6 +22,13 @@ class CourseModel {
   final DateTime? updatedAt;
   final int? lessonCount;
   final String? author;
+  // New fields
+  final List<String> learningExpectations;
+  final List<String> requirements;
+  final List<String> stacks;
+  final String level; // beginner, intermediate, advanced
+  final String duration; // e.g. "2 months"
+  final List<int> techStackIds; // New field for tech stack IDs
 
   CourseModel({
     required this.id,
@@ -41,6 +48,12 @@ class CourseModel {
     this.updatedAt,
     this.lessonCount,
     this.author,
+    this.learningExpectations = const [],
+    this.requirements = const [],
+    this.stacks = const [],
+    this.level = 'Beginner',
+    this.duration = '4 weeks',
+    this.techStackIds = const [], // Default empty list
   });
 
   factory CourseModel.fromJson(Map<String, dynamic> json) {
@@ -71,6 +84,19 @@ class CourseModel {
           : null,
       lessonCount: json['lessons_count'],
       author: json['author'],
+      // New fields
+      learningExpectations: json['learning_expectations'] != null
+          ? List<String>.from(json['learning_expectations'])
+          : [],
+      requirements: json['requirements'] != null
+          ? List<String>.from(json['requirements'])
+          : [],
+      stacks: json['stacks'] != null ? List<String>.from(json['stacks']) : [],
+      level: json['level'] ?? 'Beginner',
+      duration: json['duration'] ?? '4 weeks',
+      techStackIds: json['selected_stacks'] != null
+          ? List<int>.from(json['selected_stacks'])
+          : [],
     );
   }
 
@@ -87,6 +113,13 @@ class CourseModel {
       'wishlist': wishlist?.toJson(),
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      // New fields
+      'learning_expectations': learningExpectations,
+      'requirements': requirements,
+      // 'stacks': stacks,
+      'level': level,
+      'duration': duration,
+      'tech_stack_ids': techStackIds,
     };
   }
 
@@ -106,6 +139,12 @@ class CourseModel {
     DateTime? updatedAt,
     int? lessonCount,
     String? author,
+    List<String>? learningExpectations,
+    List<String>? requirements,
+    List<String>? stacks,
+    String? level,
+    String? duration,
+    List<int>? techStackIds,
   }) {
     return CourseModel(
       id: id ?? this.id,
@@ -123,6 +162,12 @@ class CourseModel {
       updatedAt: updatedAt ?? this.updatedAt,
       lessonCount: lessonCount ?? this.lessonCount,
       author: author ?? this.author,
+      learningExpectations: learningExpectations ?? this.learningExpectations,
+      requirements: requirements ?? this.requirements,
+      stacks: stacks ?? this.stacks,
+      level: level ?? this.level,
+      duration: duration ?? this.duration,
+      techStackIds: techStackIds ?? this.techStackIds,
     );
   }
 

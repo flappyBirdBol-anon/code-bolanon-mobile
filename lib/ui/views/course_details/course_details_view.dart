@@ -23,7 +23,9 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
     if (viewModel.isLoading) {
       return const Scaffold(
         body: Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            color: AppColors.primary,
+          ),
         ),
       );
     }
@@ -480,8 +482,8 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildKeyMetric(
-                          Icons.access_time, '2-3 months', 'Duration'),
-                      _buildKeyMetric(Icons.bar_chart, 'Beginner', 'Level'),
+                          Icons.access_time, course!.duration, 'Duration'),
+                      _buildKeyMetric(Icons.bar_chart, course!.level, 'Level'),
                       _buildKeyMetric(Icons.people_outline,
                           '${course!.reviews}+', 'Students'),
                     ],
@@ -504,12 +506,9 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: [
-              _buildLearningPoint('Build real-world applications'),
-              _buildLearningPoint('Master core concepts'),
-              _buildLearningPoint('Industry best practices'),
-              _buildLearningPoint('Hands-on projects'),
-            ],
+            children: course!.learningExpectations
+                .map((expectation) => _buildLearningPoint(expectation))
+                .toList(),
           ),
           const SizedBox(height: 24),
 
@@ -594,9 +593,10 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildRequirementItem('Basic programming knowledge'),
-          _buildRequirementItem('Computer with internet connection'),
-          _buildRequirementItem('Dedication to learn'),
+
+          ...course!.requirements
+              .map((requirement) => _buildRequirementItem(requirement))
+              .toList(),
         ],
       ),
     );
@@ -842,6 +842,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
       int index, BuildContext context, CourseDetailsViewModel viewModel) {
     final lesson = viewModel.lessons[index];
     final isLocked = viewModel.isLearner && !viewModel.isRegistered;
+    final isTrainer = course?.author == viewModel.userName;
 
     return ExpansionTile(
       backgroundColor: Colors.white,
@@ -877,13 +878,28 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           ],
         ),
       ),
-      trailing: IconButton(
-        icon: Icon(
-          isLocked ? Icons.lock_outline : Icons.arrow_forward_ios,
-          size: 16,
-          color: isLocked ? Colors.grey : null,
-        ),
-        onPressed: () => viewModel.navigateToLessonDetails(lesson),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isTrainer)
+            IconButton(
+              icon: Icon(
+                Icons.edit,
+                size: 20,
+                color: AppColors.primary,
+              ),
+              onPressed: () =>
+                  viewModel.navigateToAddLesson(course!, lesson: lesson),
+            ),
+          IconButton(
+            icon: Icon(
+              isLocked ? Icons.lock_outline : Icons.arrow_forward_ios,
+              size: 16,
+              color: isLocked ? Colors.grey : null,
+            ),
+            onPressed: () => viewModel.navigateToLessonDetails(lesson),
+          ),
+        ],
       ),
       children: [
         Padding(

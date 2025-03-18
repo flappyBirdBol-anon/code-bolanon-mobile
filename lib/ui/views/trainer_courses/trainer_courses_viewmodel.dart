@@ -25,14 +25,13 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
   bool _showStats = true;
   bool get showStats => _showStats;
 
-  // Timer for throttling scroll updates
-  Timer? _scrollThrottleTimer;
-  double _lastScrollPosition = 0;
-
-  // Timer for auto-hiding header
-  Timer? _headerHideTimer;
+  // Remove throttle timer and use frame callback instead
   bool _showHeader = true;
   bool get showHeader => _showHeader;
+
+  // Track scroll direction for better UX
+  double _lastScrollPosition = 0;
+  bool _isScrollingDown = false;
 
   @override
   List<String> get availableFilters => ['All', 'Active', 'Inactive'];
@@ -71,49 +70,45 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
   @override
   Future<void> init() async {
     await super.init();
-    // Start timer to hide header after 3 seconds
-    _startHeaderHideTimer();
+    // Set initial header state to visible
+    _showHeader = true;
 
-    // Setup scroll listener with throttling
-    scrollController.addListener(_throttledScrollListener);
+    // Add optimized scroll listener
+    scrollController.addListener(_handleScroll);
   }
 
-  void _startHeaderHideTimer() {
-    _headerHideTimer?.cancel();
-    _headerHideTimer = Timer(const Duration(seconds: 3), () {
-      _showHeader = false;
-      notifyListeners();
-    });
-  }
-
-  // Throttled scroll listener to prevent excessive UI updates
-  void _throttledScrollListener() {
+  // Optimized scroll handler that runs directly in the scroll callback
+  void _handleScroll() {
     final currentPosition = scrollController.offset;
 
-    // Only update if we've scrolled more than 15 pixels since last update
-    // This reduces the number of UI updates while scrolling
-    if ((_lastScrollPosition - currentPosition).abs() < 15) {
-      return;
+    // Check scroll direction
+    _isScrollingDown = currentPosition > _lastScrollPosition;
+
+    // Update header visibility based on scroll position and direction
+    if (currentPosition < 10) {
+      // Always show header at the top
+      if (!_showHeader) {
+        _showHeader = true;
+        notifyListeners();
+      }
+    } else if (_isScrollingDown && _showHeader && currentPosition > 50) {
+      // Hide header when scrolling down past threshold
+      _showHeader = false;
+      notifyListeners();
+    } else if (!_isScrollingDown && !_showHeader && currentPosition < 300) {
+      // Show header when scrolling up (but not when deep in the content)
+      _showHeader = true;
+      notifyListeners();
+    }
+
+    // Update stats visibility with more granular control
+    final shouldShowStats = currentPosition < 150;
+    if (shouldShowStats != _showStats) {
+      _showStats = shouldShowStats;
+      notifyListeners();
     }
 
     _lastScrollPosition = currentPosition;
-
-    // Cancel any pending timer
-    _scrollThrottleTimer?.cancel();
-
-    // Set a throttle timer to limit UI updates
-    _scrollThrottleTimer = Timer(const Duration(milliseconds: 100), () {
-      updateStatsVisibility(currentPosition);
-    });
-  }
-
-  // Update stats visibility based on scroll position
-  void updateStatsVisibility(double scrollPosition) {
-    final shouldShow = scrollPosition < 200;
-    if (shouldShow != _showStats) {
-      _showStats = shouldShow;
-      notifyListeners();
-    }
   }
 
   // New stat method for Total Learners Enrolled
@@ -134,9 +129,7 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
 
   @override
   void dispose() {
-    _headerHideTimer?.cancel();
-    _scrollThrottleTimer?.cancel();
-    scrollController.removeListener(_throttledScrollListener);
+    scrollController.removeListener(_handleScroll);
     scrollController.dispose();
     super.dispose();
   }
@@ -164,9 +157,11 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
       context,
       MaterialPageRoute(
         builder: (context) => CourseCreationView(
-          onSave: (title, description, price, image) async {
+          onSave: (title, description, price, image, learningExpectations,
+              requirements, level, duration, techStackIds) async {
             _selectedImage = image;
-            await _addCourse(title, description, price);
+            await _addCourse(title, description, price, learningExpectations,
+                requirements, level, duration, techStackIds);
             return true; // Indicate success
           },
         ),
@@ -179,13 +174,25 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
   }
 
   Future<void> _addCourse(
-      String title, String description, double price) async {
+      String title,
+      String description,
+      double price,
+      List<String> learningExpectations,
+      List<String> requirements,
+      String level,
+      String duration,
+      List<int> techStackIds) async {
     try {
       await courseService.addCourse(
         title: title,
         description: description,
         price: price,
         image: _selectedImage,
+        learningExpectations: learningExpectations,
+        requirements: requirements,
+        level: level,
+        duration: duration,
+        techStackIds: techStackIds, // Pass tech stack IDs
       );
       _showSuccessMessage('Course added successfully');
       await refreshItems();
@@ -195,6 +202,23 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
   }
 
   void navigateToEditCourse(BuildContext context, CourseModel course) async {
+    // Attempt to get cached image file first
+    XFile? cachedImageFile;
+
+    try {
+      if (course.thumbnail.isNotEmpty) {
+        final imageUrl =
+            imageService.getCourseThumbnailFromPath(course.thumbnail);
+        final file = await imageService.getCachedImageFile(imageUrl);
+
+        if (file != null) {
+          cachedImageFile = XFile(file.path);
+        }
+      }
+    } catch (e) {
+      print('Error loading cached image: $e');
+    }
+
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => CourseCreationView(
@@ -202,9 +226,28 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
           initialCourseName: course.title,
           initialDescription: course.description,
           initialPrice: course.price,
-          onSave: (title, description, price, image) async {
-            _selectedImage = image;
-            await _updateCourse(course.id, title, description, price);
+          initialLearningExpectations: course.learningExpectations,
+          initialRequirements: course.requirements,
+          initialStacks: course.stacks,
+          initialLevel: course.level,
+          initialDuration: course.duration,
+          initialTechStackIds:
+              course.techStackIds, // Pass existing tech stack IDs
+          initialThumbnail: course.thumbnail, // Pass the current thumbnail
+          onSave: (title, description, price, image, learningExpectations,
+              requirements, level, duration, techStackIds) async {
+            // Use the selected image or keep the cached one if no new image is selected
+            _selectedImage = image ?? cachedImageFile;
+            await _updateCourse(
+                course.id,
+                title,
+                description,
+                price,
+                learningExpectations,
+                requirements,
+                level,
+                duration,
+                techStackIds);
             return true; // Indicate success
           },
         ),
@@ -222,6 +265,11 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
     String title,
     String description,
     double price,
+    List<String> learningExpectations,
+    List<String> requirements,
+    String level,
+    String duration,
+    List<int> techStackIds, // Add tech stack IDs parameter
   ) async {
     try {
       await courseService.updateCourse(
@@ -230,6 +278,11 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
         description: description,
         price: price.toInt(),
         image: _selectedImage,
+        learningExpectations: learningExpectations,
+        requirements: requirements,
+        level: level,
+        duration: duration,
+        techStackIds: techStackIds, // Pass tech stack IDs
       );
       _showSuccessMessage('Course updated successfully');
       await refreshItems();

@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
@@ -99,7 +100,7 @@ class CustomListItem extends StatelessWidget {
                     ),
                     child: Icon(
                       leadingIcon,
-                      color: leadingIconColor ?? theme.primaryColor,
+                      color: leadingIconColor ?? AppColors.primary,
                       size: iconSize,
                     ),
                   )

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -257,7 +258,8 @@ class ImageService {
                 child: SizedBox(
                   width: width != null ? width * 0.3 : 30,
                   height: width != null ? width * 0.3 : 30,
-                  child: const CircularProgressIndicator(),
+                  child:
+                      const CircularProgressIndicator(color: AppColors.primary),
                 ),
               );
         } else if (snapshot.hasError || !snapshot.hasData) {
@@ -337,6 +339,7 @@ class ImageService {
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.grey[400]!),
+                color: AppColors.primary,
               ),
             ),
           ),
