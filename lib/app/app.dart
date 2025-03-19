@@ -11,6 +11,7 @@ import 'package:code_bolanon/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:code_bolanon/ui/dialogs/basic/basic_dialog.dart';
 import 'package:code_bolanon/ui/dialogs/error/error_dialog.dart';
 import 'package:code_bolanon/ui/dialogs/info_alert/info_alert_dialog.dart';
+import 'package:code_bolanon/ui/dialogs/receipt/receipt_dialog.dart';
 import 'package:code_bolanon/ui/dialogs/success/success_dialog.dart';
 import 'package:code_bolanon/ui/dialogs/warning/warning_dialog.dart';
 import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart';
@@ -26,7 +27,6 @@ import 'package:code_bolanon/ui/views/main_body/main_body_view.dart';
 import 'package:code_bolanon/ui/views/menu/menu_view.dart';
 import 'package:code_bolanon/ui/views/onboarding/onboarding_view.dart';
 import 'package:code_bolanon/ui/views/profile/profile_view.dart';
-import 'package:code_bolanon/ui/views/startup/startup_view.dart';
 import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart';
 import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -53,7 +53,6 @@ import 'package:code_bolanon/ui/views/trainer_schedules/trainer_schedules_view.d
 @StackedApp(
   routes: [
     MaterialRoute(page: HomeView),
-    MaterialRoute(page: StartupView),
     MaterialRoute(page: OnboardingView),
     MaterialRoute(page: AuthView),
     MaterialRoute(page: MainBodyView),
@@ -113,6 +112,7 @@ import 'package:code_bolanon/ui/views/trainer_schedules/trainer_schedules_view.d
     StackedDialog(classType: ErrorDialog),
     StackedDialog(classType: WarningDialog),
     StackedDialog(classType: MetricSelectionDialog),
+    StackedDialog(classType: ReceiptDialog),
     // @stacked-dialog
   ],
 )

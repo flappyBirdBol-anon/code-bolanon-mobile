@@ -952,7 +952,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
             imageService: viewModel.imageService,
             showStatus: true,
             showControls: false,
-            tags: viewModel.getCourseTags(course.id),
+            tags: viewModel.getCourseTags(course),
           );
         },
         options: CarouselOptions(

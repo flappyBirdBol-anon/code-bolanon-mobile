@@ -121,6 +121,35 @@ class _FileViewerState extends State<FileViewer>
     // Initialize audio player
     _audioPlayer = AudioPlayer();
 
+    // Listen to player state changes
+    _audioStateSubscription = _audioPlayer?.playerStateStream.listen((state) {
+      if (_isMounted) {
+        setState(() {
+          _isAudioPlaying = state.playing;
+        });
+      }
+    });
+
+    // Listen to position changes
+    _audioPositionSubscription =
+        _audioPlayer?.positionStream.listen((position) {
+      if (_isMounted) {
+        setState(() {
+          _audioPosition = position;
+        });
+      }
+    });
+
+    // Listen to duration changes
+    _audioDurationSubscription =
+        _audioPlayer?.durationStream.listen((duration) {
+      if (_isMounted) {
+        setState(() {
+          _audioDuration = duration ?? Duration.zero;
+        });
+      }
+    });
+
     // Use provided cached file if available
     if (widget.cachedFile != null) {
       _cachedFile = widget.cachedFile;
@@ -186,8 +215,23 @@ class _FileViewerState extends State<FileViewer>
       // Initialize media players or parse documents based on file type
       if (widget.fileType.contains('video')) {
         await _initializeVideoPlayer(_cachedFile!.path);
-        // } else if (widget.fileType.contains('mp3')) {
-        //   await _initializeAudioPlayer(_cachedFile!.path);
+      } else if (widget.fileType.contains('audio')) {
+        // Initialize audio source
+        try {
+          await _audioPlayer?.setFilePath(_cachedFile!.path);
+          debugPrint('Audio source set successfully');
+
+          // Get initial duration
+          final duration = await _audioPlayer?.duration;
+          if (duration != null && _isMounted) {
+            setState(() {
+              _audioDuration = duration;
+            });
+          }
+        } catch (e) {
+          debugPrint('Error setting audio source: $e');
+          throw Exception('Failed to load audio file: $e');
+        }
       } else if (widget.fileType.contains('spreadsheet') ||
           path.extension(widget.fileUrl).toLowerCase() == '.xlsx' ||
           path.extension(widget.fileUrl).toLowerCase() == '.xls') {
@@ -195,24 +239,20 @@ class _FileViewerState extends State<FileViewer>
         _excelData = await compute(_parseExcelFile, _cachedFile!.path);
 
         // If parsing failed, create a placeholder
-        if (_excelData == null) {
-          _excelData = [
-            ['This Excel file cannot be previewed directly'],
-            [
-              'Please use the download button to view it in an Excel application'
-            ]
-          ];
-        }
+        _excelData ??= [
+          ['This Excel file cannot be previewed directly'],
+          ['Please use the download button to view it in an Excel application']
+        ];
       }
 
       if (!_isMounted) return;
-      _safeSetState(() {
+      setState(() {
         _isLoading = false;
       });
     } catch (e) {
       debugPrint('Error initializing content: $e');
       if (!_isMounted) return;
-      _safeSetState(() {
+      setState(() {
         _isLoading = false;
         _hasError = true;
         _errorMessage = e.toString();
@@ -224,7 +264,7 @@ class _FileViewerState extends State<FileViewer>
   Future<void> _loadFile() async {
     if (!_isMounted) return;
 
-    _safeSetState(() {
+    setState(() {
       _isLoading = true;
       _hasError = false;
     });
@@ -256,7 +296,7 @@ class _FileViewerState extends State<FileViewer>
             }
 
             if (!_isMounted) return;
-            _safeSetState(() {
+            setState(() {
               _cachedFile = downloadedFile;
             });
 
@@ -270,7 +310,7 @@ class _FileViewerState extends State<FileViewer>
         }
       } else {
         if (!_isMounted) return;
-        _safeSetState(() {
+        setState(() {
           _cachedFile = file;
         });
       }
@@ -280,7 +320,7 @@ class _FileViewerState extends State<FileViewer>
     } catch (e) {
       debugPrint('Error loading file: $e');
       if (!_isMounted) return;
-      _safeSetState(() {
+      setState(() {
         _isLoading = false;
         _hasError = true;
         _errorMessage = e.toString();
@@ -355,11 +395,11 @@ class _FileViewerState extends State<FileViewer>
       // Open the media file
       await _player!.open(Media(filePath));
 
-      if (_isMounted) _safeSetState(() {});
+      if (_isMounted) setState(() {});
     } catch (e) {
       debugPrint('Error initializing video player: $e');
       if (_isMounted) {
-        _safeSetState(() {
+        setState(() {
           _hasError = true;
           _errorMessage = 'Could not initialize video player: $e';
         });
@@ -370,7 +410,7 @@ class _FileViewerState extends State<FileViewer>
   Future<void> _downloadFile() async {
     if (_cachedFile == null) return;
 
-    _safeSetState(() {
+    setState(() {
       _isDownloading = true;
       _downloadProgress = 'Preparing download...';
     });
@@ -391,7 +431,7 @@ class _FileViewerState extends State<FileViewer>
       final destinationPath = '${downloadsDir.path}/$fileName';
 
       // Copy the file
-      _safeSetState(() {
+      setState(() {
         _downloadProgress = 'Copying file...';
       });
 
@@ -405,7 +445,7 @@ class _FileViewerState extends State<FileViewer>
         {'source': _cachedFile!.path, 'destination': destinationPath},
       );
 
-      _safeSetState(() {
+      setState(() {
         _isDownloading = false;
         _downloadProgress = null;
       });
@@ -424,7 +464,7 @@ class _FileViewerState extends State<FileViewer>
       );
     } catch (e) {
       debugPrint('Error downloading file: $e');
-      _safeSetState(() {
+      setState(() {
         _isDownloading = false;
         _downloadProgress = null;
       });
@@ -442,7 +482,7 @@ class _FileViewerState extends State<FileViewer>
     // Prevent multiple rapid toggles
     if (_animationController.isAnimating) return;
 
-    _safeSetState(() {
+    setState(() {
       _isFullScreen = !_isFullScreen;
     });
 
@@ -472,8 +512,9 @@ class _FileViewerState extends State<FileViewer>
     _audioPositionSubscription?.cancel();
     _audioDurationSubscription?.cancel();
     _audioStateSubscription?.cancel();
-    final playerToDispose = _audioPlayer;
 
+    // Dispose audio player
+    final playerToDispose = _audioPlayer;
     _audioPlayer = null;
     playerToDispose?.dispose();
 
@@ -637,7 +678,7 @@ class _FileViewerState extends State<FileViewer>
                       debugPrint('Error rendering PDF: $error');
                       // Force rebuild on error
                       if (_isMounted) {
-                        _safeSetState(() {
+                        setState(() {
                           _hasError = true;
                           _errorMessage = 'Error rendering PDF: $error';
                         });
@@ -924,11 +965,15 @@ class _FileViewerState extends State<FileViewer>
                     size: 36,
                     color: AppColors.primary,
                   ),
-                  onPressed: () {
-                    if (_isAudioPlaying) {
-                      _audioPlayer?.pause();
-                    } else {
-                      _audioPlayer?.play();
+                  onPressed: () async {
+                    try {
+                      if (_isAudioPlaying) {
+                        await _audioPlayer?.pause();
+                      } else {
+                        await _audioPlayer?.play();
+                      }
+                    } catch (e) {
+                      debugPrint('Error controlling audio: $e');
                     }
                   },
                 ),
@@ -977,16 +1022,30 @@ class _FileViewerState extends State<FileViewer>
                   overlayColor: AppColors.secondary.withOpacity(0.2),
                 ),
                 child: Slider(
-                  value: _audioPosition.inMilliseconds.toDouble().clamp(
-                      0,
-                      _audioDuration.inMilliseconds.toDouble() > 0
-                          ? _audioDuration.inMilliseconds.toDouble()
-                          : 1),
-                  max: _audioDuration.inMilliseconds.toDouble() > 0
+                  value: _audioDuration.inMilliseconds > 0
+                      ? (_audioPosition.inMilliseconds.toDouble())
+                          .clamp(0, _audioDuration.inMilliseconds.toDouble())
+                      : 0.0,
+                  min: 0,
+                  max: _audioDuration.inMilliseconds > 0
                       ? _audioDuration.inMilliseconds.toDouble()
-                      : 1,
+                      : 1.0,
                   onChanged: (value) {
-                    _audioPlayer?.seek(Duration(milliseconds: value.toInt()));
+                    if (_isMounted && _audioDuration.inMilliseconds > 0) {
+                      _safeSetState(() {
+                        _audioPosition = Duration(milliseconds: value.toInt());
+                      });
+                    }
+                  },
+                  onChangeEnd: (value) async {
+                    try {
+                      if (_audioDuration.inMilliseconds > 0) {
+                        final position = Duration(milliseconds: value.toInt());
+                        await _audioPlayer?.seek(position);
+                      }
+                    } catch (e) {
+                      debugPrint('Error seeking audio: $e');
+                    }
                   },
                 ),
               ),
@@ -1020,11 +1079,15 @@ class _FileViewerState extends State<FileViewer>
             children: [
               IconButton(
                 icon: Icon(Icons.replay_10_rounded, color: AppColors.primary),
-                onPressed: () {
-                  final newPosition =
-                      _audioPosition - const Duration(seconds: 10);
-                  _audioPlayer?.seek(
-                      newPosition.isNegative ? Duration.zero : newPosition);
+                onPressed: () async {
+                  try {
+                    final newPosition =
+                        _audioPosition - const Duration(seconds: 10);
+                    await _audioPlayer?.seek(
+                        newPosition.isNegative ? Duration.zero : newPosition);
+                  } catch (e) {
+                    debugPrint('Error seeking audio backward: $e');
+                  }
                 },
               ),
               const SizedBox(width: 8),
@@ -1036,23 +1099,31 @@ class _FileViewerState extends State<FileViewer>
                   color: AppColors.primary,
                   size: 48,
                 ),
-                onPressed: () {
-                  if (_isAudioPlaying) {
-                    _audioPlayer?.pause();
-                  } else {
-                    _audioPlayer?.play();
+                onPressed: () async {
+                  try {
+                    if (_isAudioPlaying) {
+                      await _audioPlayer?.pause();
+                    } else {
+                      await _audioPlayer?.play();
+                    }
+                  } catch (e) {
+                    debugPrint('Error controlling audio: $e');
                   }
                 },
               ),
               const SizedBox(width: 8),
               IconButton(
                 icon: Icon(Icons.forward_10_rounded, color: AppColors.primary),
-                onPressed: () {
-                  final newPosition =
-                      _audioPosition + const Duration(seconds: 10);
-                  _audioPlayer?.seek(newPosition > _audioDuration
-                      ? _audioDuration
-                      : newPosition);
+                onPressed: () async {
+                  try {
+                    final newPosition =
+                        _audioPosition + const Duration(seconds: 10);
+                    await _audioPlayer?.seek(newPosition > _audioDuration
+                        ? _audioDuration
+                        : newPosition);
+                  } catch (e) {
+                    debugPrint('Error seeking audio forward: $e');
+                  }
                 },
               ),
             ],

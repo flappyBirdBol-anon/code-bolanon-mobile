@@ -73,6 +73,14 @@ class OnboardingView extends StackedView<OnboardingViewModel> {
   OnboardingViewModel viewModelBuilder(BuildContext context) =>
       OnboardingViewModel();
 
+  @override
+  void onViewModelReady(OnboardingViewModel viewModel) {
+    // This immediately marks that the user has started onboarding
+    // to prevent showing it again if they exit the app
+    viewModel.onModelReady();
+    super.onViewModelReady(viewModel);
+  }
+
   List<Widget> _buildPageIndicator(OnboardingViewModel viewModel) {
     return List.generate(
       viewModel.onboardingData.length,

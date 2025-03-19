@@ -35,8 +35,8 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   List<AppointmentModel> _upcomingAppointments = [];
   List<AppointmentModel> get upcomingAppointments => _upcomingAppointments;
 
-  List<String> getCourseTags(String courseId) =>
-      _tagService.getCourseTags(courseId);
+  List<String> getCourseTags(CourseModel course) =>
+      course.stacks.map((e) => e).toList();
 
   TrainerHomeViewModel() {
     init();

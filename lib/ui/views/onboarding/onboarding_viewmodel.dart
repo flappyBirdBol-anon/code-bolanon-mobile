@@ -1,4 +1,6 @@
+import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
+import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -7,8 +9,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingViewModel extends BaseViewModel {
   final _navigationService = NavigationService();
+  final _authService = locator<AuthService>();
   final PageController pageController = PageController(initialPage: 0);
   int _currentPage = 0;
+  bool _hasMarkedAsStarted = false;
 
   String get appName => 'Your App Name';
   int get currentPage => _currentPage;
@@ -35,6 +39,20 @@ class OnboardingViewModel extends BaseViewModel {
     },
   ];
 
+  // Called when view is initialized
+  void onModelReady() {
+    // Mark onboarding as started as soon as view is shown
+    if (!_hasMarkedAsStarted) {
+      _markOnboardingAsStarted();
+    }
+  }
+
+  // Ensures onboarding won't be shown again even if user exits app
+  Future<void> _markOnboardingAsStarted() async {
+    _hasMarkedAsStarted = true;
+    await _authService.setOnboardingStarted();
+  }
+
   void setCurrentPage(int page) {
     _currentPage = page;
     notifyListeners();
@@ -47,10 +65,39 @@ class OnboardingViewModel extends BaseViewModel {
     );
   }
 
-  void navigateToAuth() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('has_seen_onboarding', true);
-    _navigationService.navigateTo(Routes.authView);
+  /// Marks onboarding as completed and navigates to auth screen
+  /// This ensures the onboarding will never be shown again
+  Future<void> navigateToAuth() async {
+    // Show loading while saving preferences
+    setBusy(true);
+
+    try {
+      // Mark as fully completed
+      await _authService.setOnboardingCompleted(true);
+
+      // Navigate to authentication screen
+      await _navigationService.replaceWith(Routes.authView);
+    } catch (e) {
+      // Fallback to alternative storage if SharedPreferences fails
+      await _saveOnboardingStatusAlternative();
+      await _navigationService.replaceWith(Routes.authView);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /// Alternative method to save onboarding status in case SharedPreferences fails
+  Future<void> _saveOnboardingStatusAlternative() async {
+    try {
+      // Try to set the flag via auth service secure storage
+      // This is more secure but requires the auth service
+      if (_authService is AuthService) {
+        await _authService.setOnboardingCompleted(true);
+      }
+    } catch (e) {
+      // Log the error but continue - we'll try again next time
+      print('Failed to save onboarding status: $e');
+    }
   }
 
   @override

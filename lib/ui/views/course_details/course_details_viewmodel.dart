@@ -303,6 +303,7 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   Future<void> showRegistrationDialog() async {
     if (course == null) return;
 
+    // Show confirmation dialog first
     final response = await _dialogService.showConfirmationDialog(
       title: 'Register for Course',
       description:
@@ -311,24 +312,46 @@ class CourseDetailsViewModel extends ReactiveViewModel {
       cancelTitle: 'Cancel',
     );
 
-    if (response?.confirmed == true) {
-      try {
-        setBusy(true);
-        final registrationSuccessful =
-            await _registrationService.createRegistration(course!.id);
+    // If dialog was dismissed or Cancel was clicked, just return
+    if (response == null || !response.confirmed) {
+      final dsa = await _dialogService.showConfirmationDialog(
+        title: 'skdflk',
+        description:
+            'Are you sure you want to register for "${course!.title}"?\n\nYou will be directed to the payment page to complete your enrollment.',
+        confirmationTitle: 'Continue to Payment',
+        cancelTitle: 'Cancel',
+      );
+      return;
+    }
 
-        if (registrationSuccessful) {
-          // Reload the page after successful registration
-          await initialize(course);
-        }
-      } catch (e) {
+    // If confirmed, start the registration process
+    try {
+      setBusy(true);
+
+      // This will navigate to the payment view and wait for result
+      final registrationSuccessful =
+          await _registrationService.createRegistration(course!.id);
+
+      // This code will run after returning from the payment flow
+      if (registrationSuccessful) {
+        // Show success message
         await _dialogService.showDialog(
-          title: 'Error',
-          description: 'Failed to process registration: ${e.toString()}',
+          title: 'Registration Successful',
+          description: 'You have successfully enrolled in this course.',
+          buttonTitle: 'OK',
         );
-      } finally {
-        setBusy(false);
+
+        // Reload the page after successful registration
+        await initialize(course);
       }
+    } catch (e) {
+      await _dialogService.showDialog(
+        title: 'Error',
+        description: 'Failed to process registration: ${e.toString()}',
+        buttonTitle: 'OK',
+      );
+    } finally {
+      setBusy(false);
     }
   }
 
