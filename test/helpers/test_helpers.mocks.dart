@@ -104,8 +104,19 @@ class _FakeDuration_4 extends _i1.SmartFake implements Duration {
         );
 }
 
-class _FakeWidget_5 extends _i1.SmartFake implements _i5.Widget {
-  _FakeWidget_5(
+class _FakeImageProvider_5<T extends Object> extends _i1.SmartFake
+    implements _i5.ImageProvider<T> {
+  _FakeImageProvider_5(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
+class _FakeWidget_6 extends _i1.SmartFake implements _i5.Widget {
+  _FakeWidget_6(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -118,8 +129,8 @@ class _FakeWidget_5 extends _i1.SmartFake implements _i5.Widget {
       super.toString();
 }
 
-class _FakeLesson_6 extends _i1.SmartFake implements _i6.Lesson {
-  _FakeLesson_6(
+class _FakeLesson_7 extends _i1.SmartFake implements _i6.Lesson {
+  _FakeLesson_7(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -128,8 +139,8 @@ class _FakeLesson_6 extends _i1.SmartFake implements _i6.Lesson {
         );
 }
 
-class _FakeOpenResult_7 extends _i1.SmartFake implements _i7.OpenResult {
-  _FakeOpenResult_7(
+class _FakeOpenResult_8 extends _i1.SmartFake implements _i7.OpenResult {
+  _FakeOpenResult_8(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -809,6 +820,16 @@ class MockAuthService extends _i1.Mock implements _i12.AuthService {
       ) as int);
 
   @override
+  _i10.Future<void> initialize() => (super.noSuchMethod(
+        Invocation.method(
+          #initialize,
+          [],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
   _i10.Future<bool> login(
     String? email,
     String? password,
@@ -896,6 +917,37 @@ class MockAuthService extends _i1.Mock implements _i12.AuthService {
         returnValue: _i10.Future<bool>.value(false),
         returnValueForMissingStub: _i10.Future<bool>.value(false),
       ) as _i10.Future<bool>);
+
+  @override
+  _i10.Future<bool> getOnboardingStatus() => (super.noSuchMethod(
+        Invocation.method(
+          #getOnboardingStatus,
+          [],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
+  _i10.Future<void> setOnboardingCompleted(bool? completed) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #setOnboardingCompleted,
+          [completed],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i10.Future<void> setOnboardingStarted() => (super.noSuchMethod(
+        Invocation.method(
+          #setOnboardingStarted,
+          [],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
 
   @override
   void listenToReactiveValues(List<dynamic>? reactiveValues) =>
@@ -1772,6 +1824,69 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
       ) as _i10.Future<void>);
 
   @override
+  _i10.Future<_i19.Uint8List?> getCachedImage(
+    String? imageUrl, {
+    String? courseId,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getCachedImage,
+          [imageUrl],
+          {#courseId: courseId},
+        ),
+        returnValue: _i10.Future<_i19.Uint8List?>.value(),
+        returnValueForMissingStub: _i10.Future<_i19.Uint8List?>.value(),
+      ) as _i10.Future<_i19.Uint8List?>);
+
+  @override
+  void clearMemoryCache() => super.noSuchMethod(
+        Invocation.method(
+          #clearMemoryCache,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i10.Future<void> clearDiskCache() => (super.noSuchMethod(
+        Invocation.method(
+          #clearDiskCache,
+          [],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i5.ImageProvider<Object> getOptimizedImageProvider(
+    String? imageUrl, {
+    String? courseId,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getOptimizedImageProvider,
+          [imageUrl],
+          {#courseId: courseId},
+        ),
+        returnValue: _FakeImageProvider_5<Object>(
+          this,
+          Invocation.method(
+            #getOptimizedImageProvider,
+            [imageUrl],
+            {#courseId: courseId},
+          ),
+        ),
+        returnValueForMissingStub: _FakeImageProvider_5<Object>(
+          this,
+          Invocation.method(
+            #getOptimizedImageProvider,
+            [imageUrl],
+            {#courseId: courseId},
+          ),
+        ),
+      ) as _i5.ImageProvider<Object>);
+
+  @override
   _i10.Future<void> handleCourseCacheUpdate(_i3.CourseModel? course) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -1828,7 +1943,7 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
             #errorWidget: errorWidget,
           },
         ),
-        returnValue: _FakeWidget_5(
+        returnValue: _FakeWidget_6(
           this,
           Invocation.method(
             #loadImage,
@@ -1844,7 +1959,7 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
             },
           ),
         ),
-        returnValueForMissingStub: _FakeWidget_5(
+        returnValueForMissingStub: _FakeWidget_6(
           this,
           Invocation.method(
             #loadImage,
@@ -1902,7 +2017,7 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
             #placeholder: placeholder,
           },
         ),
-        returnValue: _FakeWidget_5(
+        returnValue: _FakeWidget_6(
           this,
           Invocation.method(
             #getImage,
@@ -1916,7 +2031,7 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
             },
           ),
         ),
-        returnValueForMissingStub: _FakeWidget_5(
+        returnValueForMissingStub: _FakeWidget_6(
           this,
           Invocation.method(
             #getImage,
@@ -1963,7 +2078,7 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
             #height: height,
           },
         ),
-        returnValue: _FakeWidget_5(
+        returnValue: _FakeWidget_6(
           this,
           Invocation.method(
             #getCourseImage,
@@ -1977,7 +2092,7 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
             },
           ),
         ),
-        returnValueForMissingStub: _FakeWidget_5(
+        returnValueForMissingStub: _FakeWidget_6(
           this,
           Invocation.method(
             #getCourseImage,
@@ -2015,7 +2130,7 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
             #errorWidget: errorWidget,
           },
         ),
-        returnValue: _FakeWidget_5(
+        returnValue: _FakeWidget_6(
           this,
           Invocation.method(
             #getProfileImageWidget,
@@ -2030,7 +2145,7 @@ class MockImageService extends _i1.Mock implements _i18.ImageService {
             },
           ),
         ),
-        returnValueForMissingStub: _FakeWidget_5(
+        returnValueForMissingStub: _FakeWidget_6(
           this,
           Invocation.method(
             #getProfileImageWidget,
@@ -2080,6 +2195,13 @@ class MockUserService extends _i1.Mock implements _i21.UserService {
         returnValue: <_i22.TechStackModel>[],
         returnValueForMissingStub: <_i22.TechStackModel>[],
       ) as List<_i22.TechStackModel>);
+
+  @override
+  int get courseCount => (super.noSuchMethod(
+        Invocation.getter(#courseCount),
+        returnValue: 0,
+        returnValueForMissingStub: 0,
+      ) as int);
 
   @override
   int get listenersCount => (super.noSuchMethod(
@@ -2167,9 +2289,9 @@ class MockUserService extends _i1.Mock implements _i21.UserService {
   _i10.Future<bool> updateProfile(
     String? firstName,
     String? lastName,
-    String? profilePicture,
     String? specialization,
     String? organization,
+    _i14.XFile? image,
     int? userId,
   ) =>
       (super.noSuchMethod(
@@ -2178,9 +2300,9 @@ class MockUserService extends _i1.Mock implements _i21.UserService {
           [
             firstName,
             lastName,
-            profilePicture,
             specialization,
             organization,
+            image,
             userId,
           ],
         ),
@@ -2312,7 +2434,7 @@ class MockLessonsService extends _i1.Mock implements _i24.LessonsService {
             #fileType: fileType,
           },
         ),
-        returnValue: _i10.Future<_i6.Lesson>.value(_FakeLesson_6(
+        returnValue: _i10.Future<_i6.Lesson>.value(_FakeLesson_7(
           this,
           Invocation.method(
             #createLesson,
@@ -2328,7 +2450,7 @@ class MockLessonsService extends _i1.Mock implements _i24.LessonsService {
             },
           ),
         )),
-        returnValueForMissingStub: _i10.Future<_i6.Lesson>.value(_FakeLesson_6(
+        returnValueForMissingStub: _i10.Future<_i6.Lesson>.value(_FakeLesson_7(
           this,
           Invocation.method(
             #createLesson,
@@ -2372,7 +2494,7 @@ class MockLessonsService extends _i1.Mock implements _i24.LessonsService {
             #fileType: fileType,
           },
         ),
-        returnValue: _i10.Future<_i6.Lesson>.value(_FakeLesson_6(
+        returnValue: _i10.Future<_i6.Lesson>.value(_FakeLesson_7(
           this,
           Invocation.method(
             #updateLesson,
@@ -2389,7 +2511,7 @@ class MockLessonsService extends _i1.Mock implements _i24.LessonsService {
             },
           ),
         )),
-        returnValueForMissingStub: _i10.Future<_i6.Lesson>.value(_FakeLesson_6(
+        returnValueForMissingStub: _i10.Future<_i6.Lesson>.value(_FakeLesson_7(
           this,
           Invocation.method(
             #updateLesson,
@@ -2698,7 +2820,7 @@ class MockFileService extends _i1.Mock implements _i25.FileService {
           [fileUrl],
           {#fileName: fileName},
         ),
-        returnValue: _i10.Future<_i7.OpenResult>.value(_FakeOpenResult_7(
+        returnValue: _i10.Future<_i7.OpenResult>.value(_FakeOpenResult_8(
           this,
           Invocation.method(
             #openFile,
@@ -2707,7 +2829,7 @@ class MockFileService extends _i1.Mock implements _i25.FileService {
           ),
         )),
         returnValueForMissingStub:
-            _i10.Future<_i7.OpenResult>.value(_FakeOpenResult_7(
+            _i10.Future<_i7.OpenResult>.value(_FakeOpenResult_8(
           this,
           Invocation.method(
             #openFile,
@@ -2724,7 +2846,7 @@ class MockFileService extends _i1.Mock implements _i25.FileService {
           #openLessonFile,
           [lesson],
         ),
-        returnValue: _i10.Future<_i7.OpenResult>.value(_FakeOpenResult_7(
+        returnValue: _i10.Future<_i7.OpenResult>.value(_FakeOpenResult_8(
           this,
           Invocation.method(
             #openLessonFile,
@@ -2732,7 +2854,7 @@ class MockFileService extends _i1.Mock implements _i25.FileService {
           ),
         )),
         returnValueForMissingStub:
-            _i10.Future<_i7.OpenResult>.value(_FakeOpenResult_7(
+            _i10.Future<_i7.OpenResult>.value(_FakeOpenResult_8(
           this,
           Invocation.method(
             #openLessonFile,
@@ -2785,7 +2907,7 @@ class MockFileService extends _i1.Mock implements _i25.FileService {
             #errorWidget: errorWidget,
           },
         ),
-        returnValue: _FakeWidget_5(
+        returnValue: _FakeWidget_6(
           this,
           Invocation.method(
             #renderFile,
@@ -2800,7 +2922,7 @@ class MockFileService extends _i1.Mock implements _i25.FileService {
             },
           ),
         ),
-        returnValueForMissingStub: _FakeWidget_5(
+        returnValueForMissingStub: _FakeWidget_6(
           this,
           Invocation.method(
             #renderFile,
@@ -2893,7 +3015,7 @@ class MockFileService extends _i1.Mock implements _i25.FileService {
             #color: color,
           },
         ),
-        returnValue: _FakeWidget_5(
+        returnValue: _FakeWidget_6(
           this,
           Invocation.method(
             #getFileTypeIcon,
@@ -2904,7 +3026,7 @@ class MockFileService extends _i1.Mock implements _i25.FileService {
             },
           ),
         ),
-        returnValueForMissingStub: _FakeWidget_5(
+        returnValueForMissingStub: _FakeWidget_6(
           this,
           Invocation.method(
             #getFileTypeIcon,
@@ -2936,7 +3058,7 @@ class MockFileService extends _i1.Mock implements _i25.FileService {
             #onDownload: onDownload,
           },
         ),
-        returnValue: _FakeWidget_5(
+        returnValue: _FakeWidget_6(
           this,
           Invocation.method(
             #buildFileListItem,
@@ -2950,7 +3072,7 @@ class MockFileService extends _i1.Mock implements _i25.FileService {
             },
           ),
         ),
-        returnValueForMissingStub: _FakeWidget_5(
+        returnValueForMissingStub: _FakeWidget_6(
           this,
           Invocation.method(
             #buildFileListItem,
@@ -3645,6 +3767,32 @@ class MockRegistrationService extends _i1.Mock
         returnValueForMissingStub:
             _i10.Future<List<_i3.CourseModel>>.value(<_i3.CourseModel>[]),
       ) as _i10.Future<List<_i3.CourseModel>>);
+
+  @override
+  _i10.Future<bool> submitReviewOrReport({
+    required String? registrationId,
+    double? rating,
+    String? feedback,
+    bool? isReported,
+    String? reportedReason,
+    String? type,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #submitReviewOrReport,
+          [],
+          {
+            #registrationId: registrationId,
+            #rating: rating,
+            #feedback: feedback,
+            #isReported: isReported,
+            #reportedReason: reportedReason,
+            #type: type,
+          },
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
 
   @override
   void listenToReactiveValues(List<dynamic>? reactiveValues) =>

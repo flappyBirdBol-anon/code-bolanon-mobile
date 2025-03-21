@@ -14,6 +14,11 @@ class RegistrationModel {
   final DateTime updatedAt;
   final CompletedLessons? completedLessons;
 
+  // User information fields
+  final String? userFirstName;
+  final String? userLastName;
+  final String? userProfilePicture;
+
   RegistrationModel({
     required this.id,
     required this.courseId,
@@ -25,6 +30,9 @@ class RegistrationModel {
     required this.createdAt,
     required this.updatedAt,
     this.completedLessons,
+    this.userFirstName,
+    this.userLastName,
+    this.userProfilePicture,
   });
 
   factory RegistrationModel.fromJson(Map<String, dynamic> json) {
@@ -36,13 +44,21 @@ class RegistrationModel {
       feedback: json['feedback'],
       isReported: json['is_reported'] is int
           ? json['is_reported'] == 1
-          : json['is_reported'] as bool,
-      reportedReason: json['reported_reason'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+          : json['is_reported'] == true,
+      reportedReason: json['report_reason'],
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : DateTime.now(),
       completedLessons: json['completed_lessons'] != null
           ? CompletedLessons.fromJson(json['completed_lessons'])
           : null,
+      // Parse user information
+      userFirstName: json['user_first_name'],
+      userLastName: json['user_last_name'],
+      userProfilePicture: json['user_profile_picture'],
     );
   }
 
@@ -58,6 +74,9 @@ class RegistrationModel {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'completed_lessons': completedLessons?.toJson(),
+      'user_first_name': userFirstName,
+      'user_last_name': userLastName,
+      'user_profile_picture': userProfilePicture,
     };
   }
 
@@ -72,6 +91,9 @@ class RegistrationModel {
     DateTime? createdAt,
     DateTime? updatedAt,
     CompletedLessons? completedLessons,
+    String? userFirstName,
+    String? userLastName,
+    String? userProfilePicture,
   }) {
     return RegistrationModel(
       id: id ?? this.id,
@@ -84,8 +106,32 @@ class RegistrationModel {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       completedLessons: completedLessons ?? this.completedLessons,
+      userFirstName: userFirstName ?? this.userFirstName,
+      userLastName: userLastName ?? this.userLastName,
+      userProfilePicture: userProfilePicture ?? this.userProfilePicture,
     );
   }
+
+  // Helper property to get full name
+  String get userFullName {
+    if (userFirstName != null && userLastName != null) {
+      return '$userFirstName $userLastName';
+    } else if (userFirstName != null) {
+      return userFirstName!;
+    } else if (userLastName != null) {
+      return userLastName!;
+    } else {
+      return 'Anonymous User';
+    }
+  }
+
+  // Helper method to check if this review is worth displaying
+  bool get hasReview =>
+      rating != null && feedback != null && feedback!.isNotEmpty;
+
+  // Helper method to check if this report is worth displaying
+  bool get hasReport =>
+      isReported && reportedReason != null && reportedReason!.isNotEmpty;
 
   @override
   String toString() {

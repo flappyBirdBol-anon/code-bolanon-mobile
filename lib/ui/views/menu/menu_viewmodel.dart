@@ -73,8 +73,8 @@ class MenuViewModel extends AppBaseViewModel {
 
     // For local files (from cache/camera)
     if (userImage.startsWith('/data/')) {
-      return Image.file(
-        File(userImage),
+      return Image.asset(
+        userImage,
         width: 60,
         height: 60,
         fit: fit,
@@ -84,19 +84,17 @@ class MenuViewModel extends AppBaseViewModel {
       );
     }
 
+    final imageUrl = _imageService.getCourseThumbnailFromPath(userImage);
+
     // For network images
-    return Image.network(
-      userImage,
+    return _imageService.loadImage(
+      imageUrl: imageUrl,
+      courseId: '',
       width: 60,
       height: 60,
       fit: fit,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return placeholder ?? const CircularProgressIndicator();
-      },
-      errorBuilder: (context, error, stackTrace) =>
-          errorWidget ??
-          const Icon(Icons.person, size: 35, color: Colors.white70),
+      placeholder: placeholder,
+      errorWidget: errorWidget,
     );
   }
 }

@@ -52,7 +52,7 @@ class RegistrationService with ReactiveServiceMixin {
           discountPercentage: 0.00,
         ),
       );
-
+      print('Payment result: $paymentResult');
       // If payment was successful, create the registration
       if (paymentResult != null && paymentResult['success'] == true) {
         final response = await _apiService.post('/registrations', data: {
@@ -61,6 +61,7 @@ class RegistrationService with ReactiveServiceMixin {
 
         if (response.statusCode == 201) {
           final registrationJson = response.data['data'];
+          print('Registration JSON: $registrationJson');
           final newRegistration = RegistrationModel.fromJson(registrationJson);
           _registrations.add(newRegistration);
           _registeredCourses.add(courseId.toString());
@@ -239,6 +240,68 @@ class RegistrationService with ReactiveServiceMixin {
       print('Error fetching course ${registration.courseId}: $e');
       print('StackTrace: $stackTrace');
       rethrow;
+    }
+  }
+
+  // Submit a review and/or report for a registration
+  Future<bool> submitReviewOrReport({
+    required String registrationId,
+    double? rating,
+    String? feedback,
+    bool? isReported,
+    String? reportedReason,
+    String? type,
+  }) async {
+    try {
+      print('Submitting review/report for registration: $registrationId');
+
+      // Prepare request data with nullable fields
+      final Map<String, dynamic> requestData = {};
+
+      // Handle based on type for Laravel expectations
+      if (type == 'review') {
+        requestData['rating'] = rating;
+        requestData['feedback'] = feedback;
+        requestData['type'] = 'review';
+      } else if (type == 'report') {
+        requestData['report_reason'] = reportedReason;
+        requestData['is_reported'] = true;
+        requestData['type'] = 'report';
+      } else {
+        // Fallback to old approach for backward compatibility
+        if (rating != null) requestData['rating'] = rating;
+        if (feedback != null) requestData['feedback'] = feedback;
+        if (isReported != null) requestData['is_reported'] = isReported;
+        if (reportedReason != null)
+          requestData['report_reason'] = reportedReason;
+      }
+
+      // Send PUT request to update registration
+      final response = await _apiService.put(
+        '/registrations/${registrationId}', // Laravel RESTful convention
+        data: requestData,
+      );
+
+      if (response.statusCode == 200) {
+        // Update the local registration data
+        final updatedRegistrationJson = response.data['data'];
+        final index = _registrations.indexWhere((r) => r.id == registrationId);
+
+        if (index != -1) {
+          _registrations[index] =
+              RegistrationModel.fromJson(updatedRegistrationJson);
+          notifyListeners();
+        }
+
+        return true;
+      } else {
+        print('Failed to update registration: ${response.data}');
+        return false;
+      }
+    } catch (e, stackTrace) {
+      print('Error in submitReviewOrReport: $e');
+      print('StackTrace: $stackTrace');
+      return false;
     }
   }
 }

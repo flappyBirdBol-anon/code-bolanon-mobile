@@ -1,17 +1,22 @@
-// lib/views/course_details/course_details_viewmodel.dart
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
+import 'package:code_bolanon/models/registration_model.dart';
+import 'package:code_bolanon/models/user_model.dart';
+import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/registration_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/services/wishlist_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
+import 'package:code_bolanon/ui/common/enums/enums.dart';
 import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart';
 import 'package:code_bolanon/ui/views/lessons_full/lessons_full_view.dart';
+import 'package:code_bolanon/ui/views/trainer_courses/add_course.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 
@@ -25,10 +30,83 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   final _dialogService = locator<DialogService>();
   final _wishlistService = locator<WishlistService>();
   final _registrationService = locator<RegistrationService>();
+  final snackbarService = locator<SnackbarService>();
+  final courseService = locator<CourseService>();
+  XFile? _selectedImage;
+
+  final imageService = locator<ImageService>();
+
+  // User data for the trainer
+  UserModel? get currentUser => _userService.currentUser;
 
   final TextEditingController reviewController = TextEditingController();
   final TextEditingController reportReasonController = TextEditingController();
   double userRating = 0;
+
+  // Reviews related properties
+  List<RegistrationModel> _reviews = [];
+  List<RegistrationModel> get reviews => _reviews;
+  String _reviewSortBy = 'latest'; // 'latest', 'highest', 'lowest'
+  String get reviewSortBy => _reviewSortBy;
+
+  void setReviewSortBy(String sortBy) {
+    _reviewSortBy = sortBy;
+    _sortReviews();
+    notifyListeners();
+  }
+
+  void _sortReviews() {
+    switch (_reviewSortBy) {
+      case 'highest':
+        _reviews.sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
+        break;
+      case 'lowest':
+        _reviews.sort((a, b) => (a.rating ?? 0).compareTo(b.rating ?? 0));
+        break;
+      case 'latest':
+      default:
+        _reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        break;
+    }
+  }
+
+  // Calculate average ratings for each star level
+  Map<int, double> get ratingDistribution {
+    if (_reviews.isEmpty) return {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+
+    // Count reviews with ratings
+    final reviewsWithRatings = _reviews.where((r) => r.rating != null).toList();
+    if (reviewsWithRatings.isEmpty) return {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+
+    // Count each rating
+    final Map<int, int> counts = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+    for (var review in reviewsWithRatings) {
+      if (review.rating != null && review.rating! >= 1 && review.rating! <= 5) {
+        counts[review.rating!] = (counts[review.rating!] ?? 0) + 1;
+      }
+    }
+
+    // Calculate percentages
+    final Map<int, double> percentages = {};
+    final total = reviewsWithRatings.length;
+    for (var rating in counts.keys) {
+      percentages[rating] = total > 0 ? counts[rating]! / total : 0;
+    }
+
+    return percentages;
+  }
+
+  // Calculate overall average rating
+  double get averageRating {
+    if (_reviews.isEmpty) return 0;
+
+    final reviewsWithRatings = _reviews.where((r) => r.rating != null).toList();
+    if (reviewsWithRatings.isEmpty) return 0;
+
+    final sum =
+        reviewsWithRatings.fold(0, (sum, review) => sum + (review.rating ?? 0));
+    return sum / reviewsWithRatings.length;
+  }
 
   @override
   List<ReactiveServiceMixin> get reactiveServices =>
@@ -43,8 +121,7 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   String get userRole => _userService.currentUser?.role ?? 'User';
   bool _isLoading = true;
   bool get isLoading => _isLoading;
-  @override
-  notifyListeners();
+
   // Reference to the course
   CourseModel? _course;
   CourseModel? get course => _course;
@@ -74,9 +151,19 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     }
 
     // Prefetch the course image to ensure it's cached
-    final imageUrl =
-        _imageService.getCourseThumbnailFromPath(_course!.thumbnail);
-    await _imageService.prefetchImage(imageUrl, courseId: _course!.id);
+    if (_course != null) {
+      final imageUrl =
+          _imageService.getCourseThumbnailFromPath(_course!.thumbnail);
+      await _imageService.prefetchImage(imageUrl, courseId: _course!.id);
+
+      // Load reviews from registrations
+      if (_course!.registrations.isNotEmpty) {
+        _reviews =
+            _course!.registrations.where((reg) => reg.hasReview).toList();
+
+        _sortReviews();
+      }
+    }
 
     // Load lessons
     await _loadLessons();
@@ -89,8 +176,9 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   // Load lessons from the service
   Future<void> _loadLessons() async {
     try {
-      _lessons = await _lessonsService.getLessons(courseId: course!.id);
-
+      if (course != null) {
+        _lessons = await _lessonsService.getLessons(courseId: course!.id);
+      }
       notifyListeners();
     } catch (e) {
       // Handle error
@@ -107,6 +195,23 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     setBusy(true);
     await _loadLessons();
     setBusy(false);
+  }
+
+  bool _manualOverrideEnabled = false;
+  bool get manualOverrideEnabled => _manualOverrideEnabled;
+  final ScrollController scrollController = ScrollController();
+
+  bool _innerBoxIsScrolled = false;
+  bool get innerBoxIsScrolled => _innerBoxIsScrolled;
+
+  void setManualOverrideEnabled(bool value) {
+    _manualOverrideEnabled = value;
+    notifyListeners();
+  }
+
+  void setInnerBoxIsScrolled(bool value) {
+    _innerBoxIsScrolled = value;
+    notifyListeners();
   }
 
   // Get a widget to display the course image
@@ -303,6 +408,7 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   Future<void> showRegistrationDialog() async {
     if (course == null) return;
 
+    // Show confirmation dialog first
     final response = await _dialogService.showConfirmationDialog(
       title: 'Register for Course',
       description:
@@ -311,24 +417,39 @@ class CourseDetailsViewModel extends ReactiveViewModel {
       cancelTitle: 'Cancel',
     );
 
-    if (response?.confirmed == true) {
-      try {
-        setBusy(true);
-        final registrationSuccessful =
-            await _registrationService.createRegistration(course!.id);
+    // If dialog was dismissed or Cancel was clicked, just return
+    if (response == null || !response.confirmed) {
+      return;
+    }
 
-        if (registrationSuccessful) {
-          // Reload the page after successful registration
-          await initialize(course);
-        }
-      } catch (e) {
+    // If confirmed, start the registration process
+    try {
+      setBusy(true);
+
+      // This will navigate to the payment view and wait for result
+      final registrationSuccessful =
+          await _registrationService.createRegistration(course!.id);
+
+      // This code will run after returning from the payment flow
+      if (registrationSuccessful) {
+        // Show success message
         await _dialogService.showDialog(
-          title: 'Error',
-          description: 'Failed to process registration: ${e.toString()}',
+          title: 'Registration Successful',
+          description: 'You have successfully enrolled in this course.',
+          buttonTitle: 'OK',
         );
-      } finally {
-        setBusy(false);
+
+        // Reload the page after successful registration
+        await initialize(course);
       }
+    } catch (e) {
+      await _dialogService.showDialog(
+        title: 'Error',
+        description: 'Failed to process registration: ${e.toString()}',
+        buttonTitle: 'OK',
+      );
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -340,22 +461,115 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   Future<void> submitReview() async {
     if (reviewController.text.isEmpty || userRating == 0) {
       // Show error message
+      await _dialogService.showDialog(
+        title: 'Invalid Review',
+        description: 'Please provide both a rating and review text.',
+        buttonTitle: 'OK',
+      );
       return;
     }
-    // TODO: Implement review submission logic
-    reviewController.clear();
-    userRating = 0;
-    notifyListeners();
+
+    try {
+      setBusy(true);
+
+      // Find current registration for this course
+      final registration = _registrationService.registrations
+          .firstWhere((reg) => reg.courseId == course!.id);
+
+      // Submit the review using registration service
+      final success = await _registrationService.submitReviewOrReport(
+        registrationId: registration.id,
+        rating: userRating,
+        feedback: reviewController.text,
+        type: 'review',
+      );
+
+      if (success) {
+        await _dialogService.showDialog(
+          title: 'Review Submitted',
+          description: 'Thank you for your feedback!',
+          buttonTitle: 'OK',
+        );
+
+        // Clear the form
+        reviewController.clear();
+        userRating = 0;
+
+        // Refresh data
+        await initialize(course);
+      } else {
+        await _dialogService.showDialog(
+          title: 'Error',
+          description: 'Failed to submit your review. Please try again later.',
+          buttonTitle: 'OK',
+        );
+      }
+    } catch (e) {
+      await _dialogService.showDialog(
+        title: 'Error',
+        description: 'An error occurred: ${e.toString()}',
+        buttonTitle: 'OK',
+      );
+    } finally {
+      setBusy(false);
+      notifyListeners();
+    }
   }
 
   Future<void> submitReport() async {
     if (reportReasonController.text.isEmpty) {
-      // Show error message
+      await _dialogService.showDialog(
+        title: 'Invalid Report',
+        description: 'Please provide a reason for reporting this course.',
+        buttonTitle: 'OK',
+      );
       return;
     }
-    // TODO: Implement report submission logic
-    reportReasonController.clear();
-    notifyListeners();
+
+    try {
+      setBusy(true);
+
+      // Find current registration for this course
+      final registration = _registrationService.registrations
+          .firstWhere((reg) => reg.courseId == course!.id);
+
+      // Submit the report using registration service
+      final success = await _registrationService.submitReviewOrReport(
+        registrationId: registration.id,
+        reportedReason: reportReasonController.text,
+        type: 'report',
+      );
+
+      if (success) {
+        await _dialogService.showDialog(
+          title: 'Report Submitted',
+          description: 'Thank you for your report. We will review it shortly.',
+          buttonTitle: 'OK',
+        );
+
+        // Clear the form
+        reportReasonController.clear();
+
+        // Refresh data
+        await initialize(course);
+      } else {
+        await _dialogService.showDialog(
+          title: 'Error',
+          description: 'Failed to submit your report. Please try again later.',
+          buttonTitle: 'OK',
+        );
+      }
+      _navigationService.back();
+    } catch (e) {
+      await _dialogService.showDialog(
+        title: 'Error',
+        description: 'An error occurred: ${e.toString()}',
+        buttonTitle: 'OK',
+      );
+    } finally {
+      setBusy(false);
+      notifyListeners();
+    }
   }
 
   bool _isReviewSectionExpanded = false;
@@ -376,6 +590,123 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   bool get isLearner => _userService.currentUser?.role == 'learner';
   bool _isRegistered = false;
   bool get isRegistered => _isRegistered;
+
+  // Add this method to navigate to the edit course page
+  void navigateToEditCourse(BuildContext context, CourseModel course) async {
+    if (!isCreator) {
+      _dialogService.showDialog(
+        title: 'Access Denied',
+        description: 'Only the course creator can edit this course.',
+        buttonTitle: 'OK',
+      );
+      return;
+    }
+
+    // Attempt to get cached image file first
+    XFile? cachedImageFile;
+
+    try {
+      if (course.thumbnail.isNotEmpty) {
+        final imageUrl =
+            imageService.getCourseThumbnailFromPath(course.thumbnail);
+        final file = await imageService.getCachedImageFile(imageUrl);
+
+        if (file != null) {
+          cachedImageFile = XFile(file.path);
+        }
+      }
+    } catch (e) {
+      print('Error loading cached image: $e');
+    }
+
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CourseCreationView(
+          isEditing: true,
+          initialCourseName: course.title,
+          initialDescription: course.description,
+          initialPrice: course.price,
+          initialLearningExpectations: course.learningExpectations,
+          initialRequirements: course.requirements,
+          initialStacks: course.stacks,
+          initialLevel: course.level,
+          initialDuration: course.duration,
+          initialTechStackIds:
+              course.techStackIds, // Pass existing tech stack IDs
+          initialThumbnail: course.thumbnail, // Pass the current thumbnail
+          onSave: (title, description, price, image, learningExpectations,
+              requirements, level, duration, techStackIds) async {
+            // Use the selected image or keep the cached one if no new image is selected
+            _selectedImage = image ?? cachedImageFile;
+            await _updateCourse(
+                course.id,
+                title,
+                description,
+                price,
+                learningExpectations,
+                requirements,
+                level,
+                duration,
+                techStackIds);
+            return true; // Indicate success
+          },
+        ),
+        fullscreenDialog: true,
+      ),
+    );
+  }
+
+  Future<void> _updateCourse(
+    String courseId,
+    String title,
+    String description,
+    double price,
+    List<String> learningExpectations,
+    List<String> requirements,
+    String level,
+    String duration,
+    List<int> techStackIds, // Add tech stack IDs parameter
+  ) async {
+    try {
+      await courseService.updateCourse(
+        courseId: courseId,
+        title: title,
+        description: description,
+        price: price.toInt(),
+        image: _selectedImage,
+        learningExpectations: learningExpectations,
+        requirements: requirements,
+        level: level,
+        duration: duration,
+        techStackIds: techStackIds, // Pass tech stack IDs
+      );
+      _showSuccessMessage('Course updated successfully');
+    } catch (e) {
+      _showErrorMessage('Failed to update course: ${e.toString()}');
+    }
+  }
+
+  void _showErrorMessage(String message) {
+    snackbarService.showCustomSnackBar(
+      message: message,
+      duration: const Duration(seconds: 3),
+      variant: SnackbarType.error,
+    );
+  }
+
+  void _showSuccessMessage(String message) {
+    snackbarService.showCustomSnackBar(
+      message: message,
+      duration: const Duration(seconds: 3),
+      variant: SnackbarType.success,
+    );
+  }
+
+  // Add this getter to check if current user is the creator of the course
+  bool get isCreator =>
+      _course != null &&
+      currentUser != null &&
+      _course!.author == currentUser!.fullName;
 
   // Add this getter to control review section visibility
   bool get canWriteReview => isLearner && isRegistered;
@@ -400,4 +731,109 @@ class CourseDetailsViewModel extends ReactiveViewModel {
 
   // Update getter to allow trainers full access
   bool get canAccessLessons => !isLearner || isRegistered;
+
+  Widget getProfileImageWidget({
+    BoxFit fit = BoxFit.cover,
+    Widget? placeholder,
+    Widget? errorWidget,
+  }) {
+    if (course?.author_image?.isEmpty ?? true) {
+      print('author_image is empty');
+      return errorWidget ??
+          const Icon(Icons.person, size: 35, color: Colors.white70);
+    }
+
+    // For local files (from cache/camera)
+    if (course!.author_image!.startsWith('/data/')) {
+      return Image.asset(
+        currentUser!.profileImage!,
+        width: 60,
+        height: 60,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) =>
+            errorWidget ??
+            const Icon(Icons.person, size: 35, color: Colors.white70),
+      );
+    }
+
+    final imageUrl =
+        _imageService.getCourseThumbnailFromPath(course!.author_image!);
+
+    // For network images
+    return _imageService.loadImage(
+      imageUrl: imageUrl,
+      courseId: '',
+      width: 60,
+      height: 60,
+      fit: fit,
+      placeholder: placeholder,
+      errorWidget: errorWidget,
+    );
+  }
+
+  // Helper to format date for display
+  String formatDate(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inSeconds < 60) {
+      return '${difference.inSeconds} seconds ago';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} minutes ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} hours ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else if (difference.inDays < 30) {
+      final weeks = (difference.inDays / 7).round(); // Rounded weeks
+      return '$weeks ${weeks == 1 ? 'week' : 'weeks'} ago';
+    } else if (difference.inDays < 365) {
+      final months = (difference.inDays / 30).round(); // Rounded months
+      return '$months ${months == 1 ? 'month' : 'months'} ago';
+    } else {
+      final years = (difference.inDays / 365).round(); // Rounded years
+      return '$years ${years == 1 ? 'year' : 'years'} ago';
+    }
+  }
+
+  // Get a widget to display the profile image from registration
+  Widget getReviewerImageWidget(
+    RegistrationModel registration, {
+    double? width,
+    double? height,
+    BoxFit fit = BoxFit.cover,
+    Widget? placeholder,
+    Widget? errorWidget,
+  }) {
+    if (registration.userProfilePicture == null ||
+        registration.userProfilePicture!.isEmpty) {
+      return errorWidget ??
+          Container(
+            width: width ?? 48,
+            height: height ?? 48,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.person,
+              color: Colors.grey[600],
+              size: (width ?? 48) * 0.6,
+            ),
+          );
+    }
+
+    // Use ImageService for remote images
+    final imageUrl = _imageService
+        .getCourseThumbnailFromPath(registration.userProfilePicture!);
+
+    return _imageService.loadImage(
+      imageUrl: imageUrl,
+      width: width,
+      height: height,
+      fit: fit,
+      placeholder: placeholder ?? _buildDefaultPlaceholder(width, height),
+      errorWidget: errorWidget ?? _buildDefaultErrorWidget(width, height),
+    );
+  }
 }

@@ -22,6 +22,7 @@ class CourseModel {
   final DateTime? updatedAt;
   final int? lessonCount;
   final String? author;
+  final String? author_image;
   // New fields
   final List<String> learningExpectations;
   final List<String> requirements;
@@ -29,6 +30,7 @@ class CourseModel {
   final String level; // beginner, intermediate, advanced
   final String duration; // e.g. "2 months"
   final List<int> techStackIds; // New field for tech stack IDs
+  final List<RegistrationModel> registrations; // Add registrations list
 
   CourseModel({
     required this.id,
@@ -48,15 +50,33 @@ class CourseModel {
     this.updatedAt,
     this.lessonCount,
     this.author,
+    this.author_image,
     this.learningExpectations = const [],
     this.requirements = const [],
     this.stacks = const [],
     this.level = 'Beginner',
-    this.duration = '4 weeks',
+    this.duration = 'N/A',
     this.techStackIds = const [], // Default empty list
+    this.registrations = const [], // Default empty list
   });
 
   factory CourseModel.fromJson(Map<String, dynamic> json) {
+    // Parse registrations from API response
+    List<RegistrationModel> registrationsData = [];
+    if (json['registrations'] != null) {
+      registrationsData = (json['registrations'] as List).map((regJson) {
+        // Create a modified map that includes user info directly
+        final Map<String, dynamic> modifiedReg = {...regJson};
+        if (regJson['user'] != null) {
+          modifiedReg['user_first_name'] = regJson['user']['first_name'];
+          modifiedReg['user_last_name'] = regJson['user']['last_name'];
+          modifiedReg['user_profile_picture'] =
+              regJson['user']['profile_picture'];
+        }
+        return RegistrationModel.fromJson(modifiedReg);
+      }).toList();
+    }
+
     return CourseModel(
       id: json['id'].toString(),
       title: json['title'] ?? '',
@@ -65,7 +85,7 @@ class CourseModel {
           json['thumbnail'] ?? json['image_url'] ?? '', // Try both fields
       imageUrl: json['image_url'] ?? json['thumbnail'] ?? '', // Try both fields
       isActive: json['is_active'] ?? true,
-      studentsEnrolled: json['students_enrolled'] ?? 0,
+      studentsEnrolled: json['learners_enrolled'] ?? 0,
       rating: (json['rating'] ?? 0.0).toDouble(),
       price: double.tryParse("${json['price'] ?? 0.00}") ?? 0.00,
       lessons: json['lessons'] ?? 16,
@@ -84,6 +104,7 @@ class CourseModel {
           : null,
       lessonCount: json['lessons_count'],
       author: json['author'],
+      author_image: json['author_image'],
       // New fields
       learningExpectations: json['learning_expectations'] != null
           ? List<String>.from(json['learning_expectations'])
@@ -97,6 +118,7 @@ class CourseModel {
       techStackIds: json['selected_stacks'] != null
           ? List<int>.from(json['selected_stacks'])
           : [],
+      registrations: registrationsData,
     );
   }
 
@@ -145,6 +167,7 @@ class CourseModel {
     String? level,
     String? duration,
     List<int>? techStackIds,
+    List<RegistrationModel>? registrations,
   }) {
     return CourseModel(
       id: id ?? this.id,
@@ -168,6 +191,7 @@ class CourseModel {
       level: level ?? this.level,
       duration: duration ?? this.duration,
       techStackIds: techStackIds ?? this.techStackIds,
+      registrations: registrations ?? this.registrations,
     );
   }
 

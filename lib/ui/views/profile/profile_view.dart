@@ -213,11 +213,11 @@ class ProfileView extends StackedView<ProfileViewModel> {
                         runSpacing: 8,
                         children: viewModel.techStacks.map((tech) {
                           return CustomStackChip(
-                            label: tech,
+                            label: tech.tags,
                             selected: true,
                             isDark: isDark,
                             icon: Icons.code,
-                            color: viewModel.getTechColor(tech, theme),
+                            color: viewModel.getTechColor(tech.tags, theme),
                             textStyle: GoogleFonts.figtree(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,

@@ -77,6 +77,16 @@ class LessonsService with ReactiveServiceMixin {
         _lessons.value = _cachedLessons; // Update the reactive value
         _lastCacheTime = DateTime.now();
         return _cachedLessons!;
+      } else if (response.statusCode == 401) {
+        // Handle unauthorized access
+        throw Exception('Unauthorized access. Please login again.');
+      } else if (response.statusCode == 403) {
+        // Handle forbidden access
+        throw Exception(
+            'Forbidden access. You do not have permission to view this resource.');
+      } else if (response.statusCode == 404) {
+        // Handle not found
+        return [];
       } else {
         throw Exception('Failed to load lessons: ${response.data['message']}');
       }
@@ -241,6 +251,7 @@ class LessonsService with ReactiveServiceMixin {
         final actualFileType = fileType ?? getMimeType(filePath);
 
         final fields = {
+          'id': id,
           'label': label,
           'description': description,
           'duration': duration,

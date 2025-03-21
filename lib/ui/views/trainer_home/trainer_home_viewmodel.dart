@@ -6,7 +6,7 @@ import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/tech_stack_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
-import 'package:code_bolanon/services/tag_service.dart';
+
 import 'package:flutter/material.dart';
 import 'package:stacked_services/stacked_services.dart';
 
@@ -17,51 +17,56 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   DateTime? _selectedDate;
   DateTime? get selectedDate => _selectedDate;
 
-  String get userName => userService.loggedInUser?.fullName ?? 'User';
-  String get userRole => userService.loggedInUser?.role ?? 'Guest';
-  String get userImage => userService.loggedInUser?.profileImage ?? '';
-  String get userEmail => userService.loggedInUser?.email ?? '';
+  String get userName => userService.currentUser?.fullName ?? 'User';
+  String get userRole => userService.currentUser?.role ?? 'Guest';
+  String get userImage => userService.currentUser?.profileImage ?? '';
+  String get userEmail => userService.currentUser?.email ?? '';
+  int get userCourseCount => userService.courseCount;
 
   List<TechStackModel> get userTopics => userService.userTechStacks;
   bool isLoading = true;
   String profileImageUrl = 'assets/images/1.jpg';
-  int activeLearners = 150;
-  int totalCourses = 12;
+  int activeLearners = 0;
+  int totalCourses = 0;
   double totalRevenue = 15000;
   final _courseService = locator<CourseService>();
   final _imageService = locator<ImageService>();
   final _navigationService = locator<NavigationService>();
-  final TagService _tagService = locator<TagService>();
+
   List<AppointmentModel> _upcomingAppointments = [];
   List<AppointmentModel> get upcomingAppointments => _upcomingAppointments;
 
-  List<String> getCourseTags(String courseId) =>
-      _tagService.getCourseTags(courseId);
+  List<String> getCourseTags(CourseModel course) =>
+      course.stacks.map((e) => e).toList();
 
   TrainerHomeViewModel() {
+    userService.addListener(_onUserChanged);
     init();
     _init();
   }
+  void _onUserChanged() {
+    notifyListeners();
+  }
 
   List<RecentActivity> recentActivities = [
-    RecentActivity(
-      id: '1',
-      title: 'New learner enrolled in UX Design',
-      timestamp: '2 hours ago',
-      icon: Icons.person_add,
-    ),
-    RecentActivity(
-      id: '2',
-      title: 'Course review received',
-      timestamp: '5 hours ago',
-      icon: Icons.star,
-    ),
-    RecentActivity(
-      id: '3',
-      title: 'New message from learner',
-      timestamp: '1 day ago',
-      icon: Icons.message,
-    ),
+    // RecentActivity(
+    //   id: '1',
+    //   title: 'New learner enrolled in UX Design',
+    //   timestamp: '2 hours ago',
+    //   icon: Icons.person_add,
+    // ),
+    // RecentActivity(
+    //   id: '2',
+    //   title: 'Course review received',
+    //   timestamp: '5 hours ago',
+    //   icon: Icons.star,
+    // ),
+    // RecentActivity(
+    //   id: '3',
+    //   title: 'New message from learner',
+    //   timestamp: '1 day ago',
+    //   icon: Icons.message,
+    // ),
   ];
 
   List<String> topics = [];
@@ -70,11 +75,13 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   List<CourseModel> get courseList => _courses;
 
   Future<void> init() async {
+    print('User Image: $userImage');
     setBusy(true);
     try {
       // Fetch courses from API using CourseService
       _courses = await _courseService.getCourses();
       topics = userTopics.map((e) => e.tags).toList();
+      totalCourses = userCourseCount;
 
       notifyListeners();
     } catch (e) {
@@ -83,6 +90,13 @@ class TrainerHomeViewModel extends AppBaseViewModel {
       setBusy(false);
       notifyListeners();
     }
+  }
+
+  int getTotalLearnersEnrolled() {
+    // Sum all enrolled learners across all courses
+    return courseList.fold<int>(
+        0, (previousValue, course) => previousValue + course.studentsEnrolled);
+    //  (previousValue, course) => previousValue + (course.enrolledCount ?? 0));
   }
 
   // Get a widget to display a course image
@@ -170,7 +184,7 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   }
 
   void openSchedule() {
-    debugPrint('Opening schedule');
+    _navigationService.navigateToTrainerAppointmentHomeView();
     // Navigate to schedule screen
   }
 
@@ -218,7 +232,7 @@ class TrainerHomeViewModel extends AppBaseViewModel {
 
   // Stack related actions
   void addToStack() {
-    debugPrint('Adding new technology to stack');
+    _navigationService.navigateToProfileView();
     // Show dialog to add new technology
   }
 
@@ -301,6 +315,50 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     await refreshData();
     notifyListeners();
   }
+
+  Widget getProfileImageWidget({
+    BoxFit fit = BoxFit.cover,
+    Widget? placeholder,
+    Widget? errorWidget,
+  }) {
+    Widget imageWidget;
+    if (userImage.isEmpty) {
+      imageWidget = errorWidget ??
+          const Icon(Icons.person, size: 35, color: Colors.white70);
+    } else if (userImage.startsWith('/data/')) {
+      imageWidget = Image.asset(
+        userImage,
+        width: 60,
+        height: 60,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) =>
+            errorWidget ??
+            const Icon(Icons.person, size: 35, color: Colors.white70),
+      );
+    } else {
+      final imageUrl = _imageService.getCourseThumbnailFromPath(userImage);
+      imageWidget = _imageService.loadImage(
+        imageUrl: imageUrl,
+        courseId: '',
+        width: 60,
+        height: 60,
+        fit: fit,
+        placeholder: placeholder,
+        errorWidget: errorWidget,
+      );
+    }
+
+    return GestureDetector(
+      onTap: () => _navigationService.navigateToProfileView(),
+      child: imageWidget,
+    );
+  }
+
+  // Empty state flags
+  bool get hasNoCourses => courseList.isEmpty && !isLoading;
+  bool get hasNoSessions => upcomingAppointments.isEmpty && !isLoading;
+  bool get hasNoActivities => recentActivities.isEmpty && !isLoading;
+  bool get hasNoProgress => activeLearners == 0 && !isLoading;
 }
 
 class RecentActivity {

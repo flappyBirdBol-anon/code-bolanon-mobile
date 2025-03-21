@@ -127,13 +127,29 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
             CircleAvatar(
               radius: 40,
               backgroundColor: Colors.grey[200],
-              backgroundImage:
-                  user.profileImage != null && user.profileImage!.isNotEmpty
-                      ? CachedNetworkImageProvider(user.profileImage!)
-                      : null,
-              child: user.profileImage == null || user.profileImage!.isEmpty
-                  ? Icon(Icons.person, size: 40, color: Colors.grey[800])
-                  : null,
+              // backgroundImage:
+              //     user.profileImage != null && user.profileImage!.isNotEmpty
+              //         ? CachedNetworkImageProvider(user.profileImage!)
+              //         : null,
+              child: ClipOval(
+                child: user.profileImage!.isEmpty
+                    ? Icon(Icons.person,
+                        size: 30, color: Colors.white.withOpacity(0.7))
+                    : viewModel.getProfileImageWidget(
+                        fit: BoxFit.cover,
+                        placeholder: const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                        errorWidget: Icon(
+                          Icons.person,
+                          size: 30,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+              ),
             ),
             const SizedBox(width: 16),
             // User Details

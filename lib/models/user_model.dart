@@ -7,6 +7,7 @@ class UserModel {
   final String? profileImage;
   final String? specialization;
   final String? organization;
+  final int? courseCount;
 
   UserModel(
       {this.id,
@@ -16,7 +17,8 @@ class UserModel {
       required this.role,
       this.profileImage,
       this.specialization,
-      this.organization});
+      this.organization,
+      this.courseCount});
   String get fullName => '$firstName $lastName';
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -26,9 +28,10 @@ class UserModel {
         lastName: json['last_name'] ?? '',
         email: json['email'] ?? '',
         role: json['role'] ?? '',
-        profileImage: json['profile_image'],
+        profileImage: json['profile_picture'],
         specialization: json['specialization'],
-        organization: json['organization']);
+        organization: json['organization'],
+        courseCount: json['course_count']);
   }
 
   Map<String, dynamic> toJson() {

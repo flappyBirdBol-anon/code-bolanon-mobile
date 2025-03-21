@@ -1,11 +1,11 @@
-// lib/views/trainer_courses_view.dart
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/courses_list_item.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
-import 'package:code_bolanon/ui/common/widgets/filterable_grid_view.dart';
+import 'package:code_bolanon/ui/common/widgets/empty_state_widget.dart';
+
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -43,149 +43,207 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       ),
       body: SafeArea(
-        child: CustomScrollView(
-          controller: viewModel.scrollController,
-          physics: const ClampingScrollPhysics(),
-          slivers: [
-            // Header Section with optimized animation
-            SliverToBoxAdapter(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                switchInCurve: Curves.easeOutQuart,
-                switchOutCurve: Curves.easeInQuart,
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.0, -0.5),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    ),
-                  );
-                },
-                child: viewModel.showHeader
-                    ? _buildHeaderSection(context, viewModel)
-                    : const SizedBox.shrink(),
-              ),
-            ),
-
-            // Course Stats with optimized animation
-            SliverToBoxAdapter(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 150),
-                child: viewModel.showStats
-                    ? _buildStatsSection(context, viewModel)
-                    : const SizedBox.shrink(),
-              ),
-            ),
-
-            // Courses Grid Title
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(
-                    left: padding, top: 16.0, bottom: 8.0, right: padding),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'My Courses',
-                      style: GoogleFonts.figtree(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
+        child: viewModel.isBusy
+            ? _buildLoadingState(isDark)
+            : viewModel.courses.isEmpty
+                ? _buildEmptyState(context, viewModel, isDark)
+                : CustomScrollView(
+                    controller: viewModel.scrollController,
+                    physics: const BouncingScrollPhysics(),
+                    slivers: [
+                      // Header Section with optimized animation
+                      SliverToBoxAdapter(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          switchInCurve: Curves.easeOutQuart,
+                          switchOutCurve: Curves.easeInQuart,
+                          transitionBuilder:
+                              (Widget child, Animation<double> animation) {
+                            return SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0.0, -0.5),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: viewModel.showHeader
+                              ? _buildHeaderSection(context, viewModel)
+                              : const SizedBox.shrink(),
+                        ),
                       ),
-                    ),
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOut,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.blueGrey.withOpacity(0.2)
-                            : Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.auto_awesome,
-                            size: 16,
-                            color: isDark ? Colors.amber : AppColors.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Interactive',
-                            style: GoogleFonts.figtree(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: isDark ? Colors.amber : AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
 
-            // Courses Grid
-            SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              sliver: SliverGrid(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  childAspectRatio: aspectRatio,
-                  mainAxisSpacing: 16.0,
-                  crossAxisSpacing: 16.0,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final course = viewModel.courses[index];
-                    // Only animate the items visible on screen for initial render
-                    return AnimationConfiguration.staggeredGrid(
-                      position: index,
-                      duration:
-                          const Duration(milliseconds: 375), // Reduced duration
-                      columnCount: crossAxisCount,
-                      child: SlideAnimation(
-                        verticalOffset: 30.0, // Reduced offset
-                        horizontalOffset: 0, // Remove horizontal animation
-                        child: FadeInAnimation(
-                          child: CoursesListItem(
-                            course: course,
-                            onTap: () =>
-                                viewModel.navigateToCourseDetails(course),
-                            imageService: viewModel.imageService,
-                            showStatus: true,
-                            showControls: true,
-                            tags: viewModel.getCourseTags(course),
-                            onEditTap: () =>
-                                viewModel.navigateToEditCourse(context, course),
-                            onToggleTap: () =>
-                                viewModel.toggleCourseStatus(course),
+                      // Course Stats with optimized animation
+                      SliverToBoxAdapter(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 150),
+                          child: viewModel.showStats
+                              ? _buildStatsSection(context, viewModel)
+                              : const SizedBox.shrink(),
+                        ),
+                      ),
+
+                      // Courses Grid Title
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              left: padding,
+                              top: 16.0,
+                              bottom: 8.0,
+                              right: padding),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'My Courses',
+                                style: GoogleFonts.figtree(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.blueGrey.withOpacity(0.2)
+                                      : Colors.blue.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.auto_awesome,
+                                      size: 16,
+                                      color: isDark
+                                          ? Colors.amber
+                                          : AppColors.primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Interactive',
+                                      style: GoogleFonts.figtree(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: isDark
+                                            ? Colors.amber
+                                            : AppColors.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    );
-                  },
-                  childCount: viewModel.courses.length,
-                ),
-              ),
-            ),
 
-            // Add bottom padding
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 80),
+                      // Courses Grid
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: padding),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            childAspectRatio: aspectRatio,
+                            mainAxisSpacing: 16.0,
+                            crossAxisSpacing: 16.0,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final course = viewModel.courses[index];
+                              // Only animate the items visible on screen for initial render
+                              return AnimationConfiguration.staggeredGrid(
+                                position: index,
+                                duration: const Duration(
+                                    milliseconds: 375), // Reduced duration
+                                columnCount: crossAxisCount,
+                                child: SlideAnimation(
+                                  verticalOffset: 30.0, // Reduced offset
+                                  horizontalOffset:
+                                      0, // Remove horizontal animation
+                                  child: FadeInAnimation(
+                                    child: CoursesListItem(
+                                      course: course,
+                                      onTap: () => viewModel
+                                          .navigateToCourseDetails(course),
+                                      imageService: viewModel.imageService,
+                                      showStatus: true,
+                                      showControls: true,
+                                      tags: viewModel.getCourseTags(course),
+                                      onEditTap: () =>
+                                          viewModel.navigateToEditCourse(
+                                              context, course),
+                                      onToggleTap: () =>
+                                          viewModel.toggleCourseStatus(course),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            childCount: viewModel.courses.length,
+                          ),
+                        ),
+                      ),
+
+                      // Add bottom padding
+                      const SliverToBoxAdapter(
+                        child: SizedBox(height: 80),
+                      ),
+                    ],
+                  ),
+      ),
+      floatingActionButton: viewModel.courses.isEmpty
+          ? null
+          : _buildAnimatedFAB(context, viewModel),
+    );
+  }
+
+  Widget _buildLoadingState(bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            color: AppColors.primary,
+            strokeWidth: 3,
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Loading your courses...',
+            style: GoogleFonts.figtree(
+              fontSize: 16,
+              color: isDark ? Colors.white70 : Colors.black54,
             ),
-          ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(
+      BuildContext context, TrainerCoursesViewModel viewModel, bool isDark) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: EmptyStateWidget(
+          animationPath: 'assets/lottie/coding_animation.json',
+          title: 'Create Your First Course',
+          description:
+              'Get started with creating your first course and share your knowledge with learners',
+          buttonText: 'Create Course',
+          onActionPressed: () => viewModel.navigateToAddCourse(context),
+          animationSize: 250,
+          isDark: isDark,
         ),
       ),
-      floatingActionButton: _buildAnimatedFAB(context, viewModel),
     );
   }
 
@@ -281,7 +339,7 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
               'Learners Enrolled',
               '${viewModel.getTotalLearnersEnrolled()}',
               Icons.people_outline,
-              Colors.green,
+              AppColors.primary,
               cardColor,
               isDark,
             ),
@@ -295,7 +353,7 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
               'Lessons Created',
               '${viewModel.getTotalLessonsCreated()}',
               Icons.library_books,
-              Colors.orange,
+              AppColors.primary,
               cardColor,
               isDark,
             ),

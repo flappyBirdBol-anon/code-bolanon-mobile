@@ -2,6 +2,7 @@ import 'package:code_bolanon/app/app.dialogs.dart';
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/analytics_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -13,6 +14,7 @@ class TrainerAnalyticsViewModel extends BaseViewModel {
   final _userService = locator<UserService>();
   final _dialogService = locator<DialogService>();
   final _snackbarService = locator<SnackbarService>();
+  final _imageService = locator<ImageService>();
 
   // User data for the trainer
   UserModel? get currentUser => _userService.currentUser;
@@ -247,5 +249,43 @@ class TrainerAnalyticsViewModel extends BaseViewModel {
       default:
         return [];
     }
+  }
+
+  Widget getProfileImageWidget({
+    BoxFit fit = BoxFit.cover,
+    Widget? placeholder,
+    Widget? errorWidget,
+  }) {
+    if (currentUser!.profileImage!.isEmpty) {
+      return errorWidget ??
+          const Icon(Icons.person, size: 35, color: Colors.white70);
+    }
+
+    // For local files (from cache/camera)
+    if (currentUser!.profileImage!.startsWith('/data/')) {
+      return Image.asset(
+        currentUser!.profileImage!,
+        width: 60,
+        height: 60,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) =>
+            errorWidget ??
+            const Icon(Icons.person, size: 35, color: Colors.white70),
+      );
+    }
+
+    final imageUrl =
+        _imageService.getCourseThumbnailFromPath(currentUser!.profileImage!);
+
+    // For network images
+    return _imageService.loadImage(
+      imageUrl: imageUrl,
+      courseId: '',
+      width: 60,
+      height: 60,
+      fit: fit,
+      placeholder: placeholder,
+      errorWidget: errorWidget,
+    );
   }
 }

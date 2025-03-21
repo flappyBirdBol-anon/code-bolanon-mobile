@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/views/available_courses/available_courses_view.dart';
 import 'package:code_bolanon/ui/views/home/home_view.dart';
 import 'package:code_bolanon/ui/views/learner_appointment_home/learner_appointment_home_view.dart';
@@ -8,6 +9,7 @@ import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart'
 import 'package:code_bolanon/ui/views/trainer_home/trainer_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 
 import 'main_body_viewmodel.dart';
@@ -127,8 +129,8 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
                             gradient: viewModel.currentIndex == 0
                                 ? LinearGradient(
                                     colors: [
-                                      const Color(0xFF448EE4),
-                                      const Color(0xFF448EE4).withOpacity(0.7),
+                                      AppColors.primary,
+                                      AppColors.primary.withOpacity(0.7),
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
@@ -153,8 +155,8 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
                             gradient: viewModel.currentIndex == 1
                                 ? LinearGradient(
                                     colors: [
-                                      const Color(0xFF448EE4),
-                                      const Color(0xFF448EE4).withOpacity(0.7),
+                                      AppColors.primary,
+                                      AppColors.primary.withOpacity(0.7),
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
@@ -179,8 +181,8 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
                             gradient: viewModel.currentIndex == 2
                                 ? LinearGradient(
                                     colors: [
-                                      const Color(0xFF448EE4),
-                                      const Color(0xFF448EE4).withOpacity(0.7),
+                                      AppColors.primary,
+                                      AppColors.primary.withOpacity(0.7),
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
@@ -205,8 +207,8 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
                             gradient: viewModel.currentIndex == 3
                                 ? LinearGradient(
                                     colors: [
-                                      const Color(0xFF448EE4),
-                                      const Color(0xFF448EE4).withOpacity(0.7),
+                                      AppColors.primary,
+                                      AppColors.primary.withOpacity(0.7),
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
@@ -230,11 +232,11 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
                     backgroundColor: Colors.transparent,
                     selectedItemColor: const Color(0xFF448EE4),
                     unselectedItemColor: Colors.grey[600],
-                    selectedLabelStyle: const TextStyle(
+                    selectedLabelStyle: GoogleFonts.figtree(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
-                    unselectedLabelStyle: const TextStyle(
+                    unselectedLabelStyle: GoogleFonts.figtree(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),

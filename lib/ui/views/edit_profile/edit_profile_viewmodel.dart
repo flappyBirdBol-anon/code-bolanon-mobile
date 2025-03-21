@@ -79,9 +79,9 @@ class EditProfileViewModel extends BaseViewModel {
       final success = await _userService.updateProfile(
         firstNameController.text,
         lastNameController.text,
-        imageUrl,
         specializationController.text,
         organizationController.text,
+        selectedProfileImage,
         userId,
       );
 
@@ -130,7 +130,7 @@ class EditProfileViewModel extends BaseViewModel {
       return errorWidget ??
           const Icon(Icons.person, size: 40, color: Colors.grey);
     }
-
+    print('Image Path: ${profilePictureUrl}');
     return _imageService.getProfileImageWidget(
       imageUrl: _imageService.getProfilePictureUrl(profilePictureUrl),
       width: 120,

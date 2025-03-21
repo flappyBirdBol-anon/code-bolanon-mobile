@@ -11,6 +11,7 @@ import '../ui/dialogs/basic/basic_dialog.dart';
 import '../ui/dialogs/error/error_dialog.dart';
 import '../ui/dialogs/info_alert/info_alert_dialog.dart';
 import '../ui/dialogs/metric_selection/metric_selection_dialog.dart';
+import '../ui/dialogs/receipt/receipt_dialog.dart';
 import '../ui/dialogs/success/success_dialog.dart';
 import '../ui/dialogs/warning/warning_dialog.dart';
 
@@ -21,6 +22,7 @@ enum DialogType {
   error,
   warning,
   metricSelection,
+  receipt,
 }
 
 void setupDialogUi() {
@@ -39,6 +41,8 @@ void setupDialogUi() {
         WarningDialog(request: request, completer: completer),
     DialogType.metricSelection: (context, request, completer) =>
         MetricSelectionDialog(request: request, completer: completer),
+    DialogType.receipt: (context, request, completer) =>
+        ReceiptDialog(request: request, completer: completer),
   };
 
   dialogService.registerCustomDialogBuilders(builders);

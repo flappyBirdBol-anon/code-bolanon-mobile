@@ -36,10 +36,10 @@ class AuthView extends StackedView<AuthViewModel> {
               // App Logo/Name - Hide when keyboard is visible
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                height: viewModel.isKeyboardVisible ? 0 : null,
+                height: viewModel.isKeyboardVisible ? 70 : null,
                 child: AnimatedOpacity(
                   duration: const Duration(milliseconds: 200),
-                  opacity: viewModel.isKeyboardVisible ? 0.0 : 1.0,
+                  opacity: viewModel.isKeyboardVisible ? 1.0 : 1.0,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 16.0),
                     child: Row(

@@ -1,10 +1,19 @@
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/models/registration_model.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart' show AppColors;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 
 import 'course_details_viewmodel.dart';
+
+// Extension to capitalize strings
+extension StringExtension on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return "${this[0].toUpperCase()}${substring(1)}";
+  }
+}
 
 class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
   final CourseModel? course;
@@ -36,32 +45,46 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
         backgroundColor: Colors.white,
         body: NestedScrollView(
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            final isScrolled = viewModel.manualOverrideEnabled
+                ? viewModel.innerBoxIsScrolled
+                : innerBoxIsScrolled;
             return [
               SliverAppBar(
-                expandedHeight: 280.0,
+                expandedHeight: 260.0,
                 floating: false,
                 pinned: true,
                 backgroundColor: Colors.white,
-                elevation: innerBoxIsScrolled ? 4 : 1,
+                elevation: isScrolled ? 4 : 1,
                 leading: IconButton(
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.arrow_back,
-                    color: innerBoxIsScrolled ? Colors.black : Colors.white,
+                    color: Color.fromARGB(255, 105, 92, 92),
                   ),
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
+                  // Show edit icon only if the user is the creator of the course
+                  if (viewModel.isCreator)
+                    IconButton(
+                      icon: const Icon(
+                        Icons.edit,
+                        color: Color.fromARGB(255, 105, 92, 92),
+                      ),
+                      onPressed: () =>
+                          viewModel.navigateToEditCourse(context, course!),
+                      tooltip: 'Edit Course',
+                    ),
                   IconButton(
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.notifications_outlined,
-                      color: innerBoxIsScrolled ? Colors.black : Colors.white,
+                      color: Color.fromARGB(255, 105, 92, 92),
                     ),
                     onPressed: () {},
                   ),
                   IconButton(
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.share_outlined,
-                      color: innerBoxIsScrolled ? Colors.black : Colors.white,
+                      color: Color.fromARGB(255, 105, 92, 92),
                     ),
                     onPressed: () {},
                   ),
@@ -71,7 +94,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   centerTitle: false,
                   titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
                   title: AnimatedOpacity(
-                    opacity: innerBoxIsScrolled ? 1.0 : 0.0,
+                    opacity: isScrolled ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 300),
                     child: Text(
                       course!.title,
@@ -164,7 +187,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                                           color: Colors.amber, size: 16),
                                       const SizedBox(width: 4),
                                       Text(
-                                        course!.rating.toString(),
+                                        viewModel.averageRating.toString(),
                                         style: GoogleFonts.figtree(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -175,7 +198,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '${course!.reviews} Reviews',
+                                  '${viewModel.reviews.length} Reviews',
                                   style: GoogleFonts.figtree(
                                     color: Colors.white.withOpacity(0.9),
                                   ),
@@ -199,7 +222,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                         children: [
                           Expanded(
                             child: Text(
-                              course!.title,
+                              'Course Contents',
                               style: GoogleFonts.figtree(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -367,7 +390,9 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                                     size: 16, color: Colors.grey[600]),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '2 Weeks',
+                                  course!.duration == null
+                                      ? 'N/A'
+                                      : course!.duration.capitalize(),
                                   style: GoogleFonts.figtree(
                                       color: Colors.grey[600]),
                                 ),
@@ -445,6 +470,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
 
   Widget _buildOverviewTab(CourseDetailsViewModel viewModel) {
     return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,7 +511,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                           Icons.access_time, course!.duration, 'Duration'),
                       _buildKeyMetric(Icons.bar_chart, course!.level, 'Level'),
                       _buildKeyMetric(Icons.people_outline,
-                          '${course!.reviews}+', 'Students'),
+                          '${course!.studentsEnrolled}+', 'Learners'),
                     ],
                   ),
                 ],
@@ -503,13 +529,16 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             ),
           ),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: course!.learningExpectations
-                .map((expectation) => _buildLearningPoint(expectation))
-                .toList(),
-          ),
+          if (course?.learningExpectations.first == '')
+            _buildEmptyLearningExpectations()
+          else
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: course!.learningExpectations
+                  .map((expectation) => _buildLearningPoint(expectation))
+                  .toList(),
+            ),
           const SizedBox(height: 24),
 
           // Instructor Section
@@ -533,7 +562,25 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.grey[200],
-                    child: const Icon(Icons.person, size: 32),
+                    child: ClipOval(
+                      child: viewModel.course?.author_image == null
+                          ? Icon(Icons.person,
+                              size: 30, color: Colors.white.withOpacity(0.7))
+                          : viewModel.getProfileImageWidget(
+                              fit: BoxFit.cover,
+                              placeholder: const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                              errorWidget: Icon(
+                                Icons.person,
+                                size: 30,
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                            ),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -595,9 +642,90 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           ),
           const SizedBox(height: 16),
 
-          ...course!.requirements
-              .map((requirement) => _buildRequirementItem(requirement))
-              .toList(),
+          if (course?.requirements.first == '')
+            _buildEmptyRequirements()
+          else
+            ...course!.requirements
+                .map((requirement) => _buildRequirementItem(requirement))
+                .toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyLearningExpectations() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.lightbulb_outline,
+            size: 40,
+            color: AppColors.primary.withOpacity(0.7),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Learning outcomes coming soon!',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.figtree(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'The instructor will be adding detailed learning outcomes for this course.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.figtree(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyRequirements() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 40,
+            color: Colors.green.withOpacity(0.7),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No prerequisites needed!',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.figtree(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'This course is accessible to all learners regardless of prior experience.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.figtree(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
         ],
       ),
     );
@@ -675,6 +803,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
   Widget _buildLessonsTab(
       CourseDetailsViewModel viewModel, BuildContext context) {
     return ListView(
+      scrollDirection: Axis.vertical,
       padding: const EdgeInsets.all(16),
       children: [
         // Stats Cards
@@ -754,89 +883,173 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Course Content',
+              'Course Lesson Content',
               style: GoogleFonts.figtree(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
             if (course?.author == viewModel.userName) // Only show for trainers
-              ElevatedButton.icon(
-                onPressed: () => viewModel.navigateToAddLesson(course!),
-                icon: const Icon(
-                  Icons.add,
-                  size: 20,
-                  color: Colors.white,
-                ),
-                label: Text(
-                  'New Lesson',
-                  style: GoogleFonts.figtree(color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 2,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              if (viewModel.lessons.isNotEmpty)
+                ElevatedButton.icon(
+                  onPressed: () => viewModel.navigateToAddLesson(course!),
+                  icon: const Icon(
+                    Icons.add,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    'New Lesson',
+                    style: GoogleFonts.figtree(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
-              ),
           ],
         ),
         const SizedBox(height: 16),
 
-        // Lessons List
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          child: Column(
+        // Empty state placeholder or lessons list
+        if (viewModel.lessons.isEmpty)
+          _buildEmptyLessonsPlaceholder(viewModel)
+        else
+          Column(
             children: [
-              for (int i = 0;
-                  i < viewModel.lessons.length &&
-                      (viewModel.showAllLessons || i < 3);
-                  i++)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: _buildLessonItem(i, context, viewModel),
+              // Lessons List
+              AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                child: Column(
+                  children: [
+                    for (int i = 0;
+                        i < viewModel.lessons.length &&
+                            (viewModel.showAllLessons || i < 3);
+                        i++)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: _buildLessonItem(i, context, viewModel),
+                      ),
+                  ],
+                ),
+              ),
+
+              // View All/Less Button
+              if (viewModel.lessons.length > 3)
+                TextButton(
+                  onPressed: () => viewModel.toggleShowAllLessons(),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side:
+                          BorderSide(color: AppColors.primary.withOpacity(0.3)),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        viewModel.showAllLessons
+                            ? 'Show Less'
+                            : 'View All Lessons',
+                        style: GoogleFonts.figtree(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        viewModel.showAllLessons
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
                 ),
             ],
           ),
-        ),
+      ],
+    );
+  }
 
-        // View All/Less Button
-        if (viewModel.lessons.length > 3)
-          TextButton(
-            onPressed: () => viewModel.toggleShowAllLessons(),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(color: AppColors.primary.withOpacity(0.3)),
-              ),
+  // New widget for empty lessons placeholder
+  Widget _buildEmptyLessonsPlaceholder(CourseDetailsViewModel viewModel) {
+    final bool isTrainer = course?.author == viewModel.userName;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            height: 120,
+            width: 120,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  viewModel.showAllLessons ? 'Show Less' : 'View All Lessons',
-                  style: GoogleFonts.figtree(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  viewModel.showAllLessons
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
-              ],
+            child: Icon(
+              Icons.play_lesson_rounded,
+              size: 64,
+              color: AppColors.primary.withOpacity(0.7),
             ),
           ),
-      ],
+          const SizedBox(height: 24),
+          Text(
+            isTrainer ? 'No Lessons Created Yet' : 'No Lessons Available Yet',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.figtree(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isTrainer
+                ? 'Start creating engaging content for your students by adding your first lesson.'
+                : 'The instructor hasn\'t added any lessons to this course yet. Check back soon!',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.figtree(
+              fontSize: 16,
+              color: Colors.grey[600],
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (isTrainer)
+            ElevatedButton.icon(
+              onPressed: () => viewModel.navigateToAddLesson(course!),
+              icon: const Icon(Icons.add_circle_outline),
+              label: const Text('Create First Lesson'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -885,7 +1098,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
         children: [
           if (isTrainer)
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.edit,
                 size: 20,
                 color: AppColors.primary,
@@ -897,7 +1110,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             icon: Icon(
               isLocked ? Icons.lock_outline : Icons.arrow_forward_ios,
               size: 16,
-              color: isLocked ? Colors.grey : null,
+              color: isLocked ? Colors.grey[300] : null,
             ),
             onPressed: () => viewModel.navigateToLessonDetails(lesson),
           ),
@@ -1000,6 +1213,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
   Widget _buildReviewsTab(
       CourseDetailsViewModel viewModel, BuildContext context) {
     return ListView(
+      scrollDirection: Axis.vertical,
       padding: const EdgeInsets.all(16),
       children: [
         // Overall Rating Card
@@ -1029,7 +1243,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                         Row(
                           children: [
                             Text(
-                              course!.rating.toString(),
+                              viewModel.averageRating.toStringAsFixed(1),
                               style: GoogleFonts.figtree(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
@@ -1052,11 +1266,14 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                       children: List.generate(
                         5,
                         (index) => Icon(
-                          Icons.star,
+                          index < viewModel.averageRating
+                              ? Icons.star
+                              : (index < viewModel.averageRating + 0.5 &&
+                                      index >= viewModel.averageRating
+                                  ? Icons.star_half
+                                  : Icons.star_border),
                           size: 24,
-                          color: index < course!.rating.floor()
-                              ? Colors.amber
-                              : Colors.grey[300],
+                          color: Colors.amber,
                         ),
                       ),
                     ),
@@ -1068,16 +1285,21 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildRatingBar(5, 0.8, '80%'),
-                    _buildRatingBar(4, 0.65, '65%'),
-                    _buildRatingBar(3, 0.4, '40%'),
-                    _buildRatingBar(2, 0.1, '10%'),
-                    _buildRatingBar(1, 0.05, '5%'),
+                    _buildRatingBar(5, viewModel.ratingDistribution[5] ?? 0,
+                        '${((viewModel.ratingDistribution[5] ?? 0) * 100).toInt()}%'),
+                    _buildRatingBar(4, viewModel.ratingDistribution[4] ?? 0,
+                        '${((viewModel.ratingDistribution[4] ?? 0) * 100).toInt()}%'),
+                    _buildRatingBar(3, viewModel.ratingDistribution[3] ?? 0,
+                        '${((viewModel.ratingDistribution[3] ?? 0) * 100).toInt()}%'),
+                    _buildRatingBar(2, viewModel.ratingDistribution[2] ?? 0,
+                        '${((viewModel.ratingDistribution[2] ?? 0) * 100).toInt()}%'),
+                    _buildRatingBar(1, viewModel.ratingDistribution[1] ?? 0,
+                        '${((viewModel.ratingDistribution[1] ?? 0) * 100).toInt()}%'),
                   ],
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Based on ${course!.reviews} reviews',
+                  'Based on ${viewModel.reviews.length} reviews',
                   style: GoogleFonts.figtree(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -1100,12 +1322,41 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.sort, size: 20),
-              label: const Text('Sort by'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
+            PopupMenuButton<String>(
+              onSelected: viewModel.setReviewSortBy,
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'latest',
+                  child: Text('Sort by Latest'),
+                ),
+                const PopupMenuItem(
+                  value: 'highest',
+                  child: Text('Sort by Highest Rating'),
+                ),
+                const PopupMenuItem(
+                  value: 'lowest',
+                  child: Text('Sort by Lowest Rating'),
+                ),
+              ],
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.sort, size: 18),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Sort by ${viewModel.reviewSortBy.capitalize()}',
+                      style: GoogleFonts.figtree(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -1307,7 +1558,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                                     ElevatedButton.icon(
                                       onPressed: () {
                                         viewModel.submitReport();
-                                        Navigator.pop(context);
+                                        // Navigator.pop(context);
                                       },
                                       icon: const Icon(
                                         Icons.flag_outlined,
@@ -1379,30 +1630,72 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           ),
 
         // Existing reviews
-        ...List.generate(
-          3,
-          (index) => _buildEnhancedReviewItem(),
-        ),
+        if (viewModel.reviews.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.rate_review_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No reviews yet',
+                    style: GoogleFonts.figtree(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Be the first to share your experience!',
+                    style: GoogleFonts.figtree(
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...viewModel.reviews
+              .map((review) => _buildEnhancedReviewItem(review, viewModel)),
 
-        // Add Review Button - Only show for enrolled students
-        const SizedBox(height: 24),
-        ElevatedButton(
-          onPressed: () {},
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        // Add Review Button - Only show for enrolled students who haven't reviewed yet
+        if (viewModel.canWriteReview &&
+            !viewModel.reviews
+                .any((review) => review.userId == viewModel.currentUser?.id))
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: ElevatedButton(
+              onPressed: () {
+                // Simplified scrolling logic
+                Scrollable.ensureVisible(
+                  context,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Write a Review',
+                style: GoogleFonts.figtree(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
-          child: Text(
-            'Write a Review',
-            style: GoogleFonts.figtree(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -1439,7 +1732,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                 height: 100 * percentage,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  color: Colors.amber,
+                  color: AppColors.primary,
                 ),
               ),
             ],
@@ -1457,7 +1750,8 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
     );
   }
 
-  Widget _buildEnhancedReviewItem() {
+  Widget _buildEnhancedReviewItem(
+      RegistrationModel review, CourseDetailsViewModel viewModel) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -1474,7 +1768,16 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                 CircleAvatar(
                   radius: 24,
                   backgroundColor: Colors.grey[200],
-                  child: const Icon(Icons.person, size: 32),
+                  child: ClipOval(
+                    child: review.userProfilePicture != null
+                        ? viewModel.getReviewerImageWidget(
+                            review,
+                            width: 48,
+                            height: 48,
+                          )
+                        : const Icon(Icons.person,
+                            size: 24, color: Colors.grey),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1482,19 +1785,28 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'John Smith',
+                        review.userFullName,
                         style: GoogleFonts.figtree(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
                       Text(
-                        '2 days ago',
+                        viewModel.formatDate(review.createdAt),
                         style: GoogleFonts.figtree(
                           color: Colors.grey[600],
                           fontSize: 12,
                         ),
                       ),
+                      if (review.createdAt != review.updatedAt)
+                        Text(
+                          '(Edited ${viewModel.formatDate(review.updatedAt)})',
+                          style: GoogleFonts.figtree(
+                            color: Colors.grey[500],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -1512,7 +1824,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                       const Icon(Icons.star, color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
                       Text(
-                        '4.5',
+                        '${review.rating}',
                         style: GoogleFonts.figtree(
                           fontWeight: FontWeight.bold,
                         ),
@@ -1524,21 +1836,21 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             ),
             const SizedBox(height: 12),
             Text(
-              'This course exceeded my expectations. The instructor is very knowledgeable and explains complex concepts in a simple way.',
+              review.feedback ?? 'No feedback provided',
               style: GoogleFonts.figtree(
                 color: Colors.grey[800],
                 fontSize: 14,
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _buildReactionButton(Icons.thumb_up_outlined, '12'),
-                const SizedBox(width: 16),
-                _buildReactionButton(Icons.comment_outlined, '3'),
-              ],
-            ),
+            // const SizedBox(height: 12),
+            // Row(
+            //   children: [
+            //     _buildReactionButton(Icons.thumb_up_outlined, '0'),
+            //     const SizedBox(width: 16),
+            //     _buildReactionButton(Icons.comment_outlined, '0'),
+            //   ],
+            // ),
           ],
         ),
       ),
@@ -1577,8 +1889,18 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
       CourseDetailsViewModel();
 
   @override
-  void onViewModelReady(CourseDetailsViewModel viewModel) =>
-      viewModel.initialize(course);
+  void onViewModelReady(CourseDetailsViewModel viewModel) {
+    viewModel.initialize(course);
+    viewModel.scrollController.addListener(() {
+      if (viewModel.manualOverrideEnabled) {
+        // Update innerBoxIsScrolled based on scroll position
+        viewModel.setInnerBoxIsScrolled(viewModel.scrollController.offset > 0);
+      } else {
+        viewModel.setInnerBoxIsScrolled(false);
+      }
+    });
+    super.onViewModelReady(viewModel);
+  }
 }
 
 // Custom SliverAppBarDelegate for the tab bar
