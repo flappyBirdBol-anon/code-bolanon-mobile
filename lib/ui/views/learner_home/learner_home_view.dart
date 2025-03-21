@@ -23,6 +23,8 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
+          color: AppColors.primary,
+          backgroundColor: Colors.white,
           onRefresh: () async => viewModel.refreshData(),
           child: SingleChildScrollView(
             child: Padding(
@@ -58,12 +60,14 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        // Changed header background to a gradient
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
-              : [theme.primaryColor, theme.primaryColor.withOpacity(0.8)],
+          colors: [
+            AppColors.primary,
+            AppColors.primary,
+          ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -86,18 +90,21 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
   }
 
   Widget _buildProfileAvatar(LearnerHomeViewModel viewModel) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.white.withOpacity(0.5),
-          width: 2.0,
+    return GestureDetector(
+      onTap: () => viewModel.openProfile(),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.white.withOpacity(0.5),
+            width: 2.0,
+          ),
+          shape: BoxShape.circle,
         ),
-        shape: BoxShape.circle,
-      ),
-      child: CircleAvatar(
-        radius: 28,
-        backgroundImage: AssetImage(viewModel.profileImageUrl),
-        backgroundColor: Colors.white.withOpacity(0.2),
+        child: CircleAvatar(
+          radius: 28,
+          backgroundImage: AssetImage(viewModel.profileImageUrl),
+          backgroundColor: Colors.white.withOpacity(0.2),
+        ),
       ),
     );
   }

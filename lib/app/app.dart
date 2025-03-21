@@ -49,6 +49,7 @@ import 'package:code_bolanon/ui/views/edit_profile/edit_profile_view.dart';
 import 'package:code_bolanon/ui/views/trainer_appointment_home/trainer_appointment_home_view.dart';
 import 'package:code_bolanon/ui/views/trainer_schedules/trainer_schedules_view.dart';
 import 'package:code_bolanon/ui/views/learner_appointment_home/learner_appointment_home_view.dart';
+import 'package:code_bolanon/ui/views/learner_schedule/learner_schedule_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -78,6 +79,7 @@ import 'package:code_bolanon/ui/views/learner_appointment_home/learner_appointme
     MaterialRoute(page: TrainerAppointmentHomeView),
     MaterialRoute(page: TrainerSchedulesView),
     MaterialRoute(page: LearnerAppointmentHomeView),
+    MaterialRoute(page: LearnerScheduleView),
 // @stacked-route
   ],
   dependencies: [

@@ -1,3 +1,4 @@
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:flutter/material.dart';
@@ -224,6 +225,10 @@ class LearnerHomeViewModel extends AppBaseViewModel {
   void openCourse(String courseId) {
     // Implementation for opening a course
     print('Opening course: $courseId');
+  }
+
+  void openProfile() {
+    navigationService.navigateTo(Routes.profileView);
   }
 
   @override

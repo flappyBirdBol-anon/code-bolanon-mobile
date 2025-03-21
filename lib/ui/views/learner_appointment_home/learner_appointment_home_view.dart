@@ -73,41 +73,49 @@ class LearnerAppointmentHomeView
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Filter by Specialization',
-            style: GoogleFonts.figtree(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF2D3142),
+      child: IntrinsicWidth(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Filter by Specialization',
+              style: GoogleFonts.figtree(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : const Color(0xFF2D3142),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildFilterChip('All', viewModel.selectedFilter == 'All', isDark,
-                  () => viewModel.setFilter('All')),
-              _buildFilterChip(
-                  'Mobile Dev',
-                  viewModel.selectedFilter == 'Mobile Dev',
-                  isDark,
-                  () => viewModel.setFilter('Mobile Dev')),
-              _buildFilterChip('Web Dev', viewModel.selectedFilter == 'Web Dev',
-                  isDark, () => viewModel.setFilter('Web Dev')),
-              _buildFilterChip('Backend', viewModel.selectedFilter == 'Backend',
-                  isDark, () => viewModel.setFilter('Backend')),
-              _buildFilterChip(
-                  'Data Science',
-                  viewModel.selectedFilter == 'Data Science',
-                  isDark,
-                  () => viewModel.setFilter('Data Science')),
-            ],
-          ),
-        ],
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildFilterChip('All', viewModel.selectedFilter == 'All',
+                    isDark, () => viewModel.setFilter('All')),
+                _buildFilterChip(
+                    'Mobile Dev',
+                    viewModel.selectedFilter == 'Mobile Dev',
+                    isDark,
+                    () => viewModel.setFilter('Mobile Dev')),
+                _buildFilterChip(
+                    'Web Dev',
+                    viewModel.selectedFilter == 'Web Dev',
+                    isDark,
+                    () => viewModel.setFilter('Web Dev')),
+                _buildFilterChip(
+                    'Backend',
+                    viewModel.selectedFilter == 'Backend',
+                    isDark,
+                    () => viewModel.setFilter('Backend')),
+                _buildFilterChip(
+                    'Data Science',
+                    viewModel.selectedFilter == 'Data Science',
+                    isDark,
+                    () => viewModel.setFilter('Data Science')),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
