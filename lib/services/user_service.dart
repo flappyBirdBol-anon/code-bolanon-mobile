@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/models/tech_stack_model.dart';
+import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stacked/stacked.dart';
@@ -92,7 +92,7 @@ class UserService with ListenableServiceMixin {
 
   Future<Map<String, dynamic>?> getProfile() async {
     try {
-      final response = await ApiService().get('/profile');
+      final response = await ApiService().get('/profile/me');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> result = {};

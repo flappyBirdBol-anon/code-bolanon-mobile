@@ -42,8 +42,7 @@ class CoursesListItem extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side:
-              const BorderSide(color: const Color.fromARGB(157, 238, 238, 238)),
+          side: const BorderSide(color: Color.fromARGB(157, 238, 238, 238)),
         ),
         child: InkWell(
           onTap: onTap,
