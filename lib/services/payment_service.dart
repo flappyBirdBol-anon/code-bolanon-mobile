@@ -53,7 +53,7 @@ class PaymentService with ListenableServiceMixin {
               timestamp: DateTime.now(),
               status: 'completed',
               userId: await _getCurrentUserId(), // Fixed: Added user ID
-              currency: 'usd',
+              currency: 'PHP',
             );
 
             // Save transaction to API
@@ -110,7 +110,7 @@ class PaymentService with ListenableServiceMixin {
       // Create payment intent first
       final paymentIntentResponse = await _apiService.createPaymentIntent(
         amount: (_calculateTotalAmount(course) * 100).toInt(),
-        currency: 'usd',
+        currency: 'PHP',
         courseId: course.id,
       );
 
@@ -257,7 +257,7 @@ class PaymentService with ListenableServiceMixin {
         timestamp: DateTime.now(),
         status: 'completed',
         userId: await _getCurrentUserId(),
-        currency: 'usd',
+        currency: 'PHP',
       );
 
       final saveResult = await _apiService.saveTransaction(transaction);

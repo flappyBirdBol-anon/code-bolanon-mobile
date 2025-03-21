@@ -9,6 +9,7 @@ import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_card.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_list_item.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_stack_chip.dart';
+import 'package:code_bolanon/ui/common/widgets/empty_state_widget.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:code_bolanon/ui/views/trainer_home/trainer_home_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -145,8 +146,27 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
             ),
             child: CircleAvatar(
               radius: 28,
-              backgroundImage: AssetImage(viewModel.profileImageUrl),
+              // backgroundImage: AssetImage(viewModel.profileImageUrl),
               backgroundColor: Colors.white.withOpacity(0.2),
+              child: ClipOval(
+                child: viewModel.userImage.isEmpty
+                    ? Icon(Icons.person,
+                        size: 30, color: Colors.white.withOpacity(0.7))
+                    : viewModel.getProfileImageWidget(
+                        fit: BoxFit.cover,
+                        placeholder: const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                        errorWidget: Icon(
+                          Icons.person,
+                          size: 30,
+                          color: Colors.white.withOpacity(0.7),
+                        ),
+                      ),
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -237,28 +257,28 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                 _buildQuickActionButton(
                     "New Course",
                     Icons.add_box_outlined,
-                    Colors.blue,
+                    AppColors.primary,
                     theme,
                     bodyStyle,
                     () => viewModel.createNewCourse()),
                 _buildQuickActionButton(
                     "Review",
                     Icons.rate_review_outlined,
-                    Colors.amber,
+                    AppColors.primary,
                     theme,
                     bodyStyle,
                     () => viewModel.reviewContent()),
                 _buildQuickActionButton(
                     "Analytics",
                     Icons.analytics_outlined,
-                    Colors.green,
+                    AppColors.primary,
                     theme,
                     bodyStyle,
                     () => viewModel.openAnalytics()),
                 _buildQuickActionButton(
                     "Schedule",
                     Icons.event_note_outlined,
-                    Colors.purple,
+                    AppColors.primary,
                     theme,
                     bodyStyle,
                     () => viewModel.openSchedule()),
@@ -369,7 +389,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                 'Learners',
                 viewModel.isLoading
                     ? null
-                    : viewModel.activeLearners.toString(),
+                    : viewModel.getTotalLearnersEnrolled().toString(),
                 Icons.people_outline,
                 theme,
                 bodyStyle,
@@ -642,7 +662,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
   Widget _buildStatItem(String title, String? value, IconData icon,
       ThemeData theme, TextStyle bodyStyle) {
     final isDark = theme.brightness == Brightness.dark;
-    final color = isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1);
+    final color = isDark ? AppColors.primary : AppColors.primary;
 
     return Expanded(
       child: Column(
@@ -714,50 +734,60 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
           ),
           child: viewModel.isLoading
               ? _buildProgressSkeleton()
-              : Column(
-                  children: [
-                    _buildProgressItem(
-                      "JavaScript Fundamentals",
-                      0.78,
-                      "78% of learners completed",
-                      Colors.blue,
-                      theme,
-                      bodyStyle,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildProgressItem(
-                      "React Components",
-                      0.45,
-                      "45% of learners completed",
-                      Colors.purple,
-                      theme,
-                      bodyStyle,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildProgressItem(
-                      "API Integration",
-                      0.32,
-                      "32% of learners completed",
-                      Colors.green,
-                      theme,
-                      bodyStyle,
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => viewModel.viewAllCourses(),
-                        child: Text(
-                          "View All Courses",
-                          style: bodyStyle.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
+              : viewModel.hasNoProgress
+                  ? EmptyStateWidget(
+                      animationPath: 'assets/lottie/mentor_animation.json',
+                      title: 'No Progress Data Yet',
+                      description:
+                          "Start creating courses to see learner progress here",
+                      buttonText: 'Create a Course',
+                      onActionPressed: () => viewModel.createNewCourse(),
+                      isDark: isDark,
+                    )
+                  : Column(
+                      children: [
+                        _buildProgressItem(
+                          "JavaScript Fundamentals",
+                          0.78,
+                          "78% of learners completed",
+                          AppColors.primary,
+                          theme,
+                          bodyStyle,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildProgressItem(
+                          "React Components",
+                          0.45,
+                          "45% of learners completed",
+                          AppColors.primary,
+                          theme,
+                          bodyStyle,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildProgressItem(
+                          "API Integration",
+                          0.32,
+                          "32% of learners completed",
+                          AppColors.primary,
+                          theme,
+                          bodyStyle,
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => viewModel.viewAllCourses(),
+                            child: Text(
+                              "View All Courses",
+                              style: bodyStyle.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
         ),
       ],
     );
@@ -874,13 +904,23 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
         const SizedBox(height: 16),
         viewModel.isLoading
             ? _buildTopicsSkeleton()
-            : Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: viewModel.topics.map((topic) {
-                  return _buildLanguageChip(topic, theme, codeStyle);
-                }).toList(),
-              ),
+            : viewModel.topics.isEmpty
+                ? EmptyStateWidget(
+                    animationPath: 'assets/lottie/coding_animation.json',
+                    title: 'Add Your Tech Stack',
+                    description: 'Add technologies that you specialize in',
+                    buttonText: 'Add Technologies',
+                    onActionPressed: () => viewModel.addToStack(),
+                    animationSize: 150,
+                    isDark: isDark,
+                  )
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: viewModel.topics.map((topic) {
+                      return _buildLanguageChip(topic, theme, codeStyle);
+                    }).toList(),
+                  ),
       ],
     );
   }
@@ -936,8 +976,20 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
         itemCount: 3,
       );
     }
-    // final isDark = theme.brightness == Brightness.dark;
-    // final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Show empty state if no courses
+    if (viewModel.hasNoCourses) {
+      return EmptyStateWidget(
+        animationPath: 'assets/lottie/trainer_animation.json',
+        title: 'No Courses Yet',
+        description: 'Create your first course to start teaching',
+        buttonText: 'Create Course',
+        onActionPressed: () => viewModel.createNewCourse(),
+        isDark: isDark,
+      );
+    }
 
     // Wrap CarouselSlider with SizedBox to ensure stable dimensions
     return SizedBox(
@@ -1017,23 +1069,36 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                       );
                     },
                   )
-                : ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: viewModel.recentActivities.length,
-                    separatorBuilder: (context, index) =>
-                        const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final activity = viewModel.recentActivities[index];
-                      return CustomListItem(
-                        text: activity.title,
-                        subtitle: activity.timestamp,
-                        leadingIcon: activity.icon,
-                        onPressed: () => viewModel.openActivity(activity.id),
-                        useTileStyle: true,
-                      );
-                    },
-                  ),
+                : viewModel.hasNoActivities
+                    ? Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: EmptyStateWidget(
+                          animationPath: 'assets/animations/team_success.json',
+                          title: 'No Recent Activity',
+                          description:
+                              'Your recent activities will appear here',
+                          animationSize: 150,
+                          isDark: isDark,
+                        ),
+                      )
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: viewModel.recentActivities.length,
+                        separatorBuilder: (context, index) =>
+                            const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final activity = viewModel.recentActivities[index];
+                          return CustomListItem(
+                            text: activity.title,
+                            subtitle: activity.timestamp,
+                            leadingIcon: activity.icon,
+                            onPressed: () =>
+                                viewModel.openActivity(activity.id),
+                            useTileStyle: true,
+                          );
+                        },
+                      ),
           ),
         ),
       ],
@@ -1108,6 +1173,8 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
   }
 
   Widget _buildUpcomingSessions(TrainerHomeViewModel viewModel) {
+    // final isDark = Theme.of(viewModel.navigationService.navigatorKey.currentContext!).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1133,23 +1200,33 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                   isLoading: true,
                 ),
               )
-            : ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: viewModel.upcomingAppointments.length,
-                itemBuilder: (context, index) {
-                  final appointment = viewModel.upcomingAppointments[index];
-                  return CustomAppointmentList(
-                    contextDetails: appointment.contextDetails,
-                    startAt: appointment.availability?.startAt ?? '',
-                    endAt: appointment.availability?.endAt ?? '',
-                    learnersEnrolled: 23, // Get actual data from your model
-                    isTrainerView: true, // Specify trainer view
-                    onTap: () =>
-                        viewModel.openSession(appointment.id.toString()),
-                  );
-                },
-              ),
+            : viewModel.hasNoSessions
+                ? EmptyStateWidget(
+                    animationPath: 'assets/animations/task_creation.json',
+                    title: 'No Upcoming Sessions',
+                    description: 'Schedule your first session with learners',
+                    buttonText: 'Schedule Session',
+                    onActionPressed: () => viewModel.openSchedule(),
+                    animationSize: 180,
+                    isDark: false,
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: viewModel.upcomingAppointments.length,
+                    itemBuilder: (context, index) {
+                      final appointment = viewModel.upcomingAppointments[index];
+                      return CustomAppointmentList(
+                        contextDetails: appointment.contextDetails,
+                        startAt: appointment.availability?.startAt ?? '',
+                        endAt: appointment.availability?.endAt ?? '',
+                        learnersEnrolled: 23, // Get actual data from your model
+                        isTrainerView: true, // Specify trainer view
+                        onTap: () =>
+                            viewModel.openSession(appointment.id.toString()),
+                      );
+                    },
+                  ),
       ],
     );
   }

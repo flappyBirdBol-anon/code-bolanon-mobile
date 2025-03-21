@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/models/registration_model.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
@@ -39,6 +40,9 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
   Set<String> _activeFilters = {'All'};
   @override
   Set<String> get activeFilters => _activeFilters;
+
+  List<RegistrationModel> _reviews = [];
+  List<RegistrationModel> get reviews => _reviews;
 
   @override
   void toggleFilter(String filter) {
@@ -115,7 +119,7 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
   int getTotalLearnersEnrolled() {
     // Sum all enrolled learners across all courses
     return courses.fold<int>(
-        0, (previousValue, course) => previousValue + (10));
+        0, (previousValue, course) => previousValue + course.studentsEnrolled);
     //  (previousValue, course) => previousValue + (course.enrolledCount ?? 0));
   }
 
@@ -123,7 +127,7 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
   int getTotalLessonsCreated() {
     // Sum all lessons across all courses
     return courses.fold<int>(
-        0, (previousValue, course) => previousValue + (11));
+        0, (previousValue, course) => previousValue + course.lessonCount!);
     //  (previousValue, course) => previousValue + (course.lessonsCount ?? 0));
   }
 
@@ -150,6 +154,17 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
     if (activeFilters.contains('Active') && course.isActive) return true;
     if (activeFilters.contains('Inactive') && !course.isActive) return true;
     return false;
+  }
+
+  double get averageRating {
+    if (_reviews.isEmpty) return 0;
+
+    final reviewsWithRatings = _reviews.where((r) => r.rating != null).toList();
+    if (reviewsWithRatings.isEmpty) return 0;
+
+    final sum =
+        reviewsWithRatings.fold(0, (sum, review) => sum + (review.rating ?? 0));
+    return sum / reviewsWithRatings.length;
   }
 
   void navigateToAddCourse(BuildContext context) async {

@@ -19,6 +19,7 @@ abstract class CourseBaseViewModel extends BaseViewModel
   final CourseService _courseService;
   final ImageService imageService;
   final TagService _tagService = locator<TagService>();
+  int get userCourseCount => userService.courseCount;
 
   List<CourseModel> _courses = [];
   List<CourseModel> get courses => _courses;

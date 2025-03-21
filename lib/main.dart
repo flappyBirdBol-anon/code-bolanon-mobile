@@ -8,14 +8,11 @@ import 'package:code_bolanon/ui/common/app_strings.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:code_bolanon/utils/app_initializer.dart';
 import 'package:code_bolanon/app/app.snackbar.dart';
-
 import 'package:flutter/material.dart';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:media_kit/media_kit.dart' show MediaKit;
-
 import 'package:stacked_services/stacked_services.dart';
 import 'package:animated_svg/animated_svg.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -114,7 +111,6 @@ Future<String> _determineInitialRoute() async {
     _cachedInitialRoute = route;
 
     // If we're showing the onboarding view, mark that onboarding has started
-    // This ensures if the user exits during onboarding, they won't see it again
     if (route == Routes.onboardingView) {
       await authService.setOnboardingStarted();
     }
@@ -125,9 +121,6 @@ Future<String> _determineInitialRoute() async {
     return Routes.onboardingView;
   }
 }
-
-// Single global key to manage app state
-final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   // Ensure Flutter is initialized
@@ -145,46 +138,73 @@ void main() async {
   // Initialize critical modules first (blocking)
   await _initializer.initializeCriticalModules();
 
-  // First, show the splash screen with loading indicator
-  runApp(AppLoaderWrapper());
+  // Run the combined app that handles both splash and main app
+  runApp(const SplashApp());
 
-  // Initialize non-critical modules and prepare the app in the background
-  await _prepareAppInBackground();
+  // Initialize non-critical modules in the background
+  _initializer.initializeNonCriticalModules();
 }
 
-/// Prepares app in background and seamlessly transitions to main app
-Future<void> _prepareAppInBackground() async {
-  // Initialize non-critical modules that affect UI
-  if (!_nonCriticalModulesInitialized) {
-    // Start their initialization (will continue in background)
-    _initializer.initializeNonCriticalModules();
-    _nonCriticalModulesInitialized = true;
-  }
+/// Splash screen app that will be shown first
+class SplashApp extends StatefulWidget {
+  const SplashApp({super.key});
 
-  // Determine initial route (important for navigation)
-  final initialRoute = await _determineInitialRoute();
-
-  // Add a small delay to ensure animations in loader have time to be seen
-  // and essential UI components are ready
-  await Future.delayed(const Duration(milliseconds: 1500));
-
-  // Navigate to the main app using the same navigator instance
-  if (_navigatorKey.currentState != null) {
-    _navigatorKey.currentState!.pushReplacement(
-      MaterialPageRoute(builder: (_) => MainApp(initialRoute: initialRoute)),
-    );
-  }
+  @override
+  State<SplashApp> createState() => _SplashAppState();
 }
 
-/// Wrapper that ensures the loader is shown until the app is ready
-class AppLoaderWrapper extends StatelessWidget {
+class _SplashAppState extends State<SplashApp> {
+  @override
+  void initState() {
+    super.initState();
+    _prepareAndNavigate();
+  }
+
+  Future<void> _prepareAndNavigate() async {
+    // Wait for non-critical modules to initialize
+    if (!_nonCriticalModulesInitialized) {
+      _initializer.initializeNonCriticalModules();
+      _nonCriticalModulesInitialized = true;
+    }
+
+    // Determine initial route
+    final initialRoute = await _determineInitialRoute();
+
+    // Add delay for splash animation
+    await Future.delayed(const Duration(milliseconds: 2000));
+
+    // Replace the entire app with the main app
+    if (mounted) {
+      runApp(MainApp(initialRoute: initialRoute));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      navigatorKey: _navigatorKey,
-      home: const _AppLoader(),
       theme: ThemeData.light().copyWith(primaryColor: AppColors.primary),
+      home: const _AppLoader(),
+    );
+  }
+}
+
+/// Main application that will be shown after splash screen
+class MainApp extends StatelessWidget {
+  final String initialRoute;
+
+  const MainApp({super.key, required this.initialRoute});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.light().copyWith(primaryColor: AppColors.primary),
+      initialRoute: initialRoute,
+      onGenerateRoute: StackedRouter().onGenerateRoute,
+      navigatorKey: StackedService.navigatorKey,
+      navigatorObservers: [StackedService.routeObserver],
+      restorationScopeId: 'app',
     );
   }
 }
@@ -248,7 +268,7 @@ class _AppLoaderState extends State<_AppLoader> with TickerProviderStateMixin {
     // Start animations
     _logoController.forward();
 
-    // Add repeat behavior for subtle continuous animation
+    // Add repeat behavior for continuous animation
     _logoController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _logoController.reverse();
@@ -265,11 +285,13 @@ class _AppLoaderState extends State<_AppLoader> with TickerProviderStateMixin {
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         _textController.reverse().then((_) {
-          setState(() {
-            _currentTipIndex = (_currentTipIndex + 1) % _loadingTips.length;
-          });
-          _textController.forward();
-          _setupTipCycling();
+          if (mounted) {
+            setState(() {
+              _currentTipIndex = (_currentTipIndex + 1) % _loadingTips.length;
+            });
+            _textController.forward();
+            _setupTipCycling();
+          }
         });
       }
     });
@@ -279,6 +301,10 @@ class _AppLoaderState extends State<_AppLoader> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    // Make sure to stop animations before disposing
+    _logoController.stop();
+    _textController.stop();
+
     _logoController.dispose();
     _textController.dispose();
     _svgController.dispose();
@@ -352,9 +378,7 @@ class _AppLoaderState extends State<_AppLoader> with TickerProviderStateMixin {
                 );
               },
             ),
-
             const SizedBox(height: 70),
-
             // Custom animated progress indicator
             SizedBox(
               width: 200,
@@ -364,9 +388,7 @@ class _AppLoaderState extends State<_AppLoader> with TickerProviderStateMixin {
                     const AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
             ),
-
             const SizedBox(height: 70),
-
             // Loading message with animation
             FadeTransition(
               opacity: _textController,
@@ -379,9 +401,7 @@ class _AppLoaderState extends State<_AppLoader> with TickerProviderStateMixin {
                 textAlign: TextAlign.center,
               ),
             ),
-
             const SizedBox(height: 25),
-
             FadeTransition(
               opacity: _fadeInAnimation,
               child: Text(
@@ -396,25 +416,6 @@ class _AppLoaderState extends State<_AppLoader> with TickerProviderStateMixin {
           ],
         ),
       ),
-    );
-  }
-}
-
-class MainApp extends StatelessWidget {
-  final String initialRoute;
-
-  const MainApp({super.key, required this.initialRoute});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.light().copyWith(primaryColor: AppColors.primary),
-      initialRoute: initialRoute,
-      onGenerateRoute: StackedRouter().onGenerateRoute,
-      navigatorKey: StackedService.navigatorKey,
-      navigatorObservers: [StackedService.routeObserver],
-      restorationScopeId: 'app',
     );
   }
 }

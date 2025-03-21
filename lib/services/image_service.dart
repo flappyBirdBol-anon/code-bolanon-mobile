@@ -155,6 +155,10 @@ class ImageService {
         final imageUrl = getCourseThumbnailFromPath(course.thumbnail);
         futures.add(prefetchImage(imageUrl, courseId: course.id));
       }
+      if (course.author_image!.isNotEmpty) {
+        final imageUrl = getCourseThumbnailFromPath(course.author_image!);
+        futures.add(prefetchImage(imageUrl, courseId: course.id));
+      }
     }
 
     // Process in chunks to avoid memory pressure

@@ -38,31 +38,31 @@ class AppointmentModel {
   // Example of mock data with included availability
   static List<AppointmentModel> getMockAppointments() {
     return [
-      AppointmentModel(
-        id: 1,
-        contextDetails: 'Flutter Development Session',
-        status: 'Confirmed',
-        gmeetLink: 'https://meet.google.com/abc-defg-hij',
-        availabilityId: 1,
-        userId: 1,
-        availability: AvailabilityData(
-          startAt: '2023-12-25 09:00:00',
-          endAt: '2023-12-25 10:30:00',
-          price: '2500',
-        ),
-      ),
-      AppointmentModel(
-        id: 2,
-        contextDetails: 'React Components Workshop',
-        status: 'Pending',
-        availabilityId: 2,
-        userId: 2,
-        availability: AvailabilityData(
-          startAt: '2023-12-26 14:00:00',
-          endAt: '2023-12-26 15:30:00',
-          price: '2000',
-        ),
-      ),
+      // AppointmentModel(
+      //   id: 1,
+      //   contextDetails: 'Flutter Development Session',
+      //   status: 'Confirmed',
+      //   gmeetLink: 'https://meet.google.com/abc-defg-hij',
+      //   availabilityId: 1,
+      //   userId: 1,
+      //   availability: AvailabilityData(
+      //     startAt: '2023-12-25 09:00:00',
+      //     endAt: '2023-12-25 10:30:00',
+      //     price: '2500',
+      //   ),
+      // ),
+      // AppointmentModel(
+      //   id: 2,
+      //   contextDetails: 'React Components Workshop',
+      //   status: 'Pending',
+      //   availabilityId: 2,
+      //   userId: 2,
+      //   availability: AvailabilityData(
+      //     startAt: '2023-12-26 14:00:00',
+      //     endAt: '2023-12-26 15:30:00',
+      //     price: '2000',
+      //   ),
+      // ),
     ];
   }
 }

@@ -1,4 +1,5 @@
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/models/registration_model.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/tag_chip.dart';
@@ -7,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class CoursesListItem extends StatelessWidget {
   final CourseModel course;
+  final RegistrationModel? registration;
   final VoidCallback onTap;
   final ImageService imageService;
   final bool showControls;
@@ -21,6 +23,7 @@ class CoursesListItem extends StatelessWidget {
     required this.course,
     required this.onTap,
     required this.imageService,
+    this.registration,
     this.showControls = false,
     this.showStatus = false,
     this.tags,

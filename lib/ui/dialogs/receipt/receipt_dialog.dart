@@ -75,9 +75,14 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Icon(Icons.share),
-                      label:
-                          Text(_isSaving ? 'Processing...' : 'Share Receipt'),
+                          : const Icon(
+                              Icons.share,
+                              color: Colors.white,
+                            ),
+                      label: Text(
+                        _isSaving ? 'Processing...' : 'Share Receipt',
+                        style: GoogleFonts.figtree(),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0D47A1),
                         foregroundColor: Colors.white,
@@ -94,7 +99,10 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
                       onPressed: () => widget.completer(DialogResponse(
                         confirmed: true,
                       )),
-                      child: const Text('Close'),
+                      child: Text(
+                        'Close',
+                        style: GoogleFonts.figtree(),
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF0D47A1),
                         side: const BorderSide(color: Color(0xFF0D47A1)),
@@ -161,10 +169,10 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
                   color: const Color(0xFF0D47A1).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.check_circle,
                   size: 32,
-                  color: const Color(0xFF0D47A1),
+                  color: Color(0xFF0D47A1),
                 ),
               ),
             ],
@@ -290,7 +298,7 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'Thank you for choosing Code Boolean!',
+                'Thank you for choosing Code Bol-Anon!',
                 style: GoogleFonts.figtree(
                   fontSize: 14,
                   color: const Color(0xFF0D47A1),

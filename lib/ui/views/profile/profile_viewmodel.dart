@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
+import 'package:code_bolanon/models/tech_stack_model.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/ui/common/utils/tech_stack_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/tech_stack_modal.dart';
@@ -48,7 +49,9 @@ class ProfileViewModel extends AppBaseViewModel {
     'MongoDB'
   ];
 
-  List<String> get techStacks => _techStacks;
+  // List<String> get techStacks => _techStacks;
+
+  List<TechStackModel> get techStacks => userService.userTechStacks;
 
   Color getTechColor(String tech, ThemeData theme) {
     return TechStackColors.getColorForTech(tech, theme);
@@ -117,10 +120,10 @@ class ProfileViewModel extends AppBaseViewModel {
 
     // For local files (from cache/camera)
     if (profilePictureUrl.startsWith('/data/')) {
-      return Image.file(
-        File(profilePictureUrl),
-        width: 70,
-        height: 70,
+      return Image.asset(
+        profilePictureUrl,
+        width: 60,
+        height: 60,
         fit: fit,
         errorBuilder: (context, error, stackTrace) =>
             errorWidget ??
@@ -128,19 +131,18 @@ class ProfileViewModel extends AppBaseViewModel {
       );
     }
 
+    final imageUrl =
+        _imageService.getCourseThumbnailFromPath(profilePictureUrl);
+
     // For network images
-    return Image.network(
-      profilePictureUrl,
-      width: 70,
-      height: 70,
+    return _imageService.loadImage(
+      imageUrl: imageUrl,
+      courseId: '',
+      width: 60,
+      height: 60,
       fit: fit,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return placeholder ?? const CircularProgressIndicator();
-      },
-      errorBuilder: (context, error, stackTrace) =>
-          errorWidget ??
-          const Icon(Icons.person, size: 35, color: Colors.white70),
+      placeholder: placeholder,
+      errorWidget: errorWidget,
     );
   }
 }

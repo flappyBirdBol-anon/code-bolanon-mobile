@@ -107,7 +107,7 @@ class CustomListItem extends StatelessWidget {
                 : null,
             title: Text(
               text,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.figtree(
                 fontSize: fontSize ?? 14,
                 fontWeight: fontWeight ?? FontWeight.w500,
                 color: textColor,
@@ -116,7 +116,7 @@ class CustomListItem extends StatelessWidget {
             subtitle: subtitle != null
                 ? Text(
                     subtitle!,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.figtree(
                       fontSize: 12,
                       color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),

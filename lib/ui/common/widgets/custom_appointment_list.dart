@@ -110,7 +110,7 @@ class CustomAppointmentList extends StatelessWidget {
                   children: [
                     Text(
                       contextDetails,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.figtree(
                         color: isDark ? Colors.white : Colors.indigo[800],
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -119,7 +119,7 @@ class CustomAppointmentList extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '${_formatDate(startAt)} at ${_formatTime(startAt)} • ${_calculateDuration(startAt, endAt)}',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.figtree(
                         color: isDark
                             ? Colors.white.withOpacity(0.8)
                             : Colors.indigo[700],
@@ -130,7 +130,7 @@ class CustomAppointmentList extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         '₱$price',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.figtree(
                           color: isDark
                               ? Colors.white.withOpacity(0.8)
                               : Colors.indigo[700],
@@ -178,7 +178,7 @@ class CustomAppointmentList extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   '${learnersEnrolled ?? 0} learners enrolled',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.figtree(
                     color: isDark
                         ? Colors.white.withOpacity(0.8)
                         : Colors.indigo[700],
@@ -201,7 +201,7 @@ class CustomAppointmentList extends StatelessWidget {
                   ),
                   child: Text(
                     'Start Session',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.figtree(
                       fontWeight: FontWeight.w500,
                       fontSize: 13,
                     ),
