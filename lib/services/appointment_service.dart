@@ -1,12 +1,10 @@
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
-import 'package:code_bolanon/services/user_service.dart';
 import 'package:intl/intl.dart';
 
 class AppointmentService {
   final ApiService _apiService;
-  final UserService _userService = locator<UserService>();
   final DateFormat dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
 
   AppointmentService({ApiService? apiService})
@@ -37,11 +35,51 @@ class AppointmentService {
     }
   }
 
-  Future<void> updateSchedule(String id, AppointmentModel appointment) async {
+  Future<Map<String, dynamic>> updateSchedule(
+      String appointmentId, AppointmentModel appointment) async {
     try {
-      await _apiService.put('/appointments/$id', data: appointment.toJson());
+      final Map<String, dynamic> appointmentData = {
+        'start_at': dateFormat.format(appointment.startAt),
+        'end_at': dateFormat.format(appointment.endAt),
+        'price': appointment.price.toString(),
+      };
+
+      print('Updating appointment: $appointmentId');
+      print('Request data: $appointmentData');
+
+      final response = await _apiService.put('/appointments/$appointmentId',
+          data: appointmentData);
+
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      // Handle specific error cases
+      if (response.statusCode == 409) {
+        return {
+          'success': false,
+          'message': response.data['message'] ??
+              'Schedule overlaps with existing appointment'
+        };
+      }
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        return {
+          'success': false,
+          'message': 'Failed to update schedule: ${response.statusCode}'
+        };
+      }
+
+      if (response.data == null) {
+        return {'success': false, 'message': 'No response data received'};
+      }
+
+      return {'success': true, 'message': 'Schedule updated successfully'};
     } catch (e) {
-      throw Exception('Failed to update schedule: $e');
+      print('Error updating schedule: $e');
+      return {
+        'success': false,
+        'message': 'Failed to update schedule. Please try again.'
+      };
     }
   }
 

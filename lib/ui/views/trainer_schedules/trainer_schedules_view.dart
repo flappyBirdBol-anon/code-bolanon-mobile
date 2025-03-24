@@ -499,6 +499,8 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                           () => _selectTime(context, viewModel, false),
                           isDark,
                         ),
+                        const SizedBox(height: 16),
+                        _buildPriceField(viewModel, isDark),
                       ],
                     ),
                   ),
@@ -618,6 +620,8 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                           () => _selectTime(context, viewModel, false),
                           isDark,
                         ),
+                        const SizedBox(height: 16),
+                        _buildPriceField(viewModel, isDark),
                       ],
                     ),
                   ),
@@ -1150,6 +1154,50 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPriceField(
+    TrainerSchedulesViewModel viewModel,
+    bool isDark,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Price',
+          style: GoogleFonts.figtree(
+            fontSize: 14,
+            color: isDark ? Colors.grey[400] : Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: TextEditingController(text: viewModel.price.toString()),
+          keyboardType: TextInputType.number,
+          onChanged: (value) =>
+              viewModel.setPrice(double.tryParse(value) ?? 500.0),
+          decoration: InputDecoration(
+            hintText: 'Enter price',
+            prefixText: '₱ ',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+              ),
+            ),
+          ),
+          style: GoogleFonts.figtree(
+            color: isDark ? Colors.white : Colors.grey[800],
+          ),
+        ),
+      ],
     );
   }
 }

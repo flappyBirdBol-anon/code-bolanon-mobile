@@ -69,6 +69,14 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   int? _selectedTimeSlotId;
   int? get selectedTimeSlotId => _selectedTimeSlotId;
 
+  double _price = 500.0;
+  double get price => _price;
+
+  void setPrice(double value) {
+    _price = value;
+    notifyListeners();
+  }
+
   void _showSuccessMessage(String message) {
     snackbarService.showCustomSnackBar(
       message: message,
@@ -142,28 +150,23 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
             _selectedDate.day, _startTime.hour, _startTime.minute),
         'endAt': DateTime(_selectedDate.year, _selectedDate.month,
             _selectedDate.day, _endTime.hour, _endTime.minute),
-        'price': 500.0,
+        'price': _price,
       };
-      final response = await _appointmentService.createSchedule(newAppointment);
+      await _appointmentService.createSchedule(newAppointment);
 
       _showSuccessMessage('Schedule added successfully');
       await loadAppointments();
       resetForm();
       _showAddScheduleForm = false;
     } catch (e) {
-      if (e.toString().contains('409')) {
-        _showErrorMessage(
-            'This time slot conflicts with an existing appointment');
-      } else {
-        _showErrorMessage('Failed to create schedule: $e');
-      }
+      _showErrorMessage('Failed to create schedule: $e');
     } finally {
       setIsLoading(false);
     }
   }
 
   // Add helper method to check for overlapping appointments
-  bool _checkForOverlap() {
+  bool _checkForOverlap({int? excludeId}) {
     final newStart = DateTime(_selectedDate.year, _selectedDate.month,
         _selectedDate.day, _startTime.hour, _startTime.minute);
     final newEnd = DateTime(_selectedDate.year, _selectedDate.month,
@@ -171,6 +174,7 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
 
     // Check overlap with available time slots
     for (var slot in _availableTimeSlots) {
+      if (excludeId != null && slot.id == excludeId) continue;
       if (_isOverlapping(newStart, newEnd, slot.startAt, slot.endAt)) {
         return true;
       }
@@ -178,6 +182,7 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
 
     // Check overlap with scheduled appointments
     for (var apt in _scheduledAppointments) {
+      if (excludeId != null && apt.id == excludeId) continue;
       if (_isOverlapping(newStart, newEnd, apt.startAt, apt.endAt)) {
         return true;
       }
@@ -192,69 +197,102 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     return start1.isBefore(end2) && end1.isAfter(start2);
   }
 
-  // Update existing appointment
-  Future<void> updateAppointment() async {
-    if (!_validateTimes() || _selectedAppointmentId == null) return;
-
-    setIsLoading(true);
+  // Single unified method for editing/rescheduling
+  void showEditForm(String id) {
     try {
-      final appointment = _scheduledAppointments
-          .firstWhere((apt) => apt.id.toString() == _selectedAppointmentId);
+      // Find the appointment in either list
+      final appointment = [..._availableTimeSlots, ..._scheduledAppointments]
+          .firstWhere((apt) => apt.id.toString() == id);
+
+      _selectedTimeSlotId = appointment.id;
+      _selectedAppointmentId = null;
+      _showRescheduleForm = true;
+
+      // Set form data
+      _startTime = TimeOfDay(
+        hour: appointment.startAt.hour,
+        minute: appointment.startAt.minute,
+      );
+      _endTime = TimeOfDay(
+        hour: appointment.endAt.hour,
+        minute: appointment.endAt.minute,
+      );
+      _price = appointment.price ?? 500.0;
+
+      notifyListeners();
+    } catch (e) {
+      _showErrorMessage('Failed to load appointment details');
+      hideRescheduleForm();
+    }
+  }
+
+  // Replace these methods to use the unified showEditForm
+  void showRescheduleFormForAppointment(String id) => showEditForm(id);
+  void openEditScheduleForm(int slotId) => showEditForm(slotId.toString());
+
+  // Update this method to be simpler
+  Future<void> updateAppointment() async {
+    if (!_validateTimes()) return;
+
+    try {
+      if (_selectedTimeSlotId == null) {
+        throw Exception('No appointment selected for update');
+      }
+
+      // Find the appointment to update
+      final appointmentToUpdate = [
+        ..._availableTimeSlots,
+        ..._scheduledAppointments
+      ].firstWhere((apt) => apt.id == _selectedTimeSlotId);
+
+      // Check for overlaps excluding current appointment
+      if (_checkForOverlap(excludeId: _selectedTimeSlotId)) {
+        _showErrorMessage(
+            'This time slot overlaps with an existing appointment');
+        return;
+      }
+
+      setIsLoading(true);
 
       final updatedAppointment = AppointmentModel(
-        id: appointment.id,
+        id: appointmentToUpdate.id,
         startAt: DateTime(_selectedDate.year, _selectedDate.month,
             _selectedDate.day, _startTime.hour, _startTime.minute),
         endAt: DateTime(_selectedDate.year, _selectedDate.month,
             _selectedDate.day, _endTime.hour, _endTime.minute),
-        price: appointment.price,
-        contextDetails: appointment.contextDetails,
-        status: appointment.status,
-        trainerId: appointment.trainerId,
-        gmeetLink: appointment.gmeetLink,
+        price: _price,
+        contextDetails: appointmentToUpdate.contextDetails,
+        status: appointmentToUpdate.status,
+        trainerId: appointmentToUpdate.trainerId,
+        gmeetLink: appointmentToUpdate.gmeetLink,
       );
 
-      await _appointmentService.updateSchedule(
-          _selectedAppointmentId!, updatedAppointment);
-      await loadAppointments();
+      final result = await _appointmentService.updateSchedule(
+          appointmentToUpdate.id.toString(), updatedAppointment);
 
-      hideRescheduleForm();
+      if (result['success']) {
+        _showSuccessMessage(result['message']);
+        await loadAppointments();
+        hideRescheduleForm();
+      } else {
+        _showErrorMessage(result['message']);
+      }
     } catch (e) {
-      setErrorMessage('Failed to update appointment: $e');
+      _showErrorMessage('Failed to update schedule');
     } finally {
       setIsLoading(false);
     }
   }
 
-  // Update existing time slot
-  Future<void> updateAvailableTimeSlot() async {
-    if (!_validateTimes() || _selectedTimeSlotId == null) return;
-
+  // Postpone or cancel an appointment
+  Future<void> postponeAppointment(String id) async {
     setIsLoading(true);
     try {
-      final slot = _availableTimeSlots
-          .firstWhere((slot) => slot.id == _selectedTimeSlotId);
-
-      final updatedSlot = AppointmentModel(
-        id: slot.id,
-        startAt: DateTime(_selectedDate.year, _selectedDate.month,
-            _selectedDate.day, _startTime.hour, _startTime.minute),
-        endAt: DateTime(_selectedDate.year, _selectedDate.month,
-            _selectedDate.day, _endTime.hour, _endTime.minute),
-        price: slot.price,
-        contextDetails: slot.contextDetails,
-        status: 'available',
-        trainerId: slot.trainerId,
-        gmeetLink: slot.gmeetLink,
-      );
-
-      await _appointmentService.updateSchedule(
-          _selectedTimeSlotId.toString(), updatedSlot);
+      await _appointmentService.deleteSchedule(id);
+      _showSuccessMessage('Appointment cancelled successfully');
       await loadAppointments();
-
-      hideEditScheduleForm();
     } catch (e) {
-      setErrorMessage('Failed to update time slot: $e');
+      _showErrorMessage('Failed to cancel appointment: $e');
     } finally {
       setIsLoading(false);
     }
@@ -274,8 +312,9 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   void resetForm() {
     _startTime = const TimeOfDay(hour: 9, minute: 0);
     _endTime = const TimeOfDay(hour: 10, minute: 0);
+    _price = 500.0;
     _showAddScheduleForm = false;
-    _errorMessage = null; // Clear any error messages
+    _errorMessage = null;
     notifyListeners();
   }
 
@@ -372,58 +411,10 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     notifyListeners();
   }
 
-  // Show edit schedule form with pre-filled data
-  void openEditScheduleForm(int slotId) {
-    _selectedTimeSlotId = slotId;
-    _showEditScheduleForm = true;
-
-    // Find the time slot to pre-fill form
-    final slot = _availableTimeSlots.firstWhere(
-      (slot) => slot.id == slotId,
-    );
-
-    // Set times from the appointment model
-    _startTime = TimeOfDay(
-      hour: slot.startAt.hour,
-      minute: slot.startAt.minute,
-    );
-
-    _endTime = TimeOfDay(
-      hour: slot.endAt.hour,
-      minute: slot.endAt.minute,
-    );
-
-    notifyListeners();
-  }
-
   // Hide edit schedule form
   void hideEditScheduleForm() {
     _showEditScheduleForm = false;
     _selectedTimeSlotId = null;
-    notifyListeners();
-  }
-
-  // Show reschedule form for specific appointment
-  void showRescheduleFormForAppointment(String appointmentId) {
-    _selectedAppointmentId = appointmentId;
-    _showRescheduleForm = true;
-
-    // Find the appointment to pre-fill form
-    final appointment = _scheduledAppointments.firstWhere(
-      (apt) => apt.id.toString() == appointmentId,
-    );
-
-    // Set times from the appointment model
-    _startTime = TimeOfDay(
-      hour: appointment.startAt.hour,
-      minute: appointment.startAt.minute,
-    );
-
-    _endTime = TimeOfDay(
-      hour: appointment.endAt.hour,
-      minute: appointment.endAt.minute,
-    );
-
     notifyListeners();
   }
 
@@ -442,39 +433,6 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
       await loadAppointments();
     } catch (e) {
       setErrorMessage('Failed to remove time slot: $e');
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  // Postpone an appointment (update timestamps only)
-  Future<void> postponeAppointment(String id) async {
-    if (_selectedAppointmentId == null) return;
-
-    setIsLoading(true);
-    try {
-      final appointment = _scheduledAppointments.firstWhere(
-        (apt) => apt.id.toString() == id,
-      );
-
-      // Only update the startAt and endAt timestamps
-      final updatedAppointment = AppointmentModel(
-        id: appointment.id,
-        startAt: DateTime(_selectedDate.year, _selectedDate.month,
-            _selectedDate.day, _startTime.hour, _startTime.minute),
-        endAt: DateTime(_selectedDate.year, _selectedDate.month,
-            _selectedDate.day, _endTime.hour, _endTime.minute),
-        price: appointment.price,
-        contextDetails: appointment.contextDetails,
-        status: appointment.status,
-        trainerId: appointment.trainerId,
-        gmeetLink: appointment.gmeetLink,
-      );
-
-      await _appointmentService.updateSchedule(id, updatedAppointment);
-      await loadAppointments();
-    } catch (e) {
-      setErrorMessage('Failed to postpone appointment: $e');
     } finally {
       setIsLoading(false);
     }
