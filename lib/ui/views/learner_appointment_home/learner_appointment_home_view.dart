@@ -25,11 +25,17 @@ class LearnerAppointmentHomeView
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : AppColors.background,
       appBar: CustomAppBar(
-        title: 'Book a Session',
-        showSearchButton: true,
-        onSearchTap: viewModel.setSearchQuery,
-        icon: Icons.search,
-      ),
+          title: 'Book a Session',
+          showSearchButton: true,
+          onSearchTap: viewModel.setSearchQuery,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.calendar_today, color: Color(0xFF4C3575)),
+              onPressed: () {
+                viewModel.navigateToAppointments();
+              },
+            ),
+          ]),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () => viewModel.fetchAvailableTrainers(),

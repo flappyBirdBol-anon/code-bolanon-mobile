@@ -1,5 +1,6 @@
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_appointment_item.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,16 +24,8 @@ class TrainerAppointmentHomeView
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : AppColors.background,
-      appBar: CustomAppBar(
+      appBar: const CustomAppBar(
         title: 'Appointments',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.calendar_today, color: Color(0xFF4C3575)),
-            onPressed: () {
-              viewModel.navigateToSchedules();
-            },
-          ),
-        ],
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -42,8 +35,131 @@ class TrainerAppointmentHomeView
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Stats Cards Section
-                _buildStatsSection(context, viewModel, isDark),
+                // Header Section
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0, vertical: 20.0),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDark
+                          ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                          : [AppColors.primary, Colors.blue.shade700],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        offset: const Offset(0, 4),
+                        blurRadius: 15,
+                      ),
+                    ],
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Welcome to Your Schedule',
+                              style: GoogleFonts.figtree(
+                                fontSize:
+                                    MediaQuery.of(context).size.width < 600
+                                        ? 20
+                                        : 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Manage your appointments and sessions',
+                              style: GoogleFonts.figtree(
+                                fontSize:
+                                    MediaQuery.of(context).size.width < 600
+                                        ? 14
+                                        : 16,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          viewModel.navigateToSchedules();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                offset: const Offset(0, 2),
+                                blurRadius: 5,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.calendar_today_rounded,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Stats Section
+                Container(
+                  height: 135, // Increased height from 120 to 135
+                  margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatItem(
+                          'Today',
+                          '${viewModel.getTodayAppointmentsCount()}',
+                          Icons.calendar_today,
+                          AppColors.primary,
+                          isDark ? const Color(0xFF1E293B) : Colors.white,
+                          isDark,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatItem(
+                          'This Week',
+                          '${viewModel.getThisWeekAppointmentsCount()}',
+                          Icons.date_range,
+                          AppColors.primary,
+                          isDark ? const Color(0xFF1E293B) : Colors.white,
+                          isDark,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatItem(
+                          'Completed',
+                          '${viewModel.completedAppointments.length}',
+                          Icons.check_circle,
+                          AppColors.primary,
+                          isDark ? const Color(0xFF1E293B) : Colors.white,
+                          isDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 const SizedBox(height: 15),
 
@@ -86,6 +202,7 @@ class TrainerAppointmentHomeView
                                 viewModel.upcomingAppointments,
                                 viewModel,
                                 isDark,
+                                context,
                               ),
                             ),
                 ),
@@ -478,6 +595,7 @@ class TrainerAppointmentHomeView
                                   icon: const Icon(
                                     Icons.event_repeat,
                                     size: 18,
+                                    color: Colors.white,
                                   ),
                                   label: const Text('Reschedule'),
                                   style: OutlinedButton.styleFrom(
@@ -570,10 +688,10 @@ class TrainerAppointmentHomeView
     List<Appointment> appointments,
     TrainerAppointmentHomeViewModel viewModel,
     bool isDark,
+    BuildContext context,
   ) {
     return appointments
         .map((appointment) {
-          // Skip appointments that are already in Today's section
           if (viewModel.isAppointmentToday(appointment)) {
             return const SizedBox.shrink();
           }
@@ -581,197 +699,17 @@ class TrainerAppointmentHomeView
           final startTime = DateTime.parse(appointment.startAt);
           final endTime = DateTime.parse(appointment.endAt);
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  offset: const Offset(0, 3),
-                  blurRadius: 10,
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.primary.withOpacity(0.15)
-                              : AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.video_camera_front_outlined,
-                          color: isDark ? Colors.white : AppColors.primary,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              appointment.learnerName,
-                              style: GoogleFonts.figtree(
-                                color: isDark ? Colors.white : Colors.grey[800],
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: isDark
-                                        ? Colors.blue.withOpacity(0.2)
-                                        : Colors.blue.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    DateFormat('MMM d').format(startTime),
-                                    style: GoogleFonts.figtree(
-                                      color: isDark
-                                          ? Colors.white70
-                                          : Colors.blue[700],
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  "${DateFormat('h:mm a').format(startTime)} - ${DateFormat('h:mm a').format(endTime)}",
-                                  style: GoogleFonts.figtree(
-                                    color: isDark
-                                        ? Colors.grey[400]
-                                        : Colors.grey[600],
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.more_vert,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          // Show more options
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: isDark
-                      ? Colors.grey[800]!.withOpacity(0.3)
-                      : Colors.grey[200],
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          // Reschedule functionality
-                        },
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.event_repeat,
-                                size: 16,
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[700],
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Reschedule',
-                                style: GoogleFonts.figtree(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 24,
-                      child: VerticalDivider(
-                        width: 1,
-                        thickness: 1,
-                        color: isDark
-                            ? Colors.grey[800]!.withOpacity(0.3)
-                            : Colors.grey[200],
-                      ),
-                    ),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => viewModel
-                            .navigateToAppointmentDetails(appointment.id),
-                        borderRadius: const BorderRadius.only(
-                          bottomRight: Radius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.launch,
-                                size: 16,
-                                color: isDark
-                                    ? AppColors.primary.withOpacity(0.8)
-                                    : AppColors.primary,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Session Details',
-                                style: GoogleFonts.figtree(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDark
-                                      ? AppColors.primary.withOpacity(0.8)
-                                      : AppColors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          return CustomAppointmentItem(
+            learnerName: appointment.learnerName,
+            date: DateFormat('MMM d').format(startTime),
+            startTime: DateFormat('h:mm a').format(startTime),
+            endTime: DateFormat('h:mm a').format(endTime),
+            isCompleted: false,
+            isDark: isDark,
+            onTap: () => viewModel.navigateToAppointmentDetails(appointment.id),
+            onReschedule: () {}, // Add reschedule functionality
+            onPostpone: () => _showPostponeConfirmation(
+                context, viewModel, appointment.id, isDark),
           );
         })
         .where((widget) => widget is! SizedBox)
@@ -787,118 +725,16 @@ class TrainerAppointmentHomeView
       final startTime = DateTime.parse(appointment.startAt);
       final endTime = DateTime.parse(appointment.endAt);
 
-      return Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              offset: const Offset(0, 3),
-              blurRadius: 10,
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF10B981).withOpacity(0.15)
-                      : const Color(0xFF10B981).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.check_circle_outline_rounded,
-                  color: isDark
-                      ? Colors.greenAccent[200]
-                      : const Color(0xFF10B981),
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      appointment.learnerName,
-                      style: GoogleFonts.figtree(
-                        color: isDark ? Colors.white : Colors.grey[800],
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.grey.withOpacity(0.2)
-                                : Colors.grey.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            DateFormat('MMM d').format(startTime),
-                            style: GoogleFonts.figtree(
-                              color: isDark ? Colors.white70 : Colors.grey[700],
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "${DateFormat('h:mm a').format(startTime)} - ${DateFormat('h:mm a').format(endTime)}",
-                          style: GoogleFonts.figtree(
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              // View Session button
-              InkWell(
-                onTap: () =>
-                    viewModel.navigateToAppointmentDetails(appointment.id),
-                borderRadius: BorderRadius.circular(30),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.grey.withOpacity(0.15)
-                        : Colors.grey.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.grey.withOpacity(0.2)
-                          : Colors.grey.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Text(
-                    'View',
-                    style: GoogleFonts.figtree(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white70 : Colors.grey[700],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      return CustomAppointmentItem(
+        learnerName: appointment.learnerName,
+        date: DateFormat('MMM d').format(startTime),
+        startTime: DateFormat('h:mm a').format(startTime),
+        endTime: DateFormat('h:mm a').format(endTime),
+        isCompleted: true,
+        isDark: isDark,
+        onTap: () => viewModel.navigateToAppointmentDetails(appointment.id),
+        onReschedule: () {}, // Not used for completed appointments
+        onPostpone: () {}, // Not used for completed appointments
       );
     }).toList();
   }
@@ -983,6 +819,119 @@ class TrainerAppointmentHomeView
             isLoading: true,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+    Color cardColor,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          vertical: 12,
+          horizontal: 8), // Reduced vertical padding from 16 to 12
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            offset: const Offset(0, 3),
+            blurRadius: 8,
+            spreadRadius: 0,
+          ),
+        ],
+        border: Border.all(
+          color: isDark
+              ? Colors.grey.withOpacity(0.1)
+              : Colors.grey.withOpacity(0.08),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // Add this to make column wrap content
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(height: 6), // Reduced from 8 to 6
+          Text(
+            value,
+            style: GoogleFonts.figtree(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 2), // Reduced from 4 to 2
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.figtree(
+              fontSize: 12,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPostponeConfirmation(
+    BuildContext context,
+    TrainerAppointmentHomeViewModel viewModel,
+    String appointmentId,
+    bool isDark,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        title: Text(
+          'Postpone Appointment',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to postpone this appointment?',
+          style: TextStyle(
+            color: isDark ? Colors.grey[400] : Colors.grey[800],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: isDark ? Colors.grey[400] : Colors.grey[800],
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              viewModel.postponeAppointment(appointmentId);
+              Navigator.of(context).pop();
+            },
+            child: Text(
+              'Postpone',
+              style: TextStyle(
+                color: isDark ? Colors.redAccent : Colors.red,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

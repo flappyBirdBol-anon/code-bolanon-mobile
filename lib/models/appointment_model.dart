@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class AppointmentModel {
   final int id;
   final DateTime startAt;
@@ -25,7 +27,7 @@ class AppointmentModel {
       id: json['id'],
       startAt: DateTime.parse(json['start_at']),
       endAt: DateTime.parse(json['end_at']),
-      price: json['price'],
+      price: double.parse(json['price'].toString()), // Convert string to double
       contextDetails: json['context'],
       status: json['status'],
       gmeetLink: json['gmeet_link'],
@@ -34,10 +36,12 @@ class AppointmentModel {
   }
 
   Map<String, dynamic> toJson() {
+    final DateFormat dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
+
     return {
       'id': id,
-      'start_at': startAt.toIso8601String(),
-      'end_at': endAt.toIso8601String(),
+      'start_at': dateFormat.format(startAt),
+      'end_at': dateFormat.format(endAt),
       'price': price,
       'context': contextDetails,
       'status': status,

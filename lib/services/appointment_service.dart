@@ -2,10 +2,12 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
+import 'package:intl/intl.dart';
 
 class AppointmentService {
   final ApiService _apiService;
   final UserService _userService = locator<UserService>();
+  final DateFormat dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
 
   AppointmentService({ApiService? apiService})
       : _apiService = apiService ?? locator<ApiService>();
@@ -13,11 +15,23 @@ class AppointmentService {
   final List<AppointmentModel> _appointments = [];
   List<AppointmentModel> get appointmentList => _appointments;
 
-  Future<AppointmentModel> createSchedule(AppointmentModel appointment) async {
+  Future<AppointmentModel> createSchedule(
+      Map<String, dynamic> appointmentData) async {
     try {
+      final Map<String, dynamic> appointment = {
+        'start_at': dateFormat.format(appointmentData['startAt']),
+        'end_at': dateFormat.format(appointmentData['endAt']),
+        'price': (appointmentData['price'] as num).toString(),
+      };
+
       final response =
-          await _apiService.post('/appointments', data: appointment.toJson());
-      return AppointmentModel.fromJson(response.data);
+          await _apiService.post('/appointments', data: appointment);
+
+      if (response.data == null) {
+        throw Exception('No data received from server');
+      }
+
+      return AppointmentModel.fromJson(response.data['data'] ?? response.data);
     } catch (e) {
       throw Exception('Failed to create schedule: $e');
     }
@@ -42,9 +56,11 @@ class AppointmentService {
   Future<List<AppointmentModel>> fetchAllAppointments() async {
     try {
       final response = await _apiService.get('/appointments');
-      return (response.data as List)
-          .map((item) => AppointmentModel.fromJson(item))
+      final data = (response.data['data'] as List)
+          .map(
+              (item) => AppointmentModel.fromJson(item as Map<String, dynamic>))
           .toList();
+      return data;
     } catch (e) {
       throw Exception('Failed to fetch active appointments: $e');
     }

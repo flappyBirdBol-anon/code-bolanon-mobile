@@ -108,6 +108,8 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
     // TODO: Implement filter logic
   }
 
+  void navigateToAppointments() {}
+
   Color getTechColor(String tech, bool isDark) {
     // Define colors for different tech stacks
     final colors = {

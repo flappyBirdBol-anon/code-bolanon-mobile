@@ -200,4 +200,8 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
   void navigateToSchedules() {
     navigationService.navigateTo(Routes.trainerSchedulesView);
   }
+
+  void postponeAppointment(appointmentId) {
+    // Postpone appointment logic here
+  }
 }

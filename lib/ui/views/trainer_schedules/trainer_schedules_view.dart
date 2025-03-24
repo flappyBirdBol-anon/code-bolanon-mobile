@@ -1,5 +1,6 @@
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_appointment_item.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -21,9 +22,11 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : AppColors.background,
-      appBar: const CustomAppBar(
+      appBar: CustomAppBar(
         title: 'Schedule Management',
         showSearchButton: false,
+        showNotificationButton: false,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       ),
       body: SafeArea(
         child: Stack(
@@ -31,8 +34,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
             // Main Content
             RefreshIndicator(
               onRefresh: () async {
-                await viewModel.fetchAvailableTimeSlots();
-                await viewModel.fetchScheduledAppointments();
+                await viewModel.loadAppointments();
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -62,10 +64,38 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF4C3575),
-        onPressed: viewModel.toggleAddScheduleForm,
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: Hero(
+        tag: 'fab_schedule',
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+                spreadRadius: 0,
+              ),
+            ],
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.primary, AppColors.secondary],
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: viewModel.toggleAddScheduleForm,
+              borderRadius: BorderRadius.circular(16),
+              child: const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Icon(Icons.add, color: Colors.white, size: 28),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -80,19 +110,25 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+              : [AppColors.primary.withOpacity(0.95), AppColors.secondary],
+        ),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            offset: const Offset(0, 3),
-            blurRadius: 10,
+            color: AppColors.primary.withOpacity(0.15),
+            offset: const Offset(0, 4),
+            blurRadius: 15,
           ),
         ],
       ),
       child: Column(
         children: [
-          // Calendar Header
+          // Calendar Header with improved styling
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(
@@ -100,9 +136,9 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
               children: [
                 IconButton(
                   onPressed: viewModel.previousWeek,
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.chevron_left,
-                    color: isDark ? Colors.white70 : Colors.grey[700],
+                    color: Colors.white,
                     size: 28,
                   ),
                 ),
@@ -110,19 +146,17 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.primary.withOpacity(0.2)
-                            : AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                          horizontal: 12, vertical: 6),
                       child: Text(
                         '${DateFormat('MMM d').format(weekDays.first)} - ${DateFormat('MMM d').format(weekDays.last)}',
                         style: GoogleFonts.figtree(
                           fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: isDark ? Colors.white70 : AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -130,17 +164,15 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                     InkWell(
                       onTap: () => _selectDate(context, viewModel),
                       child: Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.primary.withOpacity(0.2)
-                              : AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.calendar_today,
                           size: 18,
-                          color: isDark ? Colors.white70 : AppColors.primary,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -148,9 +180,9 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                 ),
                 IconButton(
                   onPressed: viewModel.nextWeek,
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.chevron_right,
-                    color: isDark ? Colors.white70 : Colors.grey[700],
+                    color: Colors.white,
                     size: 28,
                   ),
                 ),
@@ -158,7 +190,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
             ),
           ),
 
-          // Days of Week
+          // Days of Week with enhanced styling
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -174,9 +206,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? (isDark
-                                ? const Color(0xFF4C3575)
-                                : const Color(0xFF8BC34A))
+                            ? Colors.white.withOpacity(0.2)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -188,11 +218,8 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                             style: GoogleFonts.figtree(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: isSelected
-                                  ? Colors.white
-                                  : (isDark
-                                      ? Colors.white70
-                                      : Colors.grey[700]),
+                              color: Colors.white
+                                  .withOpacity(isSelected || isToday ? 1 : 0.7),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -200,12 +227,13 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                             width: 36,
                             height: 36,
                             decoration: BoxDecoration(
-                              color: isToday && !isSelected
-                                  ? (isDark
-                                      ? Colors.grey.withOpacity(0.2)
-                                      : Colors.grey.withOpacity(0.1))
+                              color: isToday
+                                  ? Colors.white.withOpacity(0.9)
                                   : Colors.transparent,
                               shape: BoxShape.circle,
+                              border: isSelected || isToday
+                                  ? Border.all(color: Colors.white, width: 2)
+                                  : null,
                             ),
                             child: Center(
                               child: Text(
@@ -215,11 +243,9 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                                   fontWeight: isSelected || isToday
                                       ? FontWeight.w600
                                       : FontWeight.normal,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : (isDark
-                                          ? Colors.white
-                                          : Colors.grey[800]),
+                                  color: isToday
+                                      ? AppColors.primary
+                                      : Colors.white,
                                 ),
                               ),
                             ),
@@ -232,7 +258,6 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
               }),
             ),
           ),
-
           const SizedBox(height: 16),
         ],
       ),
@@ -293,21 +318,19 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? const Color(0xFF8BC34A).withOpacity(0.2)
-                                  : const Color(0xFF8BC34A).withOpacity(0.1),
+                                  ? AppColors.primary.withOpacity(0.2)
+                                  : AppColors.primary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
                               Icons.access_time,
-                              color: isDark
-                                  ? Colors.white
-                                  : const Color(0xFF8BC34A),
+                              color: isDark ? Colors.white : AppColors.primary,
                               size: 20,
                             ),
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '${slot.startTime} - ${slot.endTime}',
+                            '${DateFormat('hh:mm a').format(slot.startAt)} - ${DateFormat('hh:mm a').format(slot.endAt)}',
                             style: GoogleFonts.figtree(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -365,168 +388,17 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
         else
           Column(
             children: viewModel.scheduledAppointments.map((appointment) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      offset: const Offset(0, 2),
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Center(
-                              child: Icon(Icons.person, color: Colors.white),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  appointment.learnerName,
-                                  style: GoogleFonts.figtree(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark
-                                        ? Colors.white
-                                        : Colors.grey[800],
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${DateFormat('MMM d').format(appointment.date)} | ${appointment.startTime} - ${appointment.endTime}',
-                                  style: GoogleFonts.figtree(
-                                    fontSize: 14,
-                                    color: isDark
-                                        ? Colors.grey[400]
-                                        : Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.more_vert,
-                              color:
-                                  isDark ? Colors.grey[400] : Colors.grey[600],
-                              size: 20,
-                            ),
-                            onPressed: () {
-                              _showAppointmentOptions(
-                                  context, viewModel, appointment.id, isDark);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.black12 : Colors.grey[50],
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(12),
-                          bottomRight: Radius.circular(12),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: InkWell(
-                              onTap: () =>
-                                  viewModel.showRescheduleFormForAppointment(
-                                      appointment.id),
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.event_repeat,
-                                      size: 16,
-                                      color: isDark
-                                          ? Colors.grey[400]
-                                          : Colors.grey[700],
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Reschedule',
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        color: isDark
-                                            ? Colors.grey[400]
-                                            : Colors.grey[700],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          Container(
-                            height: 24,
-                            width: 1,
-                            color: isDark ? Colors.grey[800] : Colors.grey[300],
-                          ),
-                          Expanded(
-                            child: InkWell(
-                              onTap: () {
-                                _showPostponeConfirmation(
-                                    context, viewModel, appointment.id, isDark);
-                              },
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.schedule,
-                                      size: 16,
-                                      color: isDark
-                                          ? Colors.amber[400]
-                                          : Colors.amber[700],
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Postpone',
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        color: isDark
-                                            ? Colors.amber[400]
-                                            : Colors.amber[700],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              return CustomAppointmentItem(
+                learnerName: appointment.contextDetails ?? "Learner",
+                date: DateFormat('MMM d').format(appointment.startAt),
+                startTime: DateFormat('hh:mm a').format(appointment.startAt),
+                endTime: DateFormat('hh:mm a').format(appointment.endAt),
+                onTap: () => viewModel.handleAppointmentTap(appointment.id),
+                onReschedule: () => viewModel.showRescheduleFormForAppointment(
+                    appointment.id.toString()),
+                onPostpone: () => _showPostponeConfirmation(
+                    context, viewModel, appointment.id.toString(), isDark),
+                isDark: isDark,
               );
             }).toList(),
           ),
@@ -575,6 +447,17 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                       ),
                     ),
                   ),
+                  if (viewModel.errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        viewModel.errorMessage!,
+                        style: GoogleFonts.figtree(
+                          color: Colors.red[400],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
                   Divider(color: isDark ? Colors.grey[800] : Colors.grey[300]),
                   Padding(
                     padding: const EdgeInsets.all(16),
@@ -626,7 +509,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
-                          onPressed: viewModel.addAvailableTimeSlot,
+                          onPressed: viewModel.createAvailableTimeSlot,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4C3575),
                             foregroundColor: Colors.white,
@@ -1149,7 +1032,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
   void _showTimeSlotOptions(
     BuildContext context,
     TrainerSchedulesViewModel viewModel,
-    String slotId,
+    int slotId,
     bool isDark,
   ) {
     showModalBottomSheet(
@@ -1207,7 +1090,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
   void _showDeleteConfirmation(
     BuildContext context,
     TrainerSchedulesViewModel viewModel,
-    String slotId,
+    int slotId,
     bool isDark,
   ) {
     showDialog(
