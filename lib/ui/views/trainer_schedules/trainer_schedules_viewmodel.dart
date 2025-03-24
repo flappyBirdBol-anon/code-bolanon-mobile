@@ -99,21 +99,25 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
       // Filter appointments for the selected date
       final selectedDateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
-      // Filter and sort available time slots (status: 'available')
+      // Filter and sort available time slots and completed slots with no learner
       _availableTimeSlots = appointments
           .where((apt) =>
               DateFormat('yyyy-MM-dd').format(apt.startAt) == selectedDateStr &&
-              apt.status.toLowerCase() == 'available')
+              (apt.status.toLowerCase() == 'available' ||
+                  (apt.status.toLowerCase() == 'completed' &&
+                      apt.contextDetails == null)))
           .toList()
-        ..sort((a, b) => a.startAt.compareTo(b.startAt)); // Sort by start time
+        ..sort((a, b) => a.startAt.compareTo(b.startAt));
 
-      // Filter and sort scheduled appointments (status: 'scheduled')
+      // Filter and sort scheduled appointments (status: 'ongoing' or 'completed' with learner)
       _scheduledAppointments = appointments
           .where((apt) =>
               DateFormat('yyyy-MM-dd').format(apt.startAt) == selectedDateStr &&
-              apt.status.toLowerCase() == 'ongoing')
+              ((apt.status.toLowerCase() == 'ongoing') ||
+                  (apt.status.toLowerCase() == 'completed' &&
+                      apt.contextDetails != null)))
           .toList()
-        ..sort((a, b) => a.startAt.compareTo(b.startAt)); // Sort by start tim
+        ..sort((a, b) => a.startAt.compareTo(b.startAt));
 
       notifyListeners();
     } catch (e) {

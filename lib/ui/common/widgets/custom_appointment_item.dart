@@ -8,22 +8,22 @@ class CustomAppointmentItem extends StatelessWidget {
   final String endTime;
   final bool isCompleted;
   final VoidCallback onTap;
-  final VoidCallback onReschedule;
-  final VoidCallback onPostpone;
+  final VoidCallback? onReschedule;
+  final VoidCallback? onPostpone;
   final bool isDark;
 
   const CustomAppointmentItem({
-    super.key, // Changed from key: key to super.key
+    super.key,
     required this.learnerName,
     required this.date,
     required this.startTime,
     required this.endTime,
     this.isCompleted = false,
     required this.onTap,
-    required this.onReschedule,
-    required this.onPostpone,
+    this.onReschedule,
+    this.onPostpone,
     required this.isDark,
-  }); // Removed : super(key: key)
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +130,7 @@ class CustomAppointmentItem extends StatelessWidget {
               ],
             ),
           ),
-          if (!isCompleted) ...[
+          if (!isCompleted && onReschedule != null && onPostpone != null) ...[
             Divider(
               height: 1,
               thickness: 1,

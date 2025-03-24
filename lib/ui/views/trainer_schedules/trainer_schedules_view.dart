@@ -386,21 +386,32 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
             isDark,
           )
         else
-          Column(
-            children: viewModel.scheduledAppointments.map((appointment) {
-              return CustomAppointmentItem(
-                learnerName: appointment.contextDetails ?? "Learner",
-                date: DateFormat('MMM d').format(appointment.startAt),
-                startTime: DateFormat('hh:mm a').format(appointment.startAt),
-                endTime: DateFormat('hh:mm a').format(appointment.endAt),
-                onTap: () => viewModel.handleAppointmentTap(appointment.id),
-                onReschedule: () => viewModel.showRescheduleFormForAppointment(
-                    appointment.id.toString()),
-                onPostpone: () => _showPostponeConfirmation(
-                    context, viewModel, appointment.id.toString(), isDark),
-                isDark: isDark,
-              );
-            }).toList(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: viewModel.scheduledAppointments.map((appointment) {
+                final bool isCompleted =
+                    appointment.status.toLowerCase() == 'completed';
+                return CustomAppointmentItem(
+                  learnerName: appointment.contextDetails ?? "Learner",
+                  date: DateFormat('MMM d').format(appointment.startAt),
+                  startTime: DateFormat('hh:mm a').format(appointment.startAt),
+                  endTime: DateFormat('hh:mm a').format(appointment.endAt),
+                  onTap: () => viewModel.handleAppointmentTap(appointment.id),
+                  onReschedule: isCompleted
+                      ? null // Disable reschedule for completed appointments
+                      : () => viewModel.showRescheduleFormForAppointment(
+                          appointment.id.toString()),
+                  onPostpone: isCompleted
+                      ? null // Disable postpone for completed appointments
+                      : () => _showPostponeConfirmation(context, viewModel,
+                          appointment.id.toString(), isDark),
+                  isDark: isDark,
+                  isCompleted:
+                      isCompleted, // Add this property to CustomAppointmentItem
+                );
+              }).toList(),
+            ),
           ),
       ],
     );
