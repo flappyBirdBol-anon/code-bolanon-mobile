@@ -3,21 +3,21 @@ import 'dart:async';
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/registration_model.dart';
+import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
-
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/common/base/course_base_view_model.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart';
 import 'package:code_bolanon/ui/views/trainer_courses/add_course.dart';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:code_bolanon/ui/common/widgets/course_dialog.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 class TrainerCoursesViewModel extends CourseBaseViewModel {
+  @override
+  AppointmentService get appointmentService => locator<AppointmentService>();
   final CourseService courseService;
   XFile? _selectedImage;
 
@@ -41,7 +41,7 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
   @override
   Set<String> get activeFilters => _activeFilters;
 
-  List<RegistrationModel> _reviews = [];
+  final List<RegistrationModel> _reviews = [];
   List<RegistrationModel> get reviews => _reviews;
 
   @override

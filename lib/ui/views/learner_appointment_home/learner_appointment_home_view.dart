@@ -28,6 +28,7 @@ class LearnerAppointmentHomeView
         title: 'Book a Session',
         showSearchButton: true,
         onSearchTap: viewModel.setSearchQuery,
+        icon: Icons.search,
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -38,7 +39,7 @@ class LearnerAppointmentHomeView
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Filter Section
-                _buildFilterSection(context, viewModel, isDark),
+                _buildFilterSection(context, viewModel, isDark, theme),
 
                 const SizedBox(height: 16),
 
@@ -58,7 +59,9 @@ class LearnerAppointmentHomeView
     BuildContext context,
     LearnerAppointmentHomeViewModel viewModel,
     bool isDark,
+    ThemeData theme,
   ) {
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(16),
@@ -78,7 +81,7 @@ class LearnerAppointmentHomeView
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Filter by Specialization',
+              'Filter by Interests',
               style: GoogleFonts.figtree(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -90,54 +93,20 @@ class LearnerAppointmentHomeView
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildFilterChip('All', viewModel.selectedFilter == 'All',
-                    isDark, () => viewModel.setFilter('All')),
-                _buildFilterChip(
-                    'Mobile Dev',
-                    viewModel.selectedFilter == 'Mobile Dev',
-                    isDark,
-                    () => viewModel.setFilter('Mobile Dev')),
-                _buildFilterChip(
-                    'Web Dev',
-                    viewModel.selectedFilter == 'Web Dev',
-                    isDark,
-                    () => viewModel.setFilter('Web Dev')),
-                _buildFilterChip(
-                    'Backend',
-                    viewModel.selectedFilter == 'Backend',
-                    isDark,
-                    () => viewModel.setFilter('Backend')),
-                _buildFilterChip(
-                    'Data Science',
-                    viewModel.selectedFilter == 'Data Science',
-                    isDark,
-                    () => viewModel.setFilter('Data Science')),
+                for (String stack in viewModel.techStacks)
+                  CustomStackChip(
+                    label: stack,
+                    selected: viewModel.isStackSelected(stack),
+                    onTap: () => viewModel.toggleTechStack(stack),
+                    isDark: isDark,
+                    icon: Icons.code,
+                    isOutlined: true,
+                  ),
               ],
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildFilterChip(
-      String label, bool isSelected, bool isDark, VoidCallback onTap) {
-    return FilterChip(
-      label: Text(
-        label,
-        style: GoogleFonts.figtree(
-          color: isSelected
-              ? Colors.white
-              : (isDark ? Colors.grey[300] : Colors.grey[700]),
-          fontSize: 12,
-        ),
-      ),
-      selected: isSelected,
-      onSelected: (bool selected) => onTap(),
-      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-      selectedColor: AppColors.primary,
-      checkmarkColor: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
     );
   }
 

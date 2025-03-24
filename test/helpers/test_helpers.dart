@@ -1,6 +1,7 @@
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/services/analytics_service.dart';
 import 'package:code_bolanon/services/api_service.dart';
+import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/file_service.dart';
@@ -43,6 +44,7 @@ import 'test_helpers.mocks.dart';
 
     MockSpec<WishlistService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<RegistrationService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<AppointmentService>(onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
   ],
 )
@@ -62,6 +64,7 @@ void registerServices() {
   getAndRegisterStripeService();
   getAndRegisterForgotPasswordService();
   getAndRegisterTechStackService();
+  getAndRegisterAppointmentService();
 // @stacked-mock-register
 }
 
@@ -197,6 +200,13 @@ MockForgotPasswordService getAndRegisterForgotPasswordService() {
 }
 
 MockTechStackService getAndRegisterTechStackService() {
+  _removeRegistrationIfExists<TechStackService>();
+  final service = MockTechStackService();
+  locator.registerSingleton<TechStackService>(service);
+  return service;
+}
+
+MockTechStackService getAndRegisterAppointmentService() {
   _removeRegistrationIfExists<TechStackService>();
   final service = MockTechStackService();
   locator.registerSingleton<TechStackService>(service);

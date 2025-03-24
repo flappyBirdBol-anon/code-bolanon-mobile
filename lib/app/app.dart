@@ -50,6 +50,7 @@ import 'package:code_bolanon/ui/views/trainer_appointment_home/trainer_appointme
 import 'package:code_bolanon/ui/views/trainer_schedules/trainer_schedules_view.dart';
 import 'package:code_bolanon/ui/views/learner_appointment_home/learner_appointment_home_view.dart';
 import 'package:code_bolanon/ui/views/learner_schedule/learner_schedule_view.dart';
+import 'package:code_bolanon/services/appointment_service.dart';
 // @stacked-import
 
 @StackedApp(
@@ -103,6 +104,7 @@ import 'package:code_bolanon/ui/views/learner_schedule/learner_schedule_view.dar
 
     LazySingleton(classType: WishlistService),
     LazySingleton(classType: RegistrationService),
+    LazySingleton(classType: AppointmentService),
 // @stacked-service
   ],
   bottomsheets: [

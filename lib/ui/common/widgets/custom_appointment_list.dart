@@ -3,19 +3,19 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
 
 class CustomAppointmentList extends StatelessWidget {
-  final String contextDetails;
+  final String? contextDetails;
   final String startAt;
   final String endAt;
-  final String? price;
+  final double? price;
   final VoidCallback onTap;
   final bool isLoading;
   final Color? customColor;
-  final int? learnersEnrolled; // Optional - only for trainer view
-  final bool isTrainerView; // New property to determine view type
+  final int? learnersEnrolled;
+  final bool isTrainerView;
 
   const CustomAppointmentList({
     Key? key,
-    required this.contextDetails,
+    this.contextDetails,
     required this.startAt,
     required this.endAt,
     this.price,
@@ -109,7 +109,7 @@ class CustomAppointmentList extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      contextDetails,
+                      contextDetails ?? 'No context details',
                       style: GoogleFonts.figtree(
                         color: isDark ? Colors.white : Colors.indigo[800],
                         fontSize: 16,

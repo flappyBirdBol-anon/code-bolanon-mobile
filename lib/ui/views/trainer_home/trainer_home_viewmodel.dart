@@ -6,7 +6,6 @@ import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/tech_stack_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
-
 import 'package:flutter/material.dart';
 import 'package:stacked_services/stacked_services.dart';
 
@@ -33,7 +32,7 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   final _imageService = locator<ImageService>();
   final _navigationService = locator<NavigationService>();
 
-  List<AppointmentModel> _upcomingAppointments = [];
+  final List<AppointmentModel> _upcomingAppointments = [];
   List<AppointmentModel> get upcomingAppointments => _upcomingAppointments;
 
   List<String> getCourseTags(CourseModel course) =>
@@ -288,7 +287,7 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     await Future.delayed(const Duration(seconds: 2));
 
     try {
-      _upcomingAppointments = AppointmentModel.getMockAppointments();
+      //_upcomingAppointments = AppointmentModel.getMockAppointments();
       await Future.delayed(const Duration(milliseconds: 500));
     } catch (e) {
       debugPrint('Error refreshing data: $e');

@@ -636,8 +636,8 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                   final appointment = viewModel.upcomingSessions[index];
                   return CustomAppointmentList(
                     contextDetails: appointment.contextDetails,
-                    startAt: appointment.availability?.startAt ?? '',
-                    endAt: appointment.availability?.endAt ?? '',
+                    startAt: appointment.startAt.toString(),
+                    endAt: appointment.endAt.toString(),
                     onTap: () =>
                         viewModel.openSession(appointment.id.toString()),
                     isTrainerView: false,

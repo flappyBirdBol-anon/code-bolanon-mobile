@@ -1,7 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
-
 import 'package:code_bolanon/models/course_model.dart';
-
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/utils/tech_stack_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/courses_list_item.dart';
@@ -1218,8 +1216,8 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                       final appointment = viewModel.upcomingAppointments[index];
                       return CustomAppointmentList(
                         contextDetails: appointment.contextDetails,
-                        startAt: appointment.availability?.startAt ?? '',
-                        endAt: appointment.availability?.endAt ?? '',
+                        startAt: appointment.startAt.toString(),
+                        endAt: appointment.endAt.toString(),
                         learnersEnrolled: 23, // Get actual data from your model
                         isTrainerView: true, // Specify trainer view
                         onTap: () =>

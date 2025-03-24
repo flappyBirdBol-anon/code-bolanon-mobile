@@ -17,8 +17,7 @@ class RegistrationService with ReactiveServiceMixin {
   RegistrationService({ApiService? apiService})
       : _apiService = apiService ?? locator<ApiService>();
 
-  List<RegistrationModel> _registrations =
-      []; // Initialize empty list instead of using late
+  List<RegistrationModel> _registrations = [];
   List<RegistrationModel> get registrations => _registrations;
 
   final Set<String> _registeredCourses = {};
@@ -278,7 +277,7 @@ class RegistrationService with ReactiveServiceMixin {
 
       // Send PUT request to update registration
       final response = await _apiService.put(
-        '/registrations/${registrationId}', // Laravel RESTful convention
+        '/registrations/$registrationId', // Laravel RESTful convention
         data: requestData,
       );
 

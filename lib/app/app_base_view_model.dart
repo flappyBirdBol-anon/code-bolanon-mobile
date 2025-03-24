@@ -1,4 +1,5 @@
 import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
@@ -11,4 +12,5 @@ class AppBaseViewModel extends BaseViewModel {
   final authService = locator<AuthService>();
   final navigationService = locator<NavigationService>();
   final imageService = locator<ImageService>();
+  final appointmentService = locator<AppointmentService>();
 }

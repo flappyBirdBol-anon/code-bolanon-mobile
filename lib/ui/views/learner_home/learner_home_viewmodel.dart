@@ -98,7 +98,7 @@ class LearnerHomeViewModel extends AppBaseViewModel {
   ];
 
   // Sessions
-  List<AppointmentModel> _upcomingSessions = [];
+  final List<AppointmentModel> _upcomingSessions = [];
   List<AppointmentModel> get upcomingSessions => _upcomingSessions;
 
   LearnerHomeViewModel() {
@@ -195,7 +195,7 @@ class LearnerHomeViewModel extends AppBaseViewModel {
 
   void _loadSessions() {
     // Use the mock data from AppointmentModel
-    _upcomingSessions = AppointmentModel.getMockAppointments();
+    //_upcomingSessions = AppointmentModel.getMockAppointments();
     notifyListeners();
   }
 

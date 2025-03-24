@@ -1,17 +1,19 @@
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/registration_service.dart';
-
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/common/base/course_base_view_model.dart';
 import 'package:code_bolanon/ui/views/course_details/course_details_view.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 class AvailableCoursesViewModel extends CourseBaseViewModel {
+  @override
+  AppointmentService get appointmentService => locator<AppointmentService>();
   final CourseService courseService;
   final _registrationService = locator<RegistrationService>();
 

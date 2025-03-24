@@ -1,6 +1,7 @@
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/services/course_service.dart'; // Import CourseService
 import 'package:code_bolanon/services/image_service.dart';
@@ -11,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 class LearnerCoursesViewModel extends CourseBaseViewModel {
+  @override
+  AppointmentService get appointmentService => locator<AppointmentService>();
   final RegistrationService registrationService; // Keep RegistrationService
   final CourseService courseService; // Add CourseService
 
