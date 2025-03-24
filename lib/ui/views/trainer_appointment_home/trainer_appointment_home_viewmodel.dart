@@ -1,5 +1,8 @@
+import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
+import 'package:code_bolanon/services/appointment_service.dart';
+import 'package:code_bolanon/ui/common/enums/enums.dart';
 
 class Appointment {
   final String id;
@@ -83,107 +86,47 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
     }).length;
   }
 
-  // Mock function to simulate API call
   Future<void> fetchAppointments() async {
     setIsLoading(true);
 
     try {
-      // Simulate API delay (shorter for better UX in demo)
-      await Future.delayed(const Duration(milliseconds: 500));
+      final appointmentService = locator<AppointmentService>();
+      final fetchedAppointments =
+          await appointmentService.fetchAllAppointments();
 
-      // Format: Feb 7 | 11:30 AM - 12:30 PM
-      // Get current date to make sample data more realistic
+      _upcomingAppointments = [];
+      _completedAppointments = [];
+
       final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final tomorrow = today.add(const Duration(days: 1));
-      final dayAfterTomorrow = today.add(const Duration(days: 2));
-
-      // Format dates to ISO string for the CustomAppointmentList widget
-      String formatDateTime(DateTime dt) {
-        return dt.toIso8601String();
+      for (var appointment in fetchedAppointments) {
+        if (appointment.status.toLowerCase() == 'completed') {
+          _completedAppointments.add(Appointment(
+            id: appointment.id.toString(),
+            learnerName: appointment.learnerName ?? '',
+            startAt: appointment.startAt.toString(),
+            endAt: appointment.endAt.toString(),
+            isCompleted: true,
+          ));
+        } else if (appointment.status.toLowerCase() == 'ongoing') {
+          _upcomingAppointments.add(Appointment(
+            id: appointment.id.toString(),
+            learnerName: appointment.learnerName ?? '',
+            startAt: appointment.startAt.toString(),
+            endAt: appointment.endAt.toString(),
+          ));
+        }
       }
 
-      // Mock data for demonstration - using dates matching the wireframe
-      _upcomingAppointments = [
-        // Today's appointments
-        Appointment(
-          id: '1',
-          learnerName: 'Zachary Albert Legariot',
-          startAt: formatDateTime(
-              DateTime(today.year, today.month, today.day, 11, 30)),
-          endAt: formatDateTime(
-              DateTime(today.year, today.month, today.day, 12, 30)),
-        ),
-        Appointment(
-          id: '2',
-          learnerName: 'Jelah Marie Dango',
-          startAt: formatDateTime(
-              DateTime(today.year, today.month, today.day, 13, 30)),
-          endAt: formatDateTime(
-              DateTime(today.year, today.month, today.day, 14, 30)),
-        ),
-        // Tomorrow's appointments
-        Appointment(
-          id: '3',
-          learnerName: 'Jelah Marie Dango',
-          startAt: formatDateTime(tomorrow.add(const Duration(hours: 10))),
-          endAt: formatDateTime(tomorrow.add(const Duration(hours: 11))),
-        ),
-        // Day after tomorrow appointments
-        Appointment(
-          id: '4',
-          learnerName: 'Mark Anthony Santos',
-          startAt:
-              formatDateTime(dayAfterTomorrow.add(const Duration(hours: 15))),
-          endAt:
-              formatDateTime(dayAfterTomorrow.add(const Duration(hours: 16))),
-        ),
-        Appointment(
-          id: '5',
-          learnerName: 'Christian James Prado',
-          startAt:
-              formatDateTime(dayAfterTomorrow.add(const Duration(hours: 17))),
-          endAt:
-              formatDateTime(dayAfterTomorrow.add(const Duration(hours: 18))),
-        ),
-      ];
-
-      _completedAppointments = [
-        Appointment(
-          id: '6',
-          learnerName: 'Zachary Albert Legariot',
-          startAt: formatDateTime(
-              DateTime(today.year, today.month, today.day - 1, 11, 30)),
-          endAt: formatDateTime(
-              DateTime(today.year, today.month, today.day - 1, 12, 30)),
-          isCompleted: true,
-        ),
-        Appointment(
-          id: '7',
-          learnerName: 'Jelah Marie Dango',
-          startAt: formatDateTime(
-              DateTime(today.year, today.month, today.day - 1, 13, 30)),
-          endAt: formatDateTime(
-              DateTime(today.year, today.month, today.day - 1, 14, 30)),
-          isCompleted: true,
-        ),
-        Appointment(
-          id: '8',
-          learnerName: 'Mark Anthony Santos',
-          startAt: formatDateTime(
-              DateTime(today.year, today.month, today.day - 3, 15, 0)),
-          endAt: formatDateTime(
-              DateTime(today.year, today.month, today.day - 3, 16, 0)),
-          isCompleted: true,
-        ),
-      ];
+      notifyListeners();
     } catch (e) {
-      // Handle errors
-      print('Error fetching appointments: $e');
+      snackbarService.showCustomSnackBar(
+        message: 'Failed to load appointments: $e',
+        duration: const Duration(seconds: 3),
+        variant: SnackbarType.error,
+      );
       _upcomingAppointments = [];
       _completedAppointments = [];
     } finally {
-      // Ensure loading state is set to false even if there's an error
       setIsLoading(false);
     }
   }
