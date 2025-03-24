@@ -111,7 +111,7 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
       _scheduledAppointments = appointments
           .where((apt) =>
               DateFormat('yyyy-MM-dd').format(apt.startAt) == selectedDateStr &&
-              apt.status.toLowerCase() == 'scheduled')
+              apt.status.toLowerCase() == 'ongoing')
           .toList()
         ..sort((a, b) => a.startAt.compareTo(b.startAt)); // Sort by start tim
 
