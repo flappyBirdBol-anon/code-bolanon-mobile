@@ -9,6 +9,8 @@ class AppointmentModel {
   final String status;
   final String? gmeetLink;
   final int trainerId;
+  final String? trainerName;
+  final String? learnerName;
 
   AppointmentModel({
     required this.id,
@@ -19,6 +21,8 @@ class AppointmentModel {
     required this.status,
     this.gmeetLink,
     required this.trainerId,
+    this.trainerName,
+    this.learnerName,
   });
 
   // Factory constructor to create from JSON/Map
@@ -32,6 +36,8 @@ class AppointmentModel {
       status: json['status'],
       gmeetLink: json['gmeet_link'],
       trainerId: json['trainer_id'],
+      trainerName: json['trainer_name'],
+      learnerName: json['learner_name'],
     );
   }
 
@@ -47,6 +53,8 @@ class AppointmentModel {
       'status': status,
       'gmeet_link': gmeetLink,
       'trainer_id': trainerId,
+      'trainer_name': trainerName,
+      'learner_name': learnerName,
     };
   }
 }

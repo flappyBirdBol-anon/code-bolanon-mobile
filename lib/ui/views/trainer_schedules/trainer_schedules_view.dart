@@ -393,7 +393,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                 final bool isCompleted =
                     appointment.status.toLowerCase() == 'completed';
                 return CustomAppointmentItem(
-                  learnerName: appointment.contextDetails ?? "Learner",
+                  learnerName: appointment.learnerName ?? "Learner",
                   date: DateFormat('MMM d').format(appointment.startAt),
                   startTime: DateFormat('hh:mm a').format(appointment.startAt),
                   endTime: DateFormat('hh:mm a').format(appointment.endAt),
