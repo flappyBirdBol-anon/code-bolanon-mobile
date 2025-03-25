@@ -68,7 +68,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                           radius: 35,
                           backgroundColor: Colors.white.withOpacity(0.2),
                           child: ClipOval(
-                            child: viewModel.formattedProfilePictureUrl.isEmpty
+                            child: viewModel.userImage.isEmpty
                                 ? Icon(Icons.person,
                                     size: 35,
                                     color: Colors.white.withOpacity(0.7))
@@ -197,7 +197,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                     ),
                   ),
                 ),
-                child: viewModel.techStacks.isEmpty
+                child: viewModel.selectedStacks.isEmpty
                     ? _buildEmptyState(
                         viewModel.role == 'learner'
                             ? 'No Interests Added'
@@ -211,7 +211,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                     : Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: viewModel.techStacks.map((tech) {
+                        children: viewModel.selectedStacks.map((tech) {
                           return CustomStackChip(
                             label: tech.tags,
                             selected: true,

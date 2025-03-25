@@ -23,6 +23,7 @@ import '../services/image_service.dart';
 import '../services/lesson_service.dart';
 import '../services/payment_service.dart';
 import '../services/registration_service.dart';
+import '../services/selected_stack_service.dart';
 import '../services/stripe_service.dart';
 import '../services/tag_service.dart';
 import '../services/tech_stack_service.dart';
@@ -62,4 +63,5 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => WishlistService());
   locator.registerLazySingleton(() => RegistrationService());
   locator.registerLazySingleton(() => AppointmentService());
+  locator.registerLazySingleton(() => SelectedStackService());
 }

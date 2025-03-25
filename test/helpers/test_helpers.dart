@@ -20,6 +20,7 @@ import 'package:mockito/mockito.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 import 'test_helpers.mocks.dart';
+import 'package:code_bolanon/services/selected_stack_service.dart';
 // @stacked-import
 
 @GenerateMocks(
@@ -45,6 +46,7 @@ import 'test_helpers.mocks.dart';
     MockSpec<WishlistService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<RegistrationService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<AppointmentService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<SelectedStackService>(onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
   ],
 )
@@ -65,6 +67,7 @@ void registerServices() {
   getAndRegisterForgotPasswordService();
   getAndRegisterTechStackService();
   getAndRegisterAppointmentService();
+  getAndRegisterSelectedStackService();
 // @stacked-mock-register
 }
 
