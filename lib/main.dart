@@ -139,21 +139,24 @@ void main() async {
   await _initializer.initializeCriticalModules();
 
   // Run the combined app that handles both splash and main app
-  runApp(const SplashApp());
+  runApp(const AppRoot());
 
   // Initialize non-critical modules in the background
   _initializer.initializeNonCriticalModules();
 }
 
-/// Splash screen app that will be shown first
-class SplashApp extends StatefulWidget {
-  const SplashApp({super.key});
+/// Root widget that manages both splash and main app states
+class AppRoot extends StatefulWidget {
+  const AppRoot({super.key});
 
   @override
-  State<SplashApp> createState() => _SplashAppState();
+  State<AppRoot> createState() => _AppRootState();
 }
 
-class _SplashAppState extends State<SplashApp> {
+class _AppRootState extends State<AppRoot> {
+  bool _showSplash = true;
+  String? _initialRoute;
+
   @override
   void initState() {
     super.initState();
@@ -168,43 +171,42 @@ class _SplashAppState extends State<SplashApp> {
     }
 
     // Determine initial route
-    final initialRoute = await _determineInitialRoute();
+    _initialRoute = await _determineInitialRoute();
 
     // Add delay for splash animation
     await Future.delayed(const Duration(milliseconds: 2000));
 
-    // Replace the entire app with the main app
+    // Trigger transition to main app
     if (mounted) {
-      runApp(MainApp(initialRoute: initialRoute));
+      setState(() {
+        _showSplash = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.light().copyWith(primaryColor: AppColors.primary),
-      home: const _AppLoader(),
-    );
-  }
-}
-
-/// Main application that will be shown after splash screen
-class MainApp extends StatelessWidget {
-  final String initialRoute;
-
-  const MainApp({super.key, required this.initialRoute});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.light().copyWith(primaryColor: AppColors.primary),
-      initialRoute: initialRoute,
-      onGenerateRoute: StackedRouter().onGenerateRoute,
-      navigatorKey: StackedService.navigatorKey,
-      navigatorObservers: [StackedService.routeObserver],
-      restorationScopeId: 'app',
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 500),
+      child: _showSplash
+          ? MaterialApp(
+              key: const ValueKey('splash'),
+              debugShowCheckedModeBanner: false,
+              theme:
+                  ThemeData.light().copyWith(primaryColor: AppColors.primary),
+              home: const _AppLoader(),
+            )
+          : MaterialApp(
+              key: const ValueKey('main'),
+              debugShowCheckedModeBanner: false,
+              theme:
+                  ThemeData.light().copyWith(primaryColor: AppColors.primary),
+              initialRoute: _initialRoute,
+              onGenerateRoute: StackedRouter().onGenerateRoute,
+              navigatorKey: StackedService.navigatorKey,
+              navigatorObservers: [StackedService.routeObserver],
+              restorationScopeId: 'app',
+            ),
     );
   }
 }

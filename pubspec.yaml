@@ -65,6 +65,7 @@ dependencies:
   syncfusion_flutter_xlsio: ^28.2.11
   flutter_staggered_animations: ^1.1.1
   animated_svg: ^2.1.0
+  syncfusion_flutter_datagrid: ^28.2.12
 
 dev_dependencies:
   build_runner: ^2.4.5
