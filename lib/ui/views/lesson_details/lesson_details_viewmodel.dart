@@ -5,6 +5,7 @@ import 'package:code_bolanon/services/file_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as path;
 import 'package:share_plus/share_plus.dart';
@@ -21,45 +22,37 @@ class LessonDetailsViewModel extends BaseViewModel {
   Lesson? _lesson;
   final fileService = locator<FileService>();
 
+  // Lesson state
   Lesson get lesson => _lesson ?? _createEmptyLesson();
-
   set lesson(Lesson value) => _lesson = value;
-
   bool _hasValidLesson = false;
   bool get hasValidLesson => _hasValidLesson;
 
+  // File state
   bool _isFileCached = false;
   bool get isFileCached => _isFileCached;
-
   String _fileSize = 'Unknown size';
   String get fileSize => _fileSize;
-
   bool _isFileDownloadable = false;
   bool get isFileDownloadable => _isFileDownloadable;
-
-  // File viewing experience properties
   bool _isFileLoading = false;
   bool get isFileLoading => _isFileLoading;
-
   bool _hasFileError = false;
   bool get hasFileError => _hasFileError;
-
   String? _fileErrorMessage;
   String? get fileErrorMessage => _fileErrorMessage;
-
   bool _isDownloading = false;
   bool get isDownloading => _isDownloading;
-
   double _downloadProgress = 0.0;
   double get downloadProgress => _downloadProgress;
-
   bool _canPlayFile = false;
   bool get canPlayFile => _canPlayFile;
 
-  // Add these properties
+  // UI state
+  bool _isFullScreen = false;
+  bool get isFullScreen => _isFullScreen;
   bool _isLessonCompleted = false;
   bool get isLessonCompleted => _isLessonCompleted;
-
   bool get isLearner => _userService.currentUser?.role == 'learner';
   bool get showCompletionToggle => isLearner;
 
@@ -80,7 +73,6 @@ class LessonDetailsViewModel extends BaseViewModel {
     try {
       setBusy(true);
 
-      // Determine the lesson source with priority order
       if (initialLesson != null) {
         _lesson = initialLesson;
         _hasValidLesson = true;
@@ -93,8 +85,6 @@ class LessonDetailsViewModel extends BaseViewModel {
       } else {
         _hasValidLesson = false;
         _lesson = _createEmptyLesson();
-
-        // Show error dialog and navigate back after a short delay
         Future.microtask(() async {
           await _dialogService.showDialog(
             title: 'Error',
@@ -102,20 +92,14 @@ class LessonDetailsViewModel extends BaseViewModel {
           );
           _navigationService.back();
         });
-
         setBusy(false);
         return;
       }
 
-      // Notify UI of initial state
       notifyListeners();
 
-      // Check if the lesson has a file and prefetch if needed
       if (_fileService.hasFile(lesson)) {
-        // Check if file is already cached
         _isFileCached = await _fileService.isFileCached(lesson);
-
-        // Silent prefetch attempt if not cached
         if (!_isFileCached) {
           try {
             await _fileService.prefetchFile(
@@ -125,23 +109,19 @@ class LessonDetailsViewModel extends BaseViewModel {
             );
             _isFileCached = true;
           } catch (e) {
-            // Just log the error, don't show to user for silent prefetch
             print('Silent prefetch failed: $e');
           }
         }
       }
 
-      // Get updated lesson data from service
       final updatedLesson = await _lessonsService.getLesson(_lesson!.id);
       if (updatedLesson != null) {
         _lesson = updatedLesson;
       }
 
-      // Update file status and playability
       await _checkFileStatus();
       _determineFilePlayability();
 
-      // TODO: Load saved completion status
       _isLessonCompleted = false; // Default to false for now
     } catch (e) {
       print('Error initializing lesson details: $e');
@@ -186,13 +166,42 @@ class LessonDetailsViewModel extends BaseViewModel {
 
     final fileType =
         lesson.fileType ?? _fileService.getFileType(lesson.fileName ?? '');
-
-    // Files that can be "played"
     _canPlayFile = fileType.contains('video') ||
         fileType.contains('audio') ||
         fileType.contains('pdf');
+    notifyListeners();
+  }
+
+  void toggleFullScreen() {
+    _isFullScreen = !_isFullScreen;
+
+    if (_isFullScreen) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } else {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
 
     notifyListeners();
+  }
+
+  void onFileOpened() {
+    // Handle any necessary state updates when file is opened
+    print('File opened successfully');
+  }
+
+  void onFileDownloaded() {
+    // Handle any necessary state updates when file is downloaded
+    print('File downloaded successfully');
   }
 
   Future<void> playLesson() async {
@@ -203,7 +212,6 @@ class LessonDetailsViewModel extends BaseViewModel {
 
     try {
       final result = await _fileService.openLessonFile(lesson);
-
       if (result.type != ResultType.done) {
         await _dialogService.showDialog(
           title: 'Cannot Play Lesson',
@@ -218,146 +226,14 @@ class LessonDetailsViewModel extends BaseViewModel {
     }
   }
 
-  Future<void> openLesson() async {
-    if (!_hasValidLesson || !_fileService.hasFile(lesson)) {
-      await _showNoFileDialog();
-      return;
-    }
-
-    if (_isFileLoading) {
-      // Prevent multiple attempts
-      return;
-    }
-
-    try {
-      _isFileLoading = true;
-      _hasFileError = false;
-      notifyListeners();
-
-      // Check if file is cached first
-      if (!_isFileCached) {
-        // Try to download the file first
-        final shouldDownload = await _dialogService.showConfirmationDialog(
-          title: 'File Not Downloaded',
-          description:
-              'This file needs to be downloaded before it can be opened. Download now?',
-          confirmationTitle: 'Download',
-          cancelTitle: 'Cancel',
-        );
-
-        if (shouldDownload?.confirmed ?? false) {
-          await prefetchLessonFile();
-
-          // If download failed, don't try to open
-          if (_hasFileError) {
-            _isFileLoading = false;
-            notifyListeners();
-            return;
-          }
-        } else {
-          // User canceled download
-          _isFileLoading = false;
-          notifyListeners();
-          return;
-        }
-      }
-
-      final result = await _fileService.openLessonFile(lesson);
-
-      if (result.type != ResultType.done) {
-        _hasFileError = true;
-        _fileErrorMessage = result.message;
-
-        await _dialogService.showDialog(
-          title: 'Cannot Open File',
-          description: 'Unable to open the lesson file: ${result.message}',
-        );
-      }
-    } catch (e) {
-      _hasFileError = true;
-      _fileErrorMessage = e.toString();
-
-      await _dialogService.showDialog(
-        title: 'Error',
-        description: 'Failed to open lesson: $e',
-      );
-    } finally {
-      _isFileLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> downloadLesson() async {
-    if (!_hasValidLesson || !_fileService.hasFile(lesson)) {
-      await _showNoFileDialog();
-      return;
-    }
-
-    if (_isDownloading) {
-      // Already downloading
-      return;
-    }
-
-    try {
-      _isDownloading = true;
-      _downloadProgress = 0.0;
-      notifyListeners();
-
-      // Download the file
-      final downloadedFile = await _fileService.downloadFile(lesson);
-
-      if (downloadedFile != null) {
-        _isFileCached = true;
-        _hasFileError = false;
-        _fileErrorMessage = null;
-
-        await _dialogService.showDialog(
-          title: 'Download Complete',
-          description: '${lesson.label} has been downloaded successfully.',
-        );
-
-        await _checkFileStatus();
-      } else {
-        _hasFileError = true;
-        _fileErrorMessage = 'Download failed for unknown reason';
-
-        await _dialogService.showDialog(
-          title: 'Download Failed',
-          description: 'Could not download the lesson file.',
-        );
-      }
-    } catch (e) {
-      _hasFileError = true;
-      _fileErrorMessage = e.toString();
-
-      await _dialogService.showDialog(
-        title: 'Download Failed',
-        description: 'Could not download the lesson: $e',
-      );
-    } finally {
-      _isDownloading = false;
-      notifyListeners();
-    }
-  }
-
   Future<void> shareLesson() async {
-    if (!_hasValidLesson) return;
+    if (!_hasValidLesson || !_fileService.hasFile(lesson)) {
+      await _showNoFileDialog();
+      return;
+    }
 
     try {
-      if (_fileService.hasFile(lesson)) {
-        final cachedFile = await _fileService
-            .getCachedFile(_fileService.getLessonFileUrl(lesson));
-
-        if (cachedFile != null) {
-          await Share.shareXFiles(
-            [XFile(cachedFile.path)],
-            text: 'Check out this lesson: ${lesson.label}',
-          );
-          return;
-        }
-      }
-
-      final String shareText =
+      final shareText =
           'Check out this lesson: ${lesson.label}\n${lesson.fileUrl ?? ""}';
       await Share.share(shareText);
     } catch (e) {
@@ -370,11 +246,7 @@ class LessonDetailsViewModel extends BaseViewModel {
 
   void editLesson() {
     if (!_hasValidLesson) return;
-
-    _navigationService.navigateTo(
-      Routes.addLessonView,
-      arguments: lesson,
-    );
+    _navigationService.navigateTo(Routes.addLessonView, arguments: lesson);
   }
 
   Future<void> deleteLesson() async {
@@ -393,11 +265,9 @@ class LessonDetailsViewModel extends BaseViewModel {
       try {
         final success = await _lessonsService.deleteLesson(lesson.id);
         if (success) {
-          await _fileService.clearLessonCache(lesson.id.toString());
-
           await _dialogService.showDialog(
             title: 'Success',
-            description: 'Lesson deleted successfully',
+            description: 'Lesson has been deleted successfully.',
           );
           _navigationService.back();
         }
@@ -412,144 +282,14 @@ class LessonDetailsViewModel extends BaseViewModel {
     }
   }
 
-  Future<void> prefetchLessonFile() async {
-    if (!_hasValidLesson || !_fileService.hasFile(lesson)) {
-      await _showNoFileDialog();
-      return;
-    }
-
-    if (_isDownloading) {
-      // Already downloading
-      return;
-    }
-
-    try {
-      _isDownloading = true;
-      _downloadProgress = 0.0;
-      _hasFileError = false;
-      notifyListeners();
-
-      // Call the prefetch method
-      final file = await _fileService.prefetchFile(
-        _fileService.getLessonFileUrl(lesson),
-        lessonId: lesson.id.toString(),
-        fileName: lesson.fileName,
-      );
-
-      _isFileCached = true;
-      await _checkFileStatus();
-
-      // Show success message
-      await _dialogService.showDialog(
-        title: 'Download Complete',
-        description: '${lesson.label} has been downloaded successfully.',
-      );
-    } catch (e) {
-      print('Error prefetching lesson file: $e');
-      _hasFileError = true;
-      _fileErrorMessage = e.toString();
-
-      // Show error message
-      await _dialogService.showDialog(
-        title: 'Download Failed',
-        description: 'Could not download the lesson: ${e.toString()}',
-      );
-    } finally {
-      _isDownloading = false;
-      notifyListeners();
-    }
-  }
-
-  // Add this method to handle completion toggle
   void toggleLessonCompletion() {
     if (!isLearner) return;
     _isLessonCompleted = !_isLessonCompleted;
-    // TODO: In the future, you'll want to persist this state
-    // using a service to save to local storage or backend
     notifyListeners();
   }
 
-  // Helper method to get file type icon and color
   Widget getFileTypeIconWidget({double size = 24, Color? color}) {
-    return _fileService.getFileTypeIcon(
-      lesson,
-      size: size,
-      color: color,
-    );
-  }
-
-  IconData getFileIconData() {
-    if (lesson.fileName == null || lesson.fileName!.isEmpty) {
-      return Icons.insert_drive_file;
-    }
-
-    final extension = path.extension(lesson.fileName!).toLowerCase();
-
-    if (extension == '.pdf') {
-      return Icons.picture_as_pdf_rounded;
-    } else if (extension == '.doc' || extension == '.docx') {
-      return Icons.description_rounded;
-    } else if (extension == '.xls' || extension == '.xlsx') {
-      return Icons.table_chart_rounded;
-    } else if (extension == '.ppt' || extension == '.pptx') {
-      return Icons.slideshow_rounded;
-    } else if (extension == '.txt') {
-      return Icons.text_snippet_rounded;
-    } else if (extension == '.jpg' ||
-        extension == '.jpeg' ||
-        extension == '.png' ||
-        extension == '.gif') {
-      return Icons.image_rounded;
-    } else if (extension == '.mp4' ||
-        extension == '.avi' ||
-        extension == '.mov' ||
-        extension == '.wmv') {
-      return Icons.videocam_rounded;
-    } else if (extension == '.mp3' ||
-        extension == '.wav' ||
-        extension == '.ogg' ||
-        extension == '.m4a') {
-      return Icons.audiotrack_rounded;
-    }
-
-    return Icons.insert_drive_file_rounded;
-  }
-
-  Color getFileIconColor() {
-    if (lesson.fileName == null || lesson.fileName!.isEmpty) {
-      return Colors.grey;
-    }
-
-    final extension = path.extension(lesson.fileName!).toLowerCase();
-
-    if (extension == '.pdf') {
-      return Colors.red;
-    } else if (extension == '.doc' || extension == '.docx') {
-      return Colors.blue;
-    } else if (extension == '.xls' || extension == '.xlsx') {
-      return Colors.green;
-    } else if (extension == '.ppt' || extension == '.pptx') {
-      return Colors.orange;
-    } else if (extension == '.txt') {
-      return Colors.grey;
-    } else if (extension == '.jpg' ||
-        extension == '.jpeg' ||
-        extension == '.png' ||
-        extension == '.gif') {
-      return Colors.purple;
-    } else if (extension == '.mp4' ||
-        extension == '.avi' ||
-        extension == '.mov' ||
-        extension == '.wmv') {
-      return Colors.red;
-    } else if (extension == '.mp3' ||
-        extension == '.wav' ||
-        extension == '.ogg' ||
-        extension == '.m4a') {
-      return Colors.blue;
-    }
-
-    return Colors.grey;
+    return _fileService.getFileTypeIcon(lesson, size: size, color: color);
   }
 
   Future<void> _showNoFileDialog() async {
@@ -560,6 +300,20 @@ class LessonDetailsViewModel extends BaseViewModel {
   }
 
   void navigateBack() {
-    _navigationService.back();
+    if (_isFullScreen) {
+      toggleFullScreen();
+    } else {
+      _navigationService.back();
+    }
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
   }
 }

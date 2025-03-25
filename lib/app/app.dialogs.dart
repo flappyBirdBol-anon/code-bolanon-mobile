@@ -4,6 +4,7 @@
 // StackedDialogGenerator
 // **************************************************************************
 
+import 'package:code_bolanon/ui/dialogs/fullscreen/fullscreen_dialog.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 import 'app.locator.dart';
@@ -23,6 +24,7 @@ enum DialogType {
   warning,
   metricSelection,
   receipt,
+  fullscreen,
 }
 
 void setupDialogUi() {
@@ -43,6 +45,11 @@ void setupDialogUi() {
         MetricSelectionDialog(request: request, completer: completer),
     DialogType.receipt: (context, request, completer) =>
         ReceiptDialog(request: request, completer: completer),
+    DialogType.fullscreen: (context, request, completer) =>
+        FullscreenDialogWrapper(
+          request: request,
+          completer: completer,
+        ),
   };
 
   dialogService.registerCustomDialogBuilders(builders);

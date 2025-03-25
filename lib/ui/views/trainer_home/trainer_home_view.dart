@@ -734,7 +734,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
               ? _buildProgressSkeleton()
               : viewModel.hasNoProgress
                   ? EmptyStateWidget(
-                      animationPath: 'assets/lottie/mentor_animation.json',
+                      animationPath: PngImages.progessAnim,
                       title: 'No Progress Data Yet',
                       description:
                           "Start creating courses to see learner progress here",
@@ -1071,7 +1071,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                     ? Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: EmptyStateWidget(
-                          animationPath: 'assets/animations/team_success.json',
+                          animationPath: PngImages.recentAnim,
                           title: 'No Recent Activity',
                           description:
                               'Your recent activities will appear here',
@@ -1200,7 +1200,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
               )
             : viewModel.hasNoSessions
                 ? EmptyStateWidget(
-                    animationPath: 'assets/animations/task_creation.json',
+                    animationPath: PngImages.sessionAnim,
                     title: 'No Upcoming Sessions',
                     description: 'Schedule your first session with learners',
                     buttonText: 'Schedule Session',

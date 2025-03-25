@@ -13,6 +13,12 @@ class PngImages {
 
   static const String codingAnim = '${_anim_root}coding_animation.json';
 
+  static const String recentAnim = '${_anim_root}recent_animation.json';
+
+  static const String sessionAnim = '${_anim_root}session_animation.json';
+
+  static const String progessAnim = '${_anim_root}progress_animation.json';
+
   static const String logo = '${_root}logo.svg';
 
   static const String profile = '${_root}profile.png';

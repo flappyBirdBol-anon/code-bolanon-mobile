@@ -79,7 +79,6 @@ class RegistrationService with ReactiveServiceMixin {
               print('Using transaction object directly');
               transaction = transactionData as Transaction;
             }
-
             // Use Future.delayed to ensure the dialog appears after navigation completes
             await Future.delayed(const Duration(milliseconds: 300));
             await _showReceiptDialog(courseModel, transaction);
@@ -105,7 +104,7 @@ class RegistrationService with ReactiveServiceMixin {
   Future<void> _showReceiptDialog(
       CourseModel course, Transaction transaction) async {
     await _dialogService.showCustomDialog(
-      variant: DialogType.success,
+      variant: DialogType.receipt,
       title: 'Payment Receipt',
       description: 'Your payment was successful!',
       mainButtonTitle: 'Close',
