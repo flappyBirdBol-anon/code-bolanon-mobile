@@ -3,11 +3,12 @@ import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/services/selected_stack_service.dart';
 import 'package:code_bolanon/services/tech_stack_service.dart';
 import 'package:flutter/material.dart';
+import 'package:stacked/stacked.dart';
 
 import '../../../models/tech_stack.dart';
 import '../../../models/tech_stack_model.dart'; // Import your existing model
 
-class ManageStackViewModel extends AppBaseViewModel {
+class ManageStackViewModel extends AppBaseViewModel with ReactiveServiceMixin {
   final TextEditingController techStackController = TextEditingController();
 
   List<TechStack> _techStacks = [];
@@ -25,7 +26,9 @@ class ManageStackViewModel extends AppBaseViewModel {
   final _selectedStackService = locator<SelectedStackService>();
 
   ManageStackViewModel() {
+    listenToReactiveValues([_selectedStackService.selectedStacks]);
     initialize();
+    _selectedStackService.addListener(_updateLocalStacks);
   }
 
   // Conversion method from TechStackModel to TechStack
@@ -63,6 +66,18 @@ class ManageStackViewModel extends AppBaseViewModel {
     }
   }
 
+  void _updateLocalStacks() {
+    final selectedStacksData = _selectedStackService.selectedStacks;
+    _selectedTechStacks = selectedStacksData
+        .where((item) => item.stack != null)
+        .map((item) => TechStack(
+              id: item.stackId,
+              tags: item.stack?.tags ?? '',
+            ))
+        .toList();
+    notifyListeners();
+  }
+
   Future<void> addTechStack(TechStack techStack) async {
     setBusy(true);
     try {
@@ -70,7 +85,6 @@ class ManageStackViewModel extends AppBaseViewModel {
         null,
         techStack.id.toString(),
       );
-      await initialize();
     } catch (e) {
       setError(e);
     } finally {
@@ -86,7 +100,6 @@ class ManageStackViewModel extends AppBaseViewModel {
 
       await _selectedStackService
           .removeFromSelectedStack(selectedStack.id.toString());
-      await initialize();
     } catch (e) {
       setError(e);
     } finally {
@@ -96,6 +109,7 @@ class ManageStackViewModel extends AppBaseViewModel {
 
   @override
   void dispose() {
+    _selectedStackService.removeListener(_updateLocalStacks);
     techStackController.dispose();
     super.dispose();
   }

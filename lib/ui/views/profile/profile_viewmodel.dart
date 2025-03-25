@@ -8,8 +8,9 @@ import 'package:code_bolanon/ui/views/change_password/change_password_view.dart'
 import 'package:code_bolanon/ui/views/edit_profile/edit_profile_view.dart';
 import 'package:code_bolanon/ui/views/manage_stack/manage_stack_view.dart';
 import 'package:flutter/material.dart';
+import 'package:stacked/stacked.dart';
 
-class ProfileViewModel extends AppBaseViewModel {
+class ProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
   final _selectedStackService = locator<SelectedStackService>();
   final _techStackService = locator<TechStackService>();
   List<TechStackModel> _techStacks = [];
@@ -79,8 +80,6 @@ class ProfileViewModel extends AppBaseViewModel {
         ),
       ),
     );
-
-    await _loadUserTechStacks();
   }
 
   // Navigation methods
@@ -107,8 +106,9 @@ class ProfileViewModel extends AppBaseViewModel {
   }
 
   ProfileViewModel() {
-    _selectedStackService.addListener(_onSelectedStacksChanged);
+    listenToReactiveValues([_selectedStackService.selectedStacks]);
     _init();
+    _selectedStackService.addListener(_onSelectedStacksChanged);
   }
 
   @override
@@ -118,10 +118,7 @@ class ProfileViewModel extends AppBaseViewModel {
   }
 
   void _onSelectedStacksChanged() {
-    if (!isFetching) {
-      _loadUserTechStacks();
-      notifyListeners();
-    }
+    notifyListeners();
   }
 
   Future<void> _init() async {

@@ -1,17 +1,18 @@
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/selected_stack_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
-import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
-class SelectedStackService with ChangeNotifier {
+class SelectedStackService with ListenableServiceMixin {
   final _apiService = locator<ApiService>();
 
   final ReactiveValue<List<SelectedStackModel>> _selectedStacks =
       ReactiveValue<List<SelectedStackModel>>([]);
   List<SelectedStackModel> get selectedStacks => _selectedStacks.value;
 
-  SelectedStackService();
+  SelectedStackService() {
+    listenToReactiveValues([_selectedStacks]);
+  }
 
   Future<void> fetchSelectedStacks(String? courseId) async {
     try {
@@ -56,9 +57,7 @@ class SelectedStackService with ChangeNotifier {
       });
 
       if (response.statusCode == 201) {
-        final selectedStack =
-            SelectedStackModel.fromJson(response.data['data']);
-        _selectedStacks.value = [..._selectedStacks.value, selectedStack];
+        await fetchSelectedStacks(courseId); // Refresh entire list
         return true;
       }
       return false;
@@ -74,9 +73,7 @@ class SelectedStackService with ChangeNotifier {
           await _apiService.delete('/selected_stacks/$selectedStackId');
 
       if (response.statusCode == 200) {
-        _selectedStacks.value = _selectedStacks.value
-            .where((stack) => stack.id != selectedStackId)
-            .toList();
+        await fetchSelectedStacks(null); // Refresh entire list
         return true;
       }
       return false;
