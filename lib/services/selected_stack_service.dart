@@ -51,8 +51,8 @@ class SelectedStackService with ChangeNotifier {
   Future<bool> addToSelectedStack(String? courseId, String stackId) async {
     try {
       final response = await _apiService.post('/selected_stacks', data: {
-        'course_id': courseId.toString(),
-        'stack_id': stackId.toString(),
+        if (courseId != null) 'course_id': courseId,
+        'stack_id': stackId,
       });
 
       if (response.statusCode == 201) {

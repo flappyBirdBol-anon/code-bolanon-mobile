@@ -13,6 +13,7 @@ import 'package:code_bolanon/models/course_model.dart' as _i3;
 import 'package:code_bolanon/models/course_param.dart' as _i29;
 import 'package:code_bolanon/models/lessons_model.dart' as _i6;
 import 'package:code_bolanon/models/registration_model.dart' as _i37;
+import 'package:code_bolanon/models/selected_stack_model.dart' as _i40;
 import 'package:code_bolanon/models/tech_stack_model.dart' as _i24;
 import 'package:code_bolanon/models/transaction_model.dart' as _i18;
 import 'package:code_bolanon/models/user_model.dart' as _i25;
@@ -3966,4 +3967,93 @@ class MockAppointmentService extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSelectedStackService extends _i1.Mock
-    implements _i39.SelectedStackService {}
+    implements _i39.SelectedStackService {
+  @override
+  List<_i40.SelectedStackModel> get selectedStacks => (super.noSuchMethod(
+        Invocation.getter(#selectedStacks),
+        returnValue: <_i40.SelectedStackModel>[],
+        returnValueForMissingStub: <_i40.SelectedStackModel>[],
+      ) as List<_i40.SelectedStackModel>);
+
+  @override
+  bool get hasListeners => (super.noSuchMethod(
+        Invocation.getter(#hasListeners),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
+  _i12.Future<void> fetchSelectedStacks(String? courseId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #fetchSelectedStacks,
+          [courseId],
+        ),
+        returnValue: _i12.Future<void>.value(),
+        returnValueForMissingStub: _i12.Future<void>.value(),
+      ) as _i12.Future<void>);
+
+  @override
+  _i12.Future<bool> addToSelectedStack(
+    String? courseId,
+    String? stackId,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #addToSelectedStack,
+          [
+            courseId,
+            stackId,
+          ],
+        ),
+        returnValue: _i12.Future<bool>.value(false),
+        returnValueForMissingStub: _i12.Future<bool>.value(false),
+      ) as _i12.Future<bool>);
+
+  @override
+  _i12.Future<bool> removeFromSelectedStack(String? selectedStackId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #removeFromSelectedStack,
+          [selectedStackId],
+        ),
+        returnValue: _i12.Future<bool>.value(false),
+        returnValueForMissingStub: _i12.Future<bool>.value(false),
+      ) as _i12.Future<bool>);
+
+  @override
+  void addListener(_i13.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(_i13.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+}

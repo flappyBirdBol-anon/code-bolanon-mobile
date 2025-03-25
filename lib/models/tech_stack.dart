@@ -1,14 +1,14 @@
 class TechStack {
   final int id;
   final String tags;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
   TechStack({
     required this.id,
     required this.tags,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory TechStack.fromJson(Map<String, dynamic> json) {
@@ -24,8 +24,8 @@ class TechStack {
     return {
       'id': id,
       'tags': tags,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 }

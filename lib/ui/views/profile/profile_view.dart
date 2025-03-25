@@ -175,8 +175,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                     ? 'Interested Stacks'
                     : 'Technical Skills',
                 actionButton: TextButton.icon(
-                  onPressed: () =>
-                      _showUpdateModal(context, 'Manage Tech Stack', viewModel),
+                  onPressed: () => viewModel.showTechStackModal(context),
                   icon:
                       const Icon(Icons.add, size: 18, color: AppColors.primary),
                   label: Text(
@@ -404,17 +403,6 @@ class ProfileView extends StackedView<ProfileViewModel> {
         ),
       ],
     );
-  }
-
-  void _showUpdateModal(
-      BuildContext context, String title, ProfileViewModel viewModel) {
-    if (title == 'Manage Tech Stack') {
-      viewModel.showTechStackModal(context);
-    } else if (title == 'Edit Profile') {
-      viewModel.showEditProfileModal(context);
-    } else if (title == 'Change Password') {
-      viewModel.navigateToChangePassword(context);
-    }
   }
 
   @override

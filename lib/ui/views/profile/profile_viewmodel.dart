@@ -4,9 +4,9 @@ import 'package:code_bolanon/models/tech_stack_model.dart';
 import 'package:code_bolanon/services/selected_stack_service.dart';
 import 'package:code_bolanon/services/tech_stack_service.dart';
 import 'package:code_bolanon/ui/common/utils/tech_stack_colors.dart';
-import 'package:code_bolanon/ui/common/widgets/tech_stack_modal.dart';
 import 'package:code_bolanon/ui/views/change_password/change_password_view.dart';
 import 'package:code_bolanon/ui/views/edit_profile/edit_profile_view.dart';
+import 'package:code_bolanon/ui/views/manage_stack/manage_stack_view.dart';
 import 'package:flutter/material.dart';
 
 class ProfileViewModel extends AppBaseViewModel {
@@ -58,34 +58,25 @@ class ProfileViewModel extends AppBaseViewModel {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => TechStackModal(
-        techStacks: selectedStacks.map((stack) => stack.tags).toList(),
-        onRemove: (techId) async {
-          setBusy(true);
-          try {
-            final selectedStack = _selectedStackService.selectedStacks
-                .firstWhere((stack) => stack.stack?.tags == techId);
-            await _selectedStackService
-                .removeFromSelectedStack(selectedStack.id.toString());
-            await _loadUserTechStacks();
-          } finally {
-            setBusy(false);
-          }
-        },
-        onAdd: (techId) async {
-          setBusy(true);
-          try {
-            final techStack =
-                _techStacks.firstWhere((tech) => tech.tags == techId);
-            await _selectedStackService.addToSelectedStack(
-              null,
-              techStack.id.toString(),
-            );
-            await _loadUserTechStacks();
-          } finally {
-            setBusy(false);
-          }
-        },
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              height: 4,
+              width: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Expanded(child: ManageStackView()),
+          ],
+        ),
       ),
     );
 
