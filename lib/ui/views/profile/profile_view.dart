@@ -176,12 +176,10 @@ class ProfileView extends StackedView<ProfileViewModel> {
                     : 'Technical Skills',
                 actionButton: TextButton.icon(
                   onPressed: () => viewModel.showTechStackModal(context),
-                  icon:
-                      const Icon(Icons.add, size: 18, color: AppColors.primary),
+                  icon: const Icon(Icons.edit_rounded,
+                      size: 18, color: AppColors.primary),
                   label: Text(
-                    viewModel.role == 'learner'
-                        ? 'Add Interests'
-                        : 'Add Skills',
+                    'Edit',
                     style: GoogleFonts.figtree(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w500,

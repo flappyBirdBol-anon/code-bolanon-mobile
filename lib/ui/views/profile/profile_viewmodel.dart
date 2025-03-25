@@ -59,23 +59,11 @@ class ProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: Column(
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.65,
+        child: const Column(
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              height: 4,
-              width: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const Expanded(child: ManageStackView()),
+            Expanded(child: ManageStackView()),
           ],
         ),
       ),
