@@ -68,7 +68,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                           radius: 35,
                           backgroundColor: Colors.white.withOpacity(0.2),
                           child: ClipOval(
-                            child: viewModel.formattedProfilePictureUrl.isEmpty
+                            child: viewModel.userImage.isEmpty
                                 ? Icon(Icons.person,
                                     size: 35,
                                     color: Colors.white.withOpacity(0.7))
@@ -175,14 +175,11 @@ class ProfileView extends StackedView<ProfileViewModel> {
                     ? 'Interested Stacks'
                     : 'Technical Skills',
                 actionButton: TextButton.icon(
-                  onPressed: () =>
-                      _showUpdateModal(context, 'Manage Tech Stack', viewModel),
-                  icon:
-                      const Icon(Icons.add, size: 18, color: AppColors.primary),
+                  onPressed: () => viewModel.showTechStackModal(context),
+                  icon: const Icon(Icons.edit_rounded,
+                      size: 18, color: AppColors.primary),
                   label: Text(
-                    viewModel.role == 'learner'
-                        ? 'Add Interests'
-                        : 'Add Skills',
+                    'Edit',
                     style: GoogleFonts.figtree(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w500,
@@ -197,7 +194,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                     ),
                   ),
                 ),
-                child: viewModel.techStacks.isEmpty
+                child: viewModel.selectedStacks.isEmpty
                     ? _buildEmptyState(
                         viewModel.role == 'learner'
                             ? 'No Interests Added'
@@ -211,7 +208,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                     : Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: viewModel.techStacks.map((tech) {
+                        children: viewModel.selectedStacks.map((tech) {
                           return CustomStackChip(
                             label: tech.tags,
                             selected: true,
@@ -404,17 +401,6 @@ class ProfileView extends StackedView<ProfileViewModel> {
         ),
       ],
     );
-  }
-
-  void _showUpdateModal(
-      BuildContext context, String title, ProfileViewModel viewModel) {
-    if (title == 'Manage Tech Stack') {
-      viewModel.showTechStackModal(context);
-    } else if (title == 'Edit Profile') {
-      viewModel.showEditProfileModal(context);
-    } else if (title == 'Change Password') {
-      viewModel.navigateToChangePassword(context);
-    }
   }
 
   @override

@@ -1,43 +1,5 @@
 import 'dart:convert';
 
-class StacksModel {
-  final String id;
-  final String stack;
-
-  StacksModel({
-    required this.id,
-    required this.stack,
-  });
-
-  factory StacksModel.fromJson(Map<String, dynamic> json) {
-    return StacksModel(
-      id: json['id'].toString(),
-      stack: json['tags'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'tags': stack,
-    };
-  }
-
-  StacksModel copyWith({
-    String? id,
-    String? stack,
-  }) {
-    return StacksModel(
-      id: id ?? this.id,
-      stack: stack ?? this.stack,
-    );
-  }
-
-  @override
-  String toString() {
-    return jsonEncode(toJson());
-  }
-}
-
 class TechStackModel {
   final int id;
   final String tags;
@@ -66,10 +28,15 @@ class TechStackModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id.toInt(),
+      'id': id,
       'tags': tags,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
+  }
+
+  @override
+  String toString() {
+    return jsonEncode(toJson());
   }
 }

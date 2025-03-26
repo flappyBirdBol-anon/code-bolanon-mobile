@@ -20,7 +20,12 @@ class Appointment {
   });
 }
 
+enum AppointmentFilter { all, today, upcoming, completed }
+
 class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
+  AppointmentFilter _currentFilter = AppointmentFilter.all;
+  AppointmentFilter get currentFilter => _currentFilter;
+
   bool _isLoading = false; // Set initial loading to false
   bool get isLoading => _isLoading;
 
@@ -146,5 +151,26 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
 
   void postponeAppointment(appointmentId) {
     // Postpone appointment logic here
+  }
+
+  void setFilter(AppointmentFilter filter) {
+    _currentFilter = filter;
+    notifyListeners();
+  }
+
+  List<Appointment> getFilteredAppointments() {
+    switch (_currentFilter) {
+      case AppointmentFilter.today:
+        return getTodayAppointments();
+      case AppointmentFilter.upcoming:
+        return _upcomingAppointments.where((appointment) {
+          return !isAppointmentToday(appointment);
+        }).toList();
+      case AppointmentFilter.completed:
+        return _completedAppointments;
+      case AppointmentFilter.all:
+      default:
+        return [..._upcomingAppointments, ..._completedAppointments];
+    }
   }
 }

@@ -163,80 +163,70 @@ class TrainerAppointmentHomeView
 
                 const SizedBox(height: 15),
 
-                // Today's Schedule Section
-                _buildTodayScheduleSection(context, viewModel, isDark),
-
-                const SizedBox(height: 15),
-
-                // Upcoming Appointments Section
-                _buildSectionHeader(
-                  'Upcoming Appointments',
-                  viewModel.isLoading,
-                  isDark,
-                  trailing: IconButton(
-                    icon: Icon(
-                      Icons.filter_list_rounded,
-                      color: isDark ? Colors.grey[400] : Colors.grey[700],
-                      size: 20,
+                // Filter Chips Section
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFilterChip(
+                          'All',
+                          viewModel.currentFilter == AppointmentFilter.all,
+                          () => viewModel.setFilter(AppointmentFilter.all),
+                          isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildFilterChip(
+                          'Today',
+                          viewModel.currentFilter == AppointmentFilter.today,
+                          () => viewModel.setFilter(AppointmentFilter.today),
+                          isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildFilterChip(
+                          'Upcoming',
+                          viewModel.currentFilter == AppointmentFilter.upcoming,
+                          () => viewModel.setFilter(AppointmentFilter.upcoming),
+                          isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildFilterChip(
+                          'Completed',
+                          viewModel.currentFilter ==
+                              AppointmentFilter.completed,
+                          () =>
+                              viewModel.setFilter(AppointmentFilter.completed),
+                          isDark,
+                        ),
+                      ],
                     ),
-                    onPressed: () {
-                      // Filter functionality
-                    },
                   ),
                 ),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: viewModel.isLoading &&
-                          viewModel.upcomingAppointments.isEmpty
-                      ? _buildSkeletonLoaders()
-                      : viewModel.upcomingAppointments.isEmpty
-                          ? _buildEmptyState(
-                              'No upcoming appointments',
-                              'Your upcoming lessons will appear here',
-                              Icons.event_note_outlined,
-                              isDark,
-                            )
-                          : Column(
-                              children: _buildUpcomingAppointmentsList(
-                                viewModel.upcomingAppointments,
-                                viewModel,
-                                isDark,
-                                context,
-                              ),
-                            ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Completed Appointments Section
-                _buildSectionHeader(
-                  'Completed Appointments',
-                  viewModel.isLoading &&
-                      viewModel.completedAppointments.isEmpty,
-                  isDark,
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: viewModel.isLoading &&
-                          viewModel.completedAppointments.isEmpty
-                      ? _buildSkeletonLoaders()
-                      : viewModel.completedAppointments.isEmpty
-                          ? _buildEmptyState(
-                              'No completed appointments',
-                              'Your completed lessons will appear here',
-                              Icons.check_circle_outline,
-                              isDark,
-                            )
-                          : Column(
-                              children: _buildCompletedAppointmentsList(
-                                viewModel.completedAppointments,
-                                viewModel,
-                                isDark,
-                              ),
-                            ),
-                ),
+                // Conditional Content Based on Filter
+                if (viewModel.currentFilter == AppointmentFilter.all) ...[
+                  _buildTodayScheduleSection(context, viewModel, isDark),
+                  const SizedBox(height: 15),
+                  _buildUpcomingSection(viewModel, isDark, context),
+                  const SizedBox(height: 20),
+                  _buildCompletedSection(viewModel, isDark),
+                ] else if (viewModel.currentFilter ==
+                    AppointmentFilter.today) ...[
+                  _buildTodayScheduleSection(context, viewModel, isDark),
+                ] else ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      children: _buildFilteredAppointmentsList(
+                        viewModel.getFilteredAppointments(),
+                        viewModel,
+                        isDark,
+                        context,
+                      ),
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 30),
               ],
@@ -745,57 +735,61 @@ class TrainerAppointmentHomeView
     IconData icon,
     bool isDark,
   ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            offset: const Offset(0, 3),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.grey.withOpacity(0.1)
-                  : Colors.grey.withOpacity(0.1),
-              shape: BoxShape.circle,
+    return SizedBox(
+      width: double.infinity,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              offset: const Offset(0, 3),
+              blurRadius: 10,
             ),
-            child: Icon(
-              icon,
-              size: 32,
-              color: isDark ? Colors.grey[400] : Colors.grey[500],
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.grey.withOpacity(0.1)
+                    : Colors.grey.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 32,
+                color: isDark ? Colors.grey[400] : Colors.grey[500],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: GoogleFonts.figtree(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : Colors.grey[800],
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: GoogleFonts.figtree(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : Colors.grey[800],
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: GoogleFonts.figtree(
-              fontSize: 14,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: GoogleFonts.figtree(
+                fontSize: 14,
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -933,6 +927,152 @@ class TrainerAppointmentHomeView
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFilterChip(
+      String label, bool isSelected, VoidCallback onTap, bool isDark) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark ? AppColors.primary : AppColors.primary)
+              : (isDark ? const Color(0xFF1E293B) : Colors.white),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.figtree(
+            color: isSelected
+                ? Colors.white
+                : (isDark ? Colors.grey[400] : Colors.grey[700]),
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildFilteredAppointmentsList(
+    List<Appointment> appointments,
+    TrainerAppointmentHomeViewModel viewModel,
+    bool isDark,
+    BuildContext context,
+  ) {
+    if (appointments.isEmpty) {
+      return [
+        _buildEmptyState(
+          'No appointments found',
+          'No appointments match the selected filter',
+          Icons.event_busy_outlined,
+          isDark,
+        ),
+      ];
+    }
+
+    return appointments.map((appointment) {
+      final startTime = DateTime.parse(appointment.startAt);
+      final endTime = DateTime.parse(appointment.endAt);
+
+      return CustomAppointmentItem(
+        learnerName: appointment.learnerName,
+        date: DateFormat('MMM d').format(startTime),
+        startTime: DateFormat('h:mm a').format(startTime),
+        endTime: DateFormat('h:mm a').format(endTime),
+        isCompleted: appointment.isCompleted,
+        isDark: isDark,
+        onTap: () => viewModel.navigateToAppointmentDetails(appointment.id),
+        onReschedule: appointment.isCompleted ? null : () {},
+        onPostpone: appointment.isCompleted
+            ? null
+            : () => _showPostponeConfirmation(
+                context, viewModel, appointment.id, isDark),
+      );
+    }).toList();
+  }
+
+  Widget _buildUpcomingSection(
+    TrainerAppointmentHomeViewModel viewModel,
+    bool isDark,
+    BuildContext context,
+  ) {
+    final upcomingAppointments = viewModel.upcomingAppointments
+        .where((appointment) => !viewModel.isAppointmentToday(appointment))
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          'Upcoming Appointments',
+          viewModel.isLoading,
+          isDark,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: viewModel.isLoading && upcomingAppointments.isEmpty
+              ? _buildSkeletonLoaders()
+              : upcomingAppointments.isEmpty
+                  ? Center(
+                      child: _buildEmptyState(
+                      'No upcoming appointments',
+                      'Your upcoming appointments will appear here',
+                      Icons.event_note_outlined,
+                      isDark,
+                    ))
+                  : Column(
+                      children: _buildUpcomingAppointmentsList(
+                        upcomingAppointments,
+                        viewModel,
+                        isDark,
+                        context,
+                      ),
+                    ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompletedSection(
+    TrainerAppointmentHomeViewModel viewModel,
+    bool isDark,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          'Completed Appointments',
+          viewModel.isLoading,
+          isDark,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: viewModel.isLoading && viewModel.completedAppointments.isEmpty
+              ? _buildSkeletonLoaders()
+              : viewModel.completedAppointments.isEmpty
+                  ? Center(
+                      child: _buildEmptyState(
+                      'No completed appointments',
+                      'Your completed appointments will appear here',
+                      Icons.check_circle_outline,
+                      isDark,
+                    ))
+                  : Column(
+                      children: _buildCompletedAppointmentsList(
+                        viewModel.completedAppointments,
+                        viewModel,
+                        isDark,
+                      ),
+                    ),
+        ),
+      ],
     );
   }
 

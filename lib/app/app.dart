@@ -51,6 +51,8 @@ import 'package:code_bolanon/ui/views/trainer_schedules/trainer_schedules_view.d
 import 'package:code_bolanon/ui/views/learner_appointment_home/learner_appointment_home_view.dart';
 import 'package:code_bolanon/ui/views/learner_schedule/learner_schedule_view.dart';
 import 'package:code_bolanon/services/appointment_service.dart';
+import 'package:code_bolanon/services/selected_stack_service.dart';
+import 'package:code_bolanon/ui/views/manage_stack/manage_stack_view.dart';
 import 'package:code_bolanon/services/dialog_helper_service.dart';
 
 @StackedApp(
@@ -80,6 +82,7 @@ import 'package:code_bolanon/services/dialog_helper_service.dart';
     MaterialRoute(page: TrainerSchedulesView),
     MaterialRoute(page: LearnerAppointmentHomeView),
     MaterialRoute(page: LearnerScheduleView),
+    MaterialRoute(page: ManageStackView),
 // @stacked-route
   ],
   dependencies: [
@@ -106,6 +109,7 @@ import 'package:code_bolanon/services/dialog_helper_service.dart';
     LazySingleton(classType: RegistrationService),
     LazySingleton(classType: DialogHelperService),
     LazySingleton(classType: AppointmentService),
+    LazySingleton(classType: SelectedStackService),
 // @stacked-service
   ],
   bottomsheets: [

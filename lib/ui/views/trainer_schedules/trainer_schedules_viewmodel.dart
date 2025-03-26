@@ -72,6 +72,14 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   double _price = 500.0;
   double get price => _price;
 
+  bool isSelectedDateActive(DateTime date) {
+    final now = DateTime.now();
+    return date.year == _selectedDate.year &&
+        date.month == _selectedDate.month &&
+        date.day == _selectedDate.day &&
+        date.isAfter(DateTime(now.year, now.month, now.day));
+  }
+
   void setPrice(double value) {
     _price = value;
     notifyListeners();
