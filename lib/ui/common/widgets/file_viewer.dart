@@ -42,6 +42,8 @@ class FileViewer extends StatefulWidget {
   final bool showFullscreenButton;
   final bool isFullscreen;
   final VoidCallback? onFullscreenPressed;
+  final bool showFullscreenControls; // Add this new property
+  final VoidCallback? onFullscreenClosed; // Add this for cleanup
 
   const FileViewer({
     Key? key,
@@ -62,6 +64,8 @@ class FileViewer extends StatefulWidget {
     this.showFullscreenButton = true,
     this.isFullscreen = false,
     this.onFullscreenPressed,
+    this.showFullscreenControls = true, // Default to true
+    this.onFullscreenClosed, // Add this for cleanup
   }) : super(key: key);
 
   @override
@@ -482,6 +486,15 @@ class _FileViewerState extends State<FileViewer>
 
   @override
   Widget build(BuildContext context) {
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
+
+    return widget.isFullscreen
+        ? _buildFullscreenContent(isPortrait)
+        : _buildNormalContent();
+  }
+
+  Widget _buildNormalContent() {
     return Container(
       width: widget.width,
       decoration: BoxDecoration(
@@ -497,6 +510,21 @@ class _FileViewerState extends State<FileViewer>
       ),
       padding: const EdgeInsets.all(16),
       child: _buildFilePreview(),
+    );
+  }
+
+  Widget _buildFullscreenContent(bool isPortrait) {
+    return Container(
+      color: Colors.black,
+      padding: isPortrait
+          ? const EdgeInsets.symmetric(vertical: 20)
+          : const EdgeInsets.symmetric(horizontal: 20),
+      child: Center(
+        child: AspectRatio(
+          aspectRatio: isPortrait ? 9 / 16 : 16 / 9,
+          child: _buildFilePreview(),
+        ),
+      ),
     );
   }
 
@@ -547,77 +575,29 @@ class _FileViewerState extends State<FileViewer>
   }
 
   Widget _buildPdfPreview() {
-    // First check if file exists and has content
-    return FutureBuilder<int>(
-      future: _cachedFile!.length(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildShimmerLoading();
-        }
-
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data == 0) {
-          return _buildErrorWidget(message: 'PDF file is empty or corrupted');
-        }
-
-        return Column(
-          children: [
-            AspectRatio(
-              aspectRatio: 3 / 4,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: PDFView(
-                    filePath: _cachedFile!.path,
-                    enableSwipe: true,
-                    swipeHorizontal: false,
-                    autoSpacing: true,
-                    pageFling: true,
-                    pageSnap: true,
-                    fitPolicy: FitPolicy.BOTH,
-                    preventLinkNavigation: false,
-                    onError: (error) {
-                      debugPrint('Error rendering PDF: $error');
-                      // Force rebuild on error
-                      if (_isMounted) {
-                        setState(() {
-                          _hasError = true;
-                          _errorMessage = 'Error rendering PDF: $error';
-                        });
-                      }
-                    },
-                    onPageError: (page, error) {
-                      debugPrint('Error rendering PDF page $page: $error');
-                    },
-                    onViewCreated: (controller) {
-                      // PDF view created successfully
-                      debugPrint('PDF view created successfully');
-                    },
-                    onRender: (pages) {
-                      debugPrint('PDF rendered with $pages pages');
-                    },
-                    onPageChanged: (page, total) {
-                      debugPrint('PDF page changed: $page/$total');
-                    },
-                  ),
-                ),
-              ),
+    return Column(
+      children: [
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: widget.isFullscreen
+                  ? BorderRadius.zero
+                  : BorderRadius.circular(12),
             ),
-            const SizedBox(height: 16),
-            _buildActionButtons(),
-          ],
-        );
-      },
+            child: PDFView(
+              filePath: _cachedFile!.path,
+              enableSwipe: true,
+              swipeHorizontal: widget.isFullscreen,
+              autoSpacing: true,
+              pageFling: true,
+              pageSnap: true,
+              fitPolicy: widget.isFullscreen ? FitPolicy.WIDTH : FitPolicy.BOTH,
+            ),
+          ),
+        ),
+        if (!widget.isFullscreen) _buildActionButtons(),
+      ],
     );
   }
 
@@ -797,28 +777,20 @@ class _FileViewerState extends State<FileViewer>
   }
 
   Widget _buildVideoPreview() {
-    if (_player == null || _videoController == null) {
-      return _buildShimmerLoading();
-    }
-
     return Column(
       children: [
-        AspectRatio(
-          aspectRatio: 16 / 9,
+        Expanded(
           child: Container(
             decoration: BoxDecoration(
               color: Colors.black,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              borderRadius: widget.isFullscreen
+                  ? BorderRadius.zero
+                  : BorderRadius.circular(12),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: widget.isFullscreen
+                  ? BorderRadius.zero
+                  : BorderRadius.circular(12),
               child: Video(
                 controller: _videoController!,
                 controls: AdaptiveVideoControls,
@@ -826,8 +798,10 @@ class _FileViewerState extends State<FileViewer>
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        _buildActionButtons(),
+        if (!widget.isFullscreen) ...[
+          const SizedBox(height: 16),
+          _buildActionButtons(),
+        ],
       ],
     );
   }
@@ -1182,36 +1156,55 @@ class _FileViewerState extends State<FileViewer>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (widget.showFullscreenButton && !_isFullscreen)
+        if (widget.showFullscreenControls && !widget.isFullscreen)
           IconButton(
             icon: const Icon(Icons.fullscreen),
             onPressed: _showFullscreenDialog,
             tooltip: 'Fullscreen',
           ),
-        _buildDownloadButton(),
+        if (!widget.isFullscreen) _buildDownloadButton(),
       ],
     );
   }
 
   Future<void> _showFullscreenDialog() async {
+    // Dispose any existing media controllers before going fullscreen
+    if (widget.fileType.contains('video')) {
+      _player?.pause();
+    } else if (widget.fileType.contains('audio')) {
+      _audioPlayer?.pause();
+    }
+
     await _dialogService.showFullscreenDialog(
       backgroundColor: Colors.black,
       child: FileViewer(
         fileUrl: widget.fileUrl,
         fileType: widget.fileType,
+        width: double.infinity, // Take full available width
+        height: double.infinity, // Take full available height
+        fit: widget.fit,
         title: widget.title,
         description: widget.description,
         lesson: widget.lesson,
         cachedFile: _cachedFile,
+        isFullscreen: true,
+        showFullscreenControls: false, // Hide controls in fullscreen mode
         onFileOpened: widget.onFileOpened,
         onFileDownloaded: widget.onFileDownloaded,
         onError: widget.onError,
-        showFullscreenButton: false,
-        isFullscreen: true,
+        onFullscreenClosed: () {
+          // Reinitialize media when returning from fullscreen
+          if (widget.fileType.contains('video') && _cachedFile != null) {
+            _initializeVideoPlayer(_cachedFile!.path);
+          } else if (widget.fileType.contains('audio') && _cachedFile != null) {
+            _audioPlayer?.setFilePath(_cachedFile!.path);
+          }
+        },
       ),
     );
 
-    widget.onFullscreenPressed?.call();
+    // Call the closed callback when dialog is dismissed
+    widget.onFullscreenClosed?.call();
   }
 
   Widget _buildDownloadButton() {

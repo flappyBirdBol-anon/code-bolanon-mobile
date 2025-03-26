@@ -19,13 +19,43 @@ class FullscreenDialogWrapper extends StackedView<FullscreenDialogModel> {
     FullscreenDialogModel viewModel,
     Widget? child,
   ) {
-    return Dialog.fullscreen(
-      backgroundColor: request.data?['backgroundColor'],
-      insetAnimationDuration:
-          request.data?['insetAnimationDuration'] ?? Duration.zero,
-      insetAnimationCurve:
-          request.data?['insetAnimationCurve'] ?? Curves.decelerate,
-      child: request.data?['child'] ?? const SizedBox(),
+    return Scaffold(
+      backgroundColor: request.data?['backgroundColor'] ?? Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.white),
+          onPressed: () => completer(DialogResponse(confirmed: true)),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              viewModel.isLandscape
+                  ? Icons.screen_lock_portrait
+                  : Icons.screen_lock_landscape,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              if (viewModel.isLandscape) {
+                viewModel.setPortrait();
+              } else {
+                viewModel.setLandscape();
+              }
+            },
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 1200, // Maximum width for very large screens
+            ),
+            child: request.data?['child'] ?? const SizedBox(),
+          ),
+        ),
+      ),
     );
   }
 
