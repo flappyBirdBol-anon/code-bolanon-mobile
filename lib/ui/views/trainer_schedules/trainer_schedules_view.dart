@@ -66,36 +66,38 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
       ),
       floatingActionButton: Hero(
         tag: 'fab_schedule',
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withOpacity(0.4),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-                spreadRadius: 0,
-              ),
-            ],
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primary, AppColors.secondary],
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: viewModel.toggleAddScheduleForm,
-              borderRadius: BorderRadius.circular(16),
-              child: const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Icon(Icons.add, color: Colors.white, size: 28),
-              ),
-            ),
-          ),
-        ),
+        child: viewModel.isSelectedDateActive(viewModel.selectedDate)
+            ? AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                      spreadRadius: 0,
+                    ),
+                  ],
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.primary, AppColors.secondary],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: viewModel.toggleAddScheduleForm,
+                    borderRadius: BorderRadius.circular(16),
+                    child: const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Icon(Icons.add, color: Colors.white, size: 28),
+                    ),
+                  ),
+                ),
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }
@@ -286,11 +288,17 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
         if (viewModel.isLoading && viewModel.availableTimeSlots.isEmpty)
           _buildSkeletonLoaders(3)
         else if (viewModel.availableTimeSlots.isEmpty)
-          _buildEmptyState(
-            'No available time slots',
-            'Tap the + button to add new availability',
-            isDark,
-          )
+          viewModel.isSelectedDateActive(viewModel.selectedDate)
+              ? _buildEmptyState(
+                  'No available time slots',
+                  'Please select add button to add availability',
+                  isDark,
+                )
+              : _buildEmptyState(
+                  'No time slots',
+                  'Cannot add schedules for past dates',
+                  isDark,
+                )
         else
           Column(
             children: viewModel.availableTimeSlots.map((slot) {
@@ -380,11 +388,17 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
         if (viewModel.isLoading && viewModel.scheduledAppointments.isEmpty)
           _buildSkeletonLoaders(2)
         else if (viewModel.scheduledAppointments.isEmpty)
-          _buildEmptyState(
-            'No scheduled appointments',
-            'Your booked appointments will appear here',
-            isDark,
-          )
+          viewModel.isSelectedDateActive(viewModel.selectedDate)
+              ? _buildEmptyState(
+                  'No scheduled appointments',
+                  'Your booked appointments will appear here',
+                  isDark,
+                )
+              : _buildEmptyState(
+                  'No completed scheduled appointments',
+                  'Please select a future date to add availability',
+                  isDark,
+                )
         else
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
