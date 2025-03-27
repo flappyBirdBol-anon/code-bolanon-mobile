@@ -177,51 +177,39 @@ class UserService with ListenableServiceMixin {
   Future<bool> updateProfile(
     String firstName,
     String lastName,
-    // String profilePicture,
     String specialization,
     String organization,
     XFile? image,
-    int userId, // Add userId parameter
+    int userId,
   ) async {
     try {
       final Map<String, dynamic> updateData = {
         '_method': 'PUT',
         'first_name': firstName,
         'last_name': lastName,
-        // 'profile_image': profilePicture,
         'specialization': specialization,
         'organization': organization,
       };
 
-      var response;
+      dynamic response;
       if (image != null) {
-        // Only update image if a new one is provided
+        // Update with new image
         response = await ApiService().uploadFile(
-          '/users/$userId',
+          '/profile',
           fields: updateData,
           files: {'profile_image': image},
         );
-      }
-      // final response = await ApiService().put(
-      //   '/profile/', // Use the correct user ID in the URL
-      //   data: {
-      //     'first_name': firstName,
-      //     'last_name': lastName,
-      //     'profile_image': profilePicture,
-      //     'specialization': specialization,
-      //     'organization': organization,
-      //   },
-      // );
-
-      if (response.statusCode == 200) {
-        // Update current user data
-        _currentUser.value = _currentUser.value?.copyWith(
-          firstName: firstName,
-          lastName: lastName,
-          profileImage: image?.path,
-          specialization: specialization,
-          organization: organization,
+      } else {
+        // Update without image
+        response = await ApiService().post(
+          '/profile',
+          data: updateData,
         );
+      }
+
+      if (response != null && response.statusCode == 200) {
+        notifyListeners();
+        await fetchUserProfile();
         return true;
       }
       return false;
