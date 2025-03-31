@@ -524,7 +524,7 @@ class LessonDetailsViewModel extends AppBaseViewModel {
   void toggleFullScreen() {
     _isFullScreen = !_isFullScreen;
     if (_isFullScreen) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
       // Allow all orientations in fullscreen
       SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,

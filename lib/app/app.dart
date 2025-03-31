@@ -6,6 +6,7 @@ import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/tag_service.dart';
 import 'package:code_bolanon/services/theme_service.dart';
+import 'package:code_bolanon/services/transactions_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:code_bolanon/ui/dialogs/basic/basic_dialog.dart';
@@ -110,6 +111,7 @@ import 'package:code_bolanon/services/dialog_helper_service.dart';
     LazySingleton(classType: DialogHelperService),
     LazySingleton(classType: AppointmentService),
     LazySingleton(classType: SelectedStackService),
+    LazySingleton(classType: TransactionsService),
 // @stacked-service
   ],
   bottomsheets: [

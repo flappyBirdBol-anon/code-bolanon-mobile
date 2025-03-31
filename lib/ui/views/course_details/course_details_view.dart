@@ -430,19 +430,20 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
               ),
               SliverPersistentHeader(
                 delegate: _SliverAppBarDelegate(
-                  const TabBar(
-                    splashBorderRadius: BorderRadius.all(
+                  TabBar(
+                    splashBorderRadius: const BorderRadius.all(
                       Radius.circular(10),
                     ),
                     labelColor: Colors.black,
                     unselectedLabelColor: Colors.grey,
                     indicatorColor: AppColors.primary,
                     indicatorWeight: 3,
-                    tabs: [
+                    tabs: const [
                       Tab(text: 'Overview'),
                       Tab(text: 'Lessons'),
                       Tab(text: 'Reviews'),
                     ],
+                    labelStyle: GoogleFonts.figtree(),
                   ),
                 ),
                 pinned: true,

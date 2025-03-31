@@ -4,8 +4,11 @@ import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/tech_stack_model.dart';
+import 'package:code_bolanon/models/transaction_model.dart';
+import 'package:code_bolanon/models/transactions_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/services/transactions_service.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked_services/stacked_services.dart';
 
@@ -27,10 +30,11 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   String profileImageUrl = 'assets/images/1.jpg';
   int activeLearners = 0;
   int totalCourses = 0;
-  double totalRevenue = 15000;
+  double totalRevenue = 0.0;
   final _courseService = locator<CourseService>();
   final _imageService = locator<ImageService>();
   final _navigationService = locator<NavigationService>();
+  final _transactionService = locator<TransactionsService>();
 
   final List<AppointmentModel> _upcomingAppointments = [];
   List<AppointmentModel> get upcomingAppointments => _upcomingAppointments;
@@ -73,6 +77,9 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   List<CourseModel> _courses = [];
   List<CourseModel> get courseList => _courses;
 
+  List<Transactions> _transactions = [];
+  List<Transactions> get transactions => _transactions;
+
   Future<void> init() async {
     print('User Image: $userImage');
     setBusy(true);
@@ -81,6 +88,16 @@ class TrainerHomeViewModel extends AppBaseViewModel {
       _courses = await _courseService.getCourses();
       topics = userTopics.map((e) => e.tags).toList();
       totalCourses = userCourseCount;
+
+      // Fetch transactions from API using TransactionsService
+      _transactions = await _transactionService.getTransactions();
+
+      //get total revenue limited to 2 decimal places
+      totalRevenue = _transactions.fold(
+          0.0,
+          (previousValue, transaction) =>
+              previousValue + double.parse(transaction.amount));
+      totalRevenue = double.parse(totalRevenue.toStringAsFixed(3));
 
       notifyListeners();
     } catch (e) {
@@ -171,8 +188,8 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     _navigationService.navigateTo(Routes.trainerCoursesView);
   }
 
-  void reviewContent() {
-    debugPrint('Opening reviews');
+  void openSettings() {
+    debugPrint('Opening settings');
     // Navigate to reviews screen
   }
 
@@ -182,7 +199,7 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     _navigationService.navigateToTrainerAnalyticsView();
   }
 
-  void openSchedule() {
+  void openAppointment() {
     _navigationService.navigateToTrainerAppointmentHomeView();
     // Navigate to schedule screen
   }
@@ -196,13 +213,6 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   void viewAllCourses() {
     _navigationService.navigateToTrainerCoursesView();
     // Navigate to courses list
-  }
-
-  // Stats related actions
-  void showMonthlyStats() {
-    debugPrint('Showing monthly statistics');
-    // This will be invoked by the UI to show the picker
-    // The actual implementation of the picker is in the View
   }
 
   // Update selected date and fetch associated stats
@@ -219,8 +229,6 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     // Simulate API call
     await Future.delayed(const Duration(milliseconds: 800));
 
-    // In a real app, you would fetch actual data for the selected month
-    // For now, let's vary the stats based on the month for demonstration
     final monthSeed = month * 10;
     activeLearners = 120 + monthSeed;
     totalCourses = 8 + (month % 5);
@@ -233,23 +241,6 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   void addToStack() {
     _navigationService.navigateToProfileView();
     // Show dialog to add new technology
-  }
-
-  // Challenge related actions
-  void viewAllChallenges() {
-    debugPrint('Viewing all code challenges');
-    // Navigate to challenges list
-  }
-
-  void openChallenge(String title) {
-    debugPrint('Opening challenge: $title');
-    // Navigate to specific challenge
-  }
-
-  // Session related actions
-  void startSession() {
-    debugPrint('Starting JavaScript Workshop session');
-    // Navigate to video session screen
   }
 
   void openReviewSession() {

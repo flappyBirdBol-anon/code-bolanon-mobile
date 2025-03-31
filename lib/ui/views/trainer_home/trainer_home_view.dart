@@ -260,13 +260,6 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                     bodyStyle,
                     () => viewModel.createNewCourse()),
                 _buildQuickActionButton(
-                    "Review",
-                    Icons.rate_review_outlined,
-                    AppColors.primary,
-                    theme,
-                    bodyStyle,
-                    () => viewModel.reviewContent()),
-                _buildQuickActionButton(
                     "Analytics",
                     Icons.analytics_outlined,
                     AppColors.primary,
@@ -274,12 +267,19 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                     bodyStyle,
                     () => viewModel.openAnalytics()),
                 _buildQuickActionButton(
-                    "Schedule",
+                    "Appointments",
                     Icons.event_note_outlined,
                     AppColors.primary,
                     theme,
                     bodyStyle,
-                    () => viewModel.openSchedule()),
+                    () => viewModel.openAppointment()),
+                _buildQuickActionButton(
+                    "Settings",
+                    Icons.settings_outlined,
+                    AppColors.primary,
+                    theme,
+                    bodyStyle,
+                    () => viewModel.openSettings()),
               ],
             ),
           ),
@@ -403,7 +403,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
               _buildStatDivider(isDark),
               _buildStatItem(
                 'Revenue',
-                viewModel.isLoading ? null : '\$${viewModel.totalRevenue}',
+                viewModel.isLoading ? null : 'P${viewModel.totalRevenue}',
                 Icons.attach_money,
                 theme,
                 bodyStyle,
@@ -1177,7 +1177,7 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Upcoming Sessions",
+          "Upcoming Appointments",
           style: GoogleFonts.figtree(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -1201,10 +1201,11 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
             : viewModel.hasNoSessions
                 ? EmptyStateWidget(
                     animationPath: PngImages.sessionAnim,
-                    title: 'No Upcoming Sessions',
-                    description: 'Schedule your first session with learners',
-                    buttonText: 'Schedule Session',
-                    onActionPressed: () => viewModel.openSchedule(),
+                    title: 'No Upcoming Appointments',
+                    description:
+                        'Schedule your first appointment with learners',
+                    buttonText: 'Schedule appointments',
+                    onActionPressed: () => viewModel.openAppointment(),
                     animationSize: 180,
                     isDark: false,
                   )

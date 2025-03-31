@@ -16,7 +16,7 @@ class ApiService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   // Simulated transactions database
-  final List<Map<String, dynamic>> _transactions = [];
+  // final List<Map<String, dynamic>> _transactions = [];
 
   // Private constructor
   ApiService._() {
