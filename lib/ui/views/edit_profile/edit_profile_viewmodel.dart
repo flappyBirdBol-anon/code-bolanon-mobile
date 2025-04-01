@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 
-class EditProfileViewModel extends BaseViewModel {
+class EditProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
   final _userService = locator<UserService>();
   final _imageService = locator<ImageService>();
   final _snackbarService = locator<SnackbarService>();
@@ -90,7 +91,6 @@ class EditProfileViewModel extends BaseViewModel {
           message: 'Profile updated successfully',
           duration: const Duration(seconds: 2),
         );
-        // Clear the selected image after successful update
         selectedProfileImage = null;
         notifyListeners();
       } else {
@@ -130,7 +130,7 @@ class EditProfileViewModel extends BaseViewModel {
       return errorWidget ??
           const Icon(Icons.person, size: 40, color: Colors.grey);
     }
-    print('Image Path: ${profilePictureUrl}');
+    print('Image Path: $profilePictureUrl');
     return _imageService.getProfileImageWidget(
       imageUrl: _imageService.getProfilePictureUrl(profilePictureUrl),
       width: 120,

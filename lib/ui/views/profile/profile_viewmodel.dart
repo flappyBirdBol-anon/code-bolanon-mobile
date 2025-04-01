@@ -14,9 +14,8 @@ class ProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
   final _selectedStackService = locator<SelectedStackService>();
   final _techStackService = locator<TechStackService>();
   List<TechStackModel> _techStacks = [];
-  // Changed from final to mutable
+
   bool isFetching = false;
-  // User data getters
   String get firstName => userService.currentUser?.firstName ?? 'Example';
   String get lastName => userService.currentUser?.lastName ?? 'User';
   String get email =>
@@ -94,18 +93,25 @@ class ProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
   }
 
   ProfileViewModel() {
-    listenToReactiveValues([_selectedStackService.selectedStacks]);
+    listenToReactiveValues(
+        [_selectedStackService.selectedStacks, userService.currentUser]);
     _init();
     _selectedStackService.addListener(_onSelectedStacksChanged);
+    userService.addListener(_profileUpdated);
   }
 
   @override
   void dispose() {
     _selectedStackService.removeListener(_onSelectedStacksChanged);
+    userService.removeListener(_profileUpdated);
     super.dispose();
   }
 
   void _onSelectedStacksChanged() {
+    notifyListeners();
+  }
+
+  void _profileUpdated() {
     notifyListeners();
   }
 
