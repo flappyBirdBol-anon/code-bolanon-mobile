@@ -17,6 +17,7 @@ import '../services/api_service.dart';
 import '../services/appointment_service.dart';
 import '../services/auth_service.dart';
 import '../services/course_service.dart';
+import '../services/dialog_helper_service.dart';
 import '../services/file_service.dart';
 import '../services/forgot_password_service.dart';
 import '../services/image_service.dart';
@@ -28,6 +29,7 @@ import '../services/stripe_service.dart';
 import '../services/tag_service.dart';
 import '../services/tech_stack_service.dart';
 import '../services/theme_service.dart';
+import '../services/transactions_service.dart';
 import '../services/user_service.dart';
 import '../services/wishlist_service.dart';
 
@@ -62,6 +64,8 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => AnalyticsService());
   locator.registerLazySingleton(() => WishlistService());
   locator.registerLazySingleton(() => RegistrationService());
+  locator.registerLazySingleton(() => DialogHelperService());
   locator.registerLazySingleton(() => AppointmentService());
   locator.registerLazySingleton(() => SelectedStackService());
+  locator.registerLazySingleton(() => TransactionsService());
 }

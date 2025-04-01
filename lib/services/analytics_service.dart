@@ -1,12 +1,32 @@
 import 'dart:math';
 import 'dart:io';
+import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/models/transactions_model.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 import 'package:syncfusion_officechart/officechart.dart'; // Add this package to open the file
+import 'package:code_bolanon/services/transactions_service.dart';
 
 class AnalyticsService {
+  final _transactionService = locator<TransactionsService>();
+
+  Transactions? transactions;
+  // Get total revenue from transactions with 2 decimal places
+  Future<double> totalRevenue() async {
+    List<Transactions> transactions =
+        await _transactionService.getTransactions();
+    double total = 0.0;
+    for (var transaction in transactions) {
+      if (transaction.status == 'completed') {
+        total += double.parse(transaction.amount);
+        print('total value: $total');
+      }
+    }
+    return double.parse(total.toStringAsFixed(2));
+  }
+
   // Mock data for learner enrollments
   List<Map<String, dynamic>> getEnrollmentData() {
     return [
@@ -64,7 +84,7 @@ class AnalyticsService {
   // Mock data for revenue metrics
   Map<String, dynamic> getRevenueMetrics() {
     return {
-      'totalRevenue': 45678.90,
+      'totalRevenue': 0.0,
       'monthlyGrowth': 15.7,
       'averageCourseValue': 499.99,
       'monthlyData': [

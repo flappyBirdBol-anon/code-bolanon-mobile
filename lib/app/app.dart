@@ -6,6 +6,7 @@ import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/tag_service.dart';
 import 'package:code_bolanon/services/theme_service.dart';
+import 'package:code_bolanon/services/transactions_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:code_bolanon/ui/dialogs/basic/basic_dialog.dart';
@@ -53,7 +54,7 @@ import 'package:code_bolanon/ui/views/learner_schedule/learner_schedule_view.dar
 import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:code_bolanon/services/selected_stack_service.dart';
 import 'package:code_bolanon/ui/views/manage_stack/manage_stack_view.dart';
-// @stacked-import
+import 'package:code_bolanon/services/dialog_helper_service.dart';
 
 @StackedApp(
   routes: [
@@ -107,8 +108,10 @@ import 'package:code_bolanon/ui/views/manage_stack/manage_stack_view.dart';
 
     LazySingleton(classType: WishlistService),
     LazySingleton(classType: RegistrationService),
+    LazySingleton(classType: DialogHelperService),
     LazySingleton(classType: AppointmentService),
     LazySingleton(classType: SelectedStackService),
+    LazySingleton(classType: TransactionsService),
 // @stacked-service
   ],
   bottomsheets: [

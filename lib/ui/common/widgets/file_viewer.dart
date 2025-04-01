@@ -1,18 +1,17 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:stacked/stacked.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as path;
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
 import 'package:code_bolanon/services/file_service.dart';
+import 'package:code_bolanon/services/dialog_helper_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -20,7 +19,6 @@ import 'package:excel/excel.dart';
 import 'package:docx_viewer/docx_viewer.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:shimmer/shimmer.dart';
-
 import 'package:stacked_services/stacked_services.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
@@ -40,6 +38,9 @@ class FileViewer extends StatefulWidget {
   final VoidCallback? onFileOpened;
   final VoidCallback? onFileDownloaded;
   final VoidCallback? onError;
+  final bool showFullscreenButton;
+  final bool isFullscreen;
+  final VoidCallback? onFullscreenPressed;
 
   const FileViewer({
     Key? key,
@@ -57,6 +58,9 @@ class FileViewer extends StatefulWidget {
     this.onFileOpened,
     this.onFileDownloaded,
     this.onError,
+    this.showFullscreenButton = true,
+    this.isFullscreen = false,
+    this.onFullscreenPressed,
   }) : super(key: key);
 
   @override
@@ -67,26 +71,25 @@ class _FileViewerState extends State<FileViewer>
     with SingleTickerProviderStateMixin {
   final FileService _fileService = locator<FileService>();
   final SnackbarService _snackbarService = locator<SnackbarService>();
+  final DialogHelperService _dialogService = locator<DialogHelperService>();
 
   File? _cachedFile;
   bool _isLoading = true;
   bool _hasError = false;
   String? _errorMessage;
-  bool _isFullScreen = false;
   bool _isDownloading = false;
-  String? _downloadProgress;
 
   // Media controllers
-
   AudioPlayer? _audioPlayer;
   bool _isAudioPlaying = false;
   Duration _audioPosition = Duration.zero;
   Duration _audioDuration = Duration.zero;
 
-// Stream subscriptions
+  // Stream subscriptions
   StreamSubscription? _audioPositionSubscription;
   StreamSubscription? _audioDurationSubscription;
   StreamSubscription? _audioStateSubscription;
+
   // Lazy initialization for media players
   Player? _player;
   VideoController? _videoController;
@@ -94,29 +97,17 @@ class _FileViewerState extends State<FileViewer>
   // Document data
   List<List<dynamic>>? _excelData;
 
-  // Animation controller for transitions
-  late AnimationController _animationController;
-  late Animation<double> _animation;
-
   // Add a mounted check flag to prevent setState after dispose
   bool _isMounted = true;
 
   // Debounce timer for UI updates
   Timer? _debounceTimer;
 
+  bool _isFullscreen = false;
+
   @override
   void initState() {
     super.initState();
-
-    // Initialize animation controller
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
 
     // Initialize audio player
     _audioPlayer = AudioPlayer();
@@ -193,10 +184,7 @@ class _FileViewerState extends State<FileViewer>
   }
 
   void _safeSetState(VoidCallback fn) {
-    // Cancel any pending debounce timer
     _debounceTimer?.cancel();
-
-    // Set a new debounce timer
     _debounceTimer = Timer(const Duration(milliseconds: 50), () {
       if (_isMounted) {
         setState(fn);
@@ -412,7 +400,6 @@ class _FileViewerState extends State<FileViewer>
 
     setState(() {
       _isDownloading = true;
-      _downloadProgress = 'Preparing download...';
     });
 
     try {
@@ -432,7 +419,7 @@ class _FileViewerState extends State<FileViewer>
 
       // Copy the file
       setState(() {
-        _downloadProgress = 'Copying file...';
+        _isDownloading = true;
       });
 
       // Use compute to perform file copy in a separate isolate
@@ -447,7 +434,6 @@ class _FileViewerState extends State<FileViewer>
 
       setState(() {
         _isDownloading = false;
-        _downloadProgress = null;
       });
 
       // Notify parent about successful download
@@ -466,7 +452,6 @@ class _FileViewerState extends State<FileViewer>
       debugPrint('Error downloading file: $e');
       setState(() {
         _isDownloading = false;
-        _downloadProgress = null;
       });
 
       // Show error message using the SnackbarService
@@ -478,113 +463,40 @@ class _FileViewerState extends State<FileViewer>
     }
   }
 
-  void _toggleFullScreen() {
-    // Prevent multiple rapid toggles
-    if (_animationController.isAnimating) return;
-
-    setState(() {
-      _isFullScreen = !_isFullScreen;
-    });
-
-    if (_isFullScreen) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-      _animationController.forward();
-    } else {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
-      _animationController.reverse();
-    }
-  }
-
   @override
   void dispose() {
-    // Cancel any pending debounce timer
     _debounceTimer?.cancel();
-
-    // Cancel audio subscriptions
     _audioPositionSubscription?.cancel();
     _audioDurationSubscription?.cancel();
     _audioStateSubscription?.cancel();
 
-    // Dispose audio player
     final playerToDispose = _audioPlayer;
     _audioPlayer = null;
     playerToDispose?.dispose();
 
-    // Dispose media controllers
     _disposeMediaControllers();
-
-    _animationController.dispose();
-
-    // Reset orientation
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
     _isMounted = false;
     super.dispose();
   }
 
-  Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Icon(
-              _getFileIcon(),
-              size: 20,
-              color: AppColors.secondary,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                path.basename(widget.fileUrl),
-                style: GoogleFonts.figtree(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        const Divider(height: 24, thickness: 1),
-      ],
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: widget.width,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: _buildFilePreview(),
     );
-  }
-
-  IconData _getFileIcon() {
-    if (widget.fileType.contains('pdf')) {
-      return Icons.picture_as_pdf_rounded;
-    } else if (widget.fileType.contains('document')) {
-      return Icons.description_rounded;
-    } else if (widget.fileType.contains('spreadsheet')) {
-      return Icons.table_chart_rounded;
-    } else if (widget.fileType.contains('presentation')) {
-      return Icons.slideshow_rounded;
-    } else if (widget.fileType.contains('image')) {
-      return Icons.image_rounded;
-    } else if (widget.fileType.contains('video')) {
-      return Icons.videocam_rounded;
-    } else if (widget.fileType.contains('audio')) {
-      return Icons.audiotrack_rounded;
-    } else if (widget.fileType.contains('text')) {
-      return Icons.text_snippet_rounded;
-    } else {
-      return Icons.insert_drive_file_rounded;
-    }
   }
 
   Widget _buildFilePreview() {
@@ -596,7 +508,6 @@ class _FileViewerState extends State<FileViewer>
       return _buildErrorWidget();
     }
 
-    // Determine content based on file type
     if (widget.fileType.contains('pdf')) {
       return _buildPdfPreview();
     } else if (widget.fileType.contains('image')) {
@@ -1270,27 +1181,36 @@ class _FileViewerState extends State<FileViewer>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ElevatedButton.icon(
-          onPressed: _toggleFullScreen,
-          icon: const Icon(Icons.fullscreen_rounded),
-          label: const Text('Full Screen'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.secondary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            textStyle: GoogleFonts.figtree(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+        if (widget.showFullscreenButton && !_isFullscreen)
+          IconButton(
+            icon: const Icon(Icons.fullscreen),
+            onPressed: _showFullscreenDialog,
+            tooltip: 'Fullscreen',
           ),
-        ),
-        const SizedBox(width: 12),
         _buildDownloadButton(),
       ],
     );
+  }
+
+  Future<void> _showFullscreenDialog() async {
+    await _dialogService.showFullscreenDialog(
+      backgroundColor: Colors.black,
+      child: FileViewer(
+        fileUrl: widget.fileUrl,
+        fileType: widget.fileType,
+        title: widget.title,
+        description: widget.description,
+        lesson: widget.lesson,
+        cachedFile: _cachedFile,
+        onFileOpened: widget.onFileOpened,
+        onFileDownloaded: widget.onFileDownloaded,
+        onError: widget.onError,
+        showFullscreenButton: false,
+        isFullscreen: true,
+      ),
+    );
+
+    widget.onFullscreenPressed?.call();
   }
 
   Widget _buildDownloadButton() {
@@ -1385,236 +1305,6 @@ class _FileViewerState extends State<FileViewer>
           ),
         );
   }
-
-  Widget _buildFullScreenContent() {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_isFullScreen) {
-          _toggleFullScreen();
-          return false;
-        }
-        return true;
-      },
-      child: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          return Container(
-            color: Colors.white,
-            child: Stack(
-              children: [
-                Center(
-                  child: _buildFullScreenFileContent(),
-                ),
-                Positioned(
-                  top: 40,
-                  right: 16,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _toggleFullScreen,
-                      borderRadius: BorderRadius.circular(24),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildFullScreenFileContent() {
-    if (_cachedFile == null) {
-      return _buildErrorWidget();
-    }
-
-    if (widget.fileType.contains('pdf')) {
-      return PDFView(
-        filePath: _cachedFile!.path,
-        enableSwipe: true,
-        swipeHorizontal: false,
-        autoSpacing: true,
-        pageFling: true,
-        pageSnap: true,
-        fitPolicy: FitPolicy.BOTH,
-      );
-    } else if (widget.fileType.contains('image')) {
-      return InteractiveViewer(
-        minScale: 0.5,
-        maxScale: 3.0,
-        child: Image.file(
-          _cachedFile!,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            debugPrint('Error loading image in fullscreen: $error');
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.broken_image, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Unable to load image',
-                    style: GoogleFonts.figtree(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      );
-    } else if (widget.fileType.contains('video') && _videoController != null) {
-      return Video(
-        controller: _videoController!,
-        controls: AdaptiveVideoControls,
-      );
-    } else if (widget.fileType.contains('audio')) {
-      return _buildAudioPreview();
-    } else if (path.extension(widget.fileUrl).toLowerCase() == '.docx') {
-      final oldPath = _cachedFile!.path;
-      final newPath = oldPath.endsWith('.docx') ? oldPath : '$oldPath.docx';
-      return DocxView(
-        filePath: newPath,
-      );
-    } else if (widget.fileType.contains('spreadsheet') ||
-        path.extension(widget.fileUrl).toLowerCase() == '.xlsx' ||
-        path.extension(widget.fileUrl).toLowerCase() == '.xls') {
-      if (_excelData == null || _excelData!.isEmpty) {
-        return _buildShimmerLoading();
-      }
-
-      // Extract headers from the first row
-      final headers = _excelData![0];
-      // Data rows (excluding header)
-      final rows = _excelData!.length > 1 ? _excelData!.sublist(1) : [];
-
-      return Container(
-        color: Colors.white,
-        padding: const EdgeInsets.all(16),
-        child: DataTable2(
-          columnSpacing: 12,
-          horizontalMargin: 12,
-          minWidth: 600,
-          fixedLeftColumns: 1,
-          headingRowHeight: 50,
-          headingRowColor: MaterialStateProperty.all(Colors.grey[100]),
-          border: TableBorder(
-            horizontalInside: BorderSide(color: Colors.grey[300]!),
-          ),
-          columns: [
-            for (var header in headers)
-              DataColumn2(
-                label: Text(
-                  header.toString(),
-                  style: GoogleFonts.figtree(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                size: ColumnSize.M,
-              ),
-          ],
-          rows: [
-            for (var row in rows)
-              DataRow2(
-                cells: [
-                  for (var cell in row)
-                    DataCell(
-                      Text(
-                        cell.toString(),
-                        style: GoogleFonts.figtree(
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-          ],
-        ),
-      );
-    } else if (widget.fileType.contains('text')) {
-      return FutureBuilder<String>(
-        future: compute<String, String>(
-          (path) => File(path).readAsString(),
-          _cachedFile!.path,
-        ),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return _buildShimmerLoading();
-          }
-
-          if (snapshot.hasError || !snapshot.hasData) {
-            return _buildErrorWidget(message: 'Could not read text file');
-          }
-
-          final text = snapshot.data!;
-
-          return Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(24),
-            child: SingleChildScrollView(
-              child: Text(
-                text,
-                style: GoogleFonts.figtree(
-                  fontSize: 16,
-                  height: 1.6,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    } else {
-      return _buildGenericFilePreview();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isFullScreen) {
-      return _buildFullScreenContent();
-    }
-
-    return Container(
-      width: widget.width,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          _buildFilePreview(),
-        ],
-      ),
-    );
-  }
 }
 
 // Extension to help with file type icons
@@ -1654,215 +1344,5 @@ extension LessonFileTypeExtension on Lesson {
     }
 
     return Icons.insert_drive_file_rounded;
-  }
-}
-
-// Helper widget for lesson content display
-class LessonContentViewer extends StatelessWidget {
-  final ReactiveValue<String> _filesUrl = ReactiveValue<String>("");
-  String get fileUrls => _filesUrl.value;
-  set fileUrls(String value) => _filesUrl.value = value;
-
-  final Lesson lesson;
-  final String? title;
-  final String? description;
-  final Function()? onRetry;
-  final VoidCallback? onFileOpened;
-  final VoidCallback? onFileDownloaded;
-
-  LessonContentViewer({
-    Key? key,
-    required this.lesson,
-    this.title,
-    this.description,
-    this.onRetry,
-    this.onFileOpened,
-    this.onFileDownloaded,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final fileService = locator<FileService>();
-
-    if (!fileService.hasFile(lesson)) {
-      return Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.info_outline_rounded,
-                size: 48,
-                color: Colors.grey[400],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No Content Available',
-                style: GoogleFonts.figtree(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'This lesson does not have any file content to display.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.figtree(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final fileUrl = fileService.getLessonFileUrl(lesson);
-    final fileType =
-        lesson.fileType ?? fileService.getFileType(lesson.fileName!);
-
-    return FutureBuilder<File?>(
-      future: fileService.getCachedFile(fileUrl),
-      builder: (context, fileSnapshot) {
-        if (fileSnapshot.connectionState == ConnectionState.waiting) {
-          return _buildShimmerLoading();
-        }
-
-        final cachedFile = fileSnapshot.data;
-
-        if (fileSnapshot.hasError || cachedFile == null) {
-          return _buildErrorWidget(
-            onRetry: onRetry ??
-                () {
-                  fileService.handleLessonFileCacheUpdate(lesson);
-                },
-          );
-        }
-
-        fileUrls = fileUrl;
-        return FileViewer(
-          fileUrl: fileUrl,
-          fileType: fileType,
-          title: title ?? lesson.label,
-          description: description ?? lesson.description,
-          lesson: lesson,
-          cachedFile: cachedFile,
-          onFileOpened: onFileOpened,
-          onFileDownloaded: onFileDownloaded,
-          errorWidget: _buildErrorWidget(
-            onRetry: onRetry ??
-                () {
-                  fileService.handleLessonFileCacheUpdate(lesson);
-                },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildShimmerLoading() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Container(
-        height: 300,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorWidget({Function()? onRetry}) {
-    final SnackbarService _snackbarService = locator<SnackbarService>();
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.error_outline_rounded,
-            size: 48,
-            color: Colors.red[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Content Unavailable',
-            style: GoogleFonts.figtree(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'There was a problem loading the lesson content. Please try again later.',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.figtree(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () {
-              if (onRetry != null) {
-                onRetry();
-              } else {
-                final fileService = locator<FileService>();
-                fileService.handleLessonFileCacheUpdate(lesson);
-              }
-
-              _snackbarService.showCustomSnackBar(
-                variant: SnackbarType.info,
-                message: 'Refreshing content...',
-                duration: const Duration(seconds: 2),
-              );
-            },
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              textStyle: GoogleFonts.figtree(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

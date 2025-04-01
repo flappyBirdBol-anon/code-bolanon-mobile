@@ -430,19 +430,20 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
               ),
               SliverPersistentHeader(
                 delegate: _SliverAppBarDelegate(
-                  const TabBar(
-                    splashBorderRadius: BorderRadius.all(
+                  TabBar(
+                    splashBorderRadius: const BorderRadius.all(
                       Radius.circular(10),
                     ),
                     labelColor: Colors.black,
                     unselectedLabelColor: Colors.grey,
                     indicatorColor: AppColors.primary,
                     indicatorWeight: 3,
-                    tabs: [
+                    tabs: const [
                       Tab(text: 'Overview'),
                       Tab(text: 'Lessons'),
                       Tab(text: 'Reviews'),
                     ],
+                    labelStyle: GoogleFonts.figtree(),
                   ),
                 ),
                 pinned: true,
@@ -817,11 +818,12 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.only(
+                        top: 10, bottom: 10, left: 0, right: 0),
                     child: Column(
                       children: [
                         const Icon(Icons.school_outlined,
-                            color: AppColors.primary, size: 28),
+                            color: AppColors.primary, size: 35),
                         const SizedBox(height: 8),
                         Text(
                           '${viewModel.lessons.length}',
@@ -849,11 +851,12 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.only(
+                        top: 10, bottom: 10, left: 0, right: 0),
                     child: Column(
                       children: [
                         Icon(Icons.timer_outlined,
-                            color: Colors.orange[400], size: 28),
+                            color: Colors.orange[400], size: 35),
                         const SizedBox(height: 8),
                         Text(
                           viewModel.totalDuration,

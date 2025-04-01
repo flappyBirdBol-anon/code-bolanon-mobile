@@ -33,6 +33,7 @@ import 'package:code_bolanon/services/selected_stack_service.dart' as _i39;
 import 'package:code_bolanon/services/stripe_service.dart' as _i30;
 import 'package:code_bolanon/services/tech_stack_service.dart' as _i32;
 import 'package:code_bolanon/services/theme_service.dart' as _i15;
+import 'package:code_bolanon/services/transactions_service.dart' as _i41;
 import 'package:code_bolanon/services/user_service.dart' as _i23;
 import 'package:code_bolanon/services/wishlist_service.dart' as _i34;
 import 'package:dio/dio.dart' as _i2;
@@ -3976,11 +3977,11 @@ class MockSelectedStackService extends _i1.Mock
       ) as List<_i40.SelectedStackModel>);
 
   @override
-  bool get hasListeners => (super.noSuchMethod(
-        Invocation.getter(#hasListeners),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
+  int get listenersCount => (super.noSuchMethod(
+        Invocation.getter(#listenersCount),
+        returnValue: 0,
+        returnValueForMissingStub: 0,
+      ) as int);
 
   @override
   _i12.Future<void> fetchSelectedStacks(String? courseId) =>
@@ -4022,7 +4023,17 @@ class MockSelectedStackService extends _i1.Mock
       ) as _i12.Future<bool>);
 
   @override
-  void addListener(_i13.VoidCallback? listener) => super.noSuchMethod(
+  void listenToReactiveValues(List<dynamic>? reactiveValues) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #listenToReactiveValues,
+          [reactiveValues],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void addListener(void Function()? listener) => super.noSuchMethod(
         Invocation.method(
           #addListener,
           [listener],
@@ -4031,19 +4042,10 @@ class MockSelectedStackService extends _i1.Mock
       );
 
   @override
-  void removeListener(_i13.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(void Function()? listener) => super.noSuchMethod(
         Invocation.method(
           #removeListener,
           [listener],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void dispose() => super.noSuchMethod(
-        Invocation.method(
-          #dispose,
-          [],
         ),
         returnValueForMissingStub: null,
       );
@@ -4057,3 +4059,9 @@ class MockSelectedStackService extends _i1.Mock
         returnValueForMissingStub: null,
       );
 }
+
+/// A class which mocks [TransactionsService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockTransactionsService extends _i1.Mock
+    implements _i41.TransactionsService {}

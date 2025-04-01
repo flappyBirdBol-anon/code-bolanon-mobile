@@ -23,6 +23,7 @@ enum DialogType {
   warning,
   metricSelection,
   receipt,
+  fullscreen,
 }
 
 void setupDialogUi() {
