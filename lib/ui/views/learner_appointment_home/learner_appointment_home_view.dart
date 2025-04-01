@@ -297,23 +297,23 @@ class LearnerAppointmentHomeView
                   ),
                 ),
                 // Book Button
-                ElevatedButton(
-                  onPressed: () => viewModel.bookSession(trainer.id!),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                GestureDetector(
+                  onTap: () => viewModel.bookSession(trainer.id!),
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
                     ),
-                  ),
-                  child: Text(
-                    'Book',
-                    style: GoogleFonts.figtree(
-                      fontWeight: FontWeight.w500,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Book',
+                      style: GoogleFonts.figtree(
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

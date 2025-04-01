@@ -36,6 +36,7 @@ import 'package:code_bolanon/ui/views/edit_profile/edit_profile_view.dart';
 import 'package:code_bolanon/ui/views/forgot_password/forgot_password_view.dart';
 import 'package:code_bolanon/ui/views/home/home_view.dart';
 import 'package:code_bolanon/ui/views/learner_appointment_home/learner_appointment_home_view.dart';
+import 'package:code_bolanon/ui/views/learner_book_appointment/learner_book_appointment_view.dart';
 import 'package:code_bolanon/ui/views/learner_courses/learner_courses_view.dart';
 import 'package:code_bolanon/ui/views/learner_home/learner_home_view.dart';
 import 'package:code_bolanon/ui/views/learner_schedule/learner_schedule_view.dart';
@@ -85,6 +86,7 @@ import 'package:stacked_services/stacked_services.dart';
     MaterialRoute(page: LearnerScheduleView),
     MaterialRoute(page: ManageStackView),
     MaterialRoute(page: AppointmentDetailsView),
+    MaterialRoute(page: LearnerBookAppointmentView),
 // @stacked-route
   ],
   dependencies: [

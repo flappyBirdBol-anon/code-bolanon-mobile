@@ -1,13 +1,12 @@
 import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/tech_stack_model.dart';
 import 'package:code_bolanon/models/user_model.dart';
-import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:flutter/material.dart';
 
 class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
-  final _apiService = locator<ApiService>();
   final _appointmentService = locator<AppointmentService>();
 
   List<UserModel> _availableTrainers = [];
@@ -128,7 +127,6 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
   }
 
   Future<void> bookSession(int trainerId) async {
-    // TODO: Implement booking logic
-    debugPrint('Booking session with trainer: $trainerId');
+    navigationService.navigateTo(Routes.learnerBookAppointmentView);
   }
 }

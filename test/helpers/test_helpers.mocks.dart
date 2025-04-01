@@ -3984,14 +3984,17 @@ class MockAppointmentService extends _i1.Mock
       ) as _i13.Future<List<_i9.AppointmentModel>>);
 
   @override
-  _i13.Future<List<int>> getAvailableTrainers() => (super.noSuchMethod(
+  _i13.Future<List<_i26.UserModel>> getAvailableTrainers() =>
+      (super.noSuchMethod(
         Invocation.method(
           #getAvailableTrainers,
           [],
         ),
-        returnValue: _i13.Future<List<int>>.value(<int>[]),
-        returnValueForMissingStub: _i13.Future<List<int>>.value(<int>[]),
-      ) as _i13.Future<List<int>>);
+        returnValue:
+            _i13.Future<List<_i26.UserModel>>.value(<_i26.UserModel>[]),
+        returnValueForMissingStub:
+            _i13.Future<List<_i26.UserModel>>.value(<_i26.UserModel>[]),
+      ) as _i13.Future<List<_i26.UserModel>>);
 }
 
 /// A class which mocks [SelectedStackService].
