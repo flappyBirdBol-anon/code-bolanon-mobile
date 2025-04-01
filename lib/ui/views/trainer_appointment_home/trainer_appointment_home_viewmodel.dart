@@ -154,7 +154,7 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
   }
 
   void navigateToAppointmentDetails(String appointmentId) {
-    //navigationService.navigateTo();
+    navigationService.navigateTo(Routes.appointmentDetailsView);
   }
 
   void navigateToSchedules() {

@@ -1,8 +1,8 @@
 import 'package:code_bolanon/ui/common/app_colors.dart';
-import 'package:code_bolanon/ui/common/widgets/CustomScheduleItem.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_item.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_schedule_item.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -254,8 +254,8 @@ class TrainerAppointmentHomeView
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader("Today's Appointment", viewModel.isLoading,
-              isDark, true, viewModel),
+          _buildSectionHeader(
+              "Today", viewModel.isLoading, isDark, true, viewModel),
           const SizedBox(height: 12),
           viewModel.isLoading && todayAppointments.isEmpty
               ? _buildSkeletonLoaders()
@@ -632,12 +632,9 @@ class TrainerAppointmentHomeView
         endTime: DateFormat('h:mm a').format(endTime),
         isCompleted: appointment.isCompleted,
         isDark: isDark,
-        onTap: () => viewModel.navigateToAppointmentDetails(appointment.id),
+        onViewDetails: () =>
+            viewModel.navigateToAppointmentDetails(appointment.id),
         onReschedule: appointment.isCompleted ? null : () {},
-        onPostpone: appointment.isCompleted
-            ? null
-            : () => _showPostponeConfirmation(
-                context, viewModel, appointment.id, isDark),
       );
     }).toList();
   }
@@ -654,8 +651,8 @@ class TrainerAppointmentHomeView
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('Upcoming Appointments', viewModel.isLoading,
-            isDark, false, viewModel),
+        _buildSectionHeader(
+            'Upcoming', viewModel.isLoading, isDark, false, viewModel),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: viewModel.isLoading && upcomingAppointments.isEmpty
@@ -686,8 +683,8 @@ class TrainerAppointmentHomeView
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('Completed Appointments', viewModel.isLoading,
-            isDark, false, viewModel),
+        _buildSectionHeader(
+            'Completed', viewModel.isLoading, isDark, false, viewModel),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: viewModel.isLoading && viewModel.completedAppointments.isEmpty

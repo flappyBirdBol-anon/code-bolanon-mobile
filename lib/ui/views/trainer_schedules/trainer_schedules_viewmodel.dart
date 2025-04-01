@@ -1,4 +1,5 @@
 import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/services/appointment_service.dart';
@@ -446,7 +447,7 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     }
   }
 
-  void handleAppointmentTap(appointmentId) {
-    print('Appointment tapped: $appointmentId');
+  void navigateToAppointmentDetails(String appointmentId) {
+    navigationService.navigateTo(Routes.appointmentDetailsView);
   }
 }

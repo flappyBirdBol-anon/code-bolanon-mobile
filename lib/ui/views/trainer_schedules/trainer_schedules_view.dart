@@ -1,6 +1,7 @@
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_item.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_schedule_item.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -302,62 +303,15 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
         else
           Column(
             children: viewModel.availableTimeSlots.map((slot) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      offset: const Offset(0, 2),
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppColors.primary.withOpacity(0.2)
-                                  : AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.access_time,
-                              color: isDark ? Colors.white : AppColors.primary,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            '${DateFormat('hh:mm a').format(slot.startAt)} - ${DateFormat('hh:mm a').format(slot.endAt)}',
-                            style: GoogleFonts.figtree(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: isDark ? Colors.white : Colors.grey[800],
-                            ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        onPressed: () => _showTimeSlotOptions(
-                            context, viewModel, slot.id, isDark),
-                        icon: Icon(
-                          Icons.more_vert,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                          size: 20,
-                        ),
-                      ),
-                    ],
-                  ),
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: CustomScheduleItem(
+                  date: DateFormat('MMM d').format(slot.startAt),
+                  startTime: DateFormat('h:mm a').format(slot.startAt),
+                  endTime: DateFormat('h:mm a').format(slot.endAt),
+                  isDark: isDark,
+                  onTap: () => _showAppointmentOptions(
+                      context, viewModel, slot.id.toString(), isDark),
                 ),
               );
             }).toList(),
@@ -411,15 +365,12 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                   date: DateFormat('MMM d').format(appointment.startAt),
                   startTime: DateFormat('hh:mm a').format(appointment.startAt),
                   endTime: DateFormat('hh:mm a').format(appointment.endAt),
-                  onTap: () => viewModel.handleAppointmentTap(appointment.id),
+                  onViewDetails: () => viewModel
+                      .navigateToAppointmentDetails(appointment.id.toString()),
                   onReschedule: isCompleted
                       ? null // Disable reschedule for completed appointments
                       : () => viewModel.showRescheduleFormForAppointment(
                           appointment.id.toString()),
-                  onPostpone: isCompleted
-                      ? null // Disable postpone for completed appointments
-                      : () => _showPostponeConfirmation(context, viewModel,
-                          appointment.id.toString(), isDark),
                   isDark: isDark,
                   isCompleted:
                       isCompleted, // Add this property to CustomAppointmentItem
@@ -858,23 +809,6 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
             ),
             ListTile(
               leading: Icon(
-                Icons.schedule,
-                color: isDark ? Colors.amber[400] : Colors.amber[700],
-              ),
-              title: Text(
-                'Postpone',
-                style: GoogleFonts.figtree(
-                  color: isDark ? Colors.white : Colors.grey[800],
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _showPostponeConfirmation(
-                    context, viewModel, appointmentId, isDark);
-              },
-            ),
-            ListTile(
-              leading: Icon(
                 Icons.delete_outline,
                 color: isDark ? Colors.red[300] : Colors.red[400],
               ),
@@ -962,14 +896,14 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         title: Text(
-          'Cancel Appointment',
+          'Cancel Schedule',
           style: GoogleFonts.figtree(
             color: isDark ? Colors.white : Colors.grey[800],
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
-          'Are you sure you want to cancel this appointment? This action cannot be undone.',
+          'Are you sure you want to delete this schedule? This action cannot be undone.',
           style: GoogleFonts.figtree(
             color: isDark ? Colors.white70 : Colors.grey[700],
           ),
@@ -1056,64 +990,6 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
     if (picked != null) {
       viewModel.selectDateFromCalendar(picked);
     }
-  }
-
-  void _showTimeSlotOptions(
-    BuildContext context,
-    TrainerSchedulesViewModel viewModel,
-    int slotId,
-    bool isDark,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(
-                Icons.edit,
-                color: isDark ? Colors.white70 : Colors.grey[700],
-              ),
-              title: Text(
-                'Edit Time Slot',
-                style: GoogleFonts.figtree(
-                  color: isDark ? Colors.white : Colors.grey[800],
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                viewModel.openEditScheduleForm(slotId);
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.delete_outline,
-                color: isDark ? Colors.red[300] : Colors.red[400],
-              ),
-              title: Text(
-                'Delete Time Slot',
-                style: GoogleFonts.figtree(
-                  color: isDark ? Colors.white : Colors.grey[800],
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _showDeleteConfirmation(context, viewModel, slotId, isDark);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   void _showDeleteConfirmation(

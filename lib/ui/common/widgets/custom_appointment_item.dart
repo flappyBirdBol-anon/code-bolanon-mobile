@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -7,9 +8,8 @@ class CustomAppointmentItem extends StatelessWidget {
   final String startTime;
   final String endTime;
   final bool isCompleted;
-  final VoidCallback onTap;
   final VoidCallback? onReschedule;
-  final VoidCallback? onPostpone;
+  final VoidCallback? onViewDetails;
   final bool isDark;
 
   const CustomAppointmentItem({
@@ -19,9 +19,8 @@ class CustomAppointmentItem extends StatelessWidget {
     required this.startTime,
     required this.endTime,
     this.isCompleted = false,
-    required this.onTap,
     this.onReschedule,
-    this.onPostpone,
+    this.onViewDetails,
     required this.isDark,
   });
 
@@ -119,18 +118,21 @@ class CustomAppointmentItem extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: isDark ? Colors.white : Colors.blue[700],
-                    size: 16,
+                if (isCompleted)
+                  IconButton(
+                    icon: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: isDark ? Colors.white : Colors.blue[700],
+                      size: 16,
+                    ),
+                    onPressed: onViewDetails,
                   ),
-                  onPressed: onTap,
-                ),
               ],
             ),
           ),
-          if (!isCompleted && onReschedule != null && onPostpone != null) ...[
+          if (!isCompleted &&
+              onReschedule != null &&
+              onViewDetails != null) ...[
             Divider(
               height: 1,
               thickness: 1,
@@ -183,7 +185,7 @@ class CustomAppointmentItem extends StatelessWidget {
                 ),
                 Expanded(
                   child: InkWell(
-                    onTap: onPostpone,
+                    onTap: onViewDetails,
                     borderRadius: const BorderRadius.only(
                       bottomRight: Radius.circular(16),
                     ),
@@ -193,17 +195,19 @@ class CustomAppointmentItem extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.schedule,
+                            Icons.remove_red_eye_outlined,
                             size: 16,
-                            color: isDark ? Colors.red[400] : Colors.red[700],
+                            color:
+                                isDark ? Colors.grey[400] : AppColors.primary,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Postpone',
+                            'View',
                             style: GoogleFonts.figtree(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: isDark ? Colors.red[400] : Colors.red[700],
+                              color:
+                                  isDark ? Colors.grey[400] : AppColors.primary,
                             ),
                           ),
                         ],
