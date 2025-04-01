@@ -61,23 +61,24 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
 
     try {
       // Get available trainer IDs from AppointmentService
-      final availableTrainerIds =
+      final availableTrainers =
           await _appointmentService.getAvailableTrainers();
 
-      // Fetch full trainer details for these IDs
-      final response = await _apiService.get('/trainers');
-      final allTrainers = (response.data as List)
-          .map((item) => UserModel.fromJson(item))
-          .where((trainer) => availableTrainerIds.contains(trainer.id))
-          .toList();
-
       if (_selectedTechStacks.isEmpty) {
-        _availableTrainers = allTrainers;
+        _availableTrainers = availableTrainers;
       } else {
-        _availableTrainers = allTrainers.where((trainer) {
-          final trainerTechStacks = trainer.specialization?.split(',') ?? [];
-          return _selectedTechStacks.any((selected) => trainerTechStacks.any(
-              (stack) => stack.trim().toLowerCase() == selected.toLowerCase()));
+        _availableTrainers = availableTrainers.where((trainer) {
+          // Extract tech stack tags from each trainer
+          final techStackTags = trainer.stacks
+                  ?.map((selectedStack) =>
+                      selectedStack.stack?.tags.toLowerCase() ?? "")
+                  .where((tag) => tag.isNotEmpty)
+                  .toList() ??
+              [];
+
+          // Check if any selected tech stack matches any trainer tech stack
+          return _selectedTechStacks.any(
+              (selected) => techStackTags.contains(selected.toLowerCase()));
         }).toList();
       }
     } catch (e) {

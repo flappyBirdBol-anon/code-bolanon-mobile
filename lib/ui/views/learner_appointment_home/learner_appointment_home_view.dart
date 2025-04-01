@@ -163,8 +163,11 @@ class LearnerAppointmentHomeView
 
   Widget _buildTrainerCard(UserModel trainer, bool isDark,
       LearnerAppointmentHomeViewModel viewModel) {
-    // TODO: Get actual tech stacks and ratings from the API
-    final techStacks = ['Flutter', 'React Native', 'iOS', 'Android'];
+    final techStacks = trainer.stacks
+            ?.map((selectedStack) => selectedStack.stack?.tags ?? "")
+            .where((tag) => tag.isNotEmpty)
+            .toList() ??
+        [];
     const rating = 4.8;
     const reviewCount = 24;
 
