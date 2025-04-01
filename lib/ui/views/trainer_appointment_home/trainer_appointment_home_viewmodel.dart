@@ -35,6 +35,9 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
   List<Appointment> _completedAppointments = [];
   List<Appointment> get completedAppointments => _completedAppointments;
 
+  List<Appointment> _availableSchedules = [];
+  List<Appointment> get availableSchedules => _availableSchedules;
+
   // Called when view is initialized
   void initialize() {
     fetchAppointments();
@@ -101,6 +104,7 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
 
       _upcomingAppointments = [];
       _completedAppointments = [];
+      _availableSchedules = [];
 
       final now = DateTime.now();
       for (var appointment in fetchedAppointments) {
@@ -119,6 +123,13 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
             startAt: appointment.startAt.toString(),
             endAt: appointment.endAt.toString(),
           ));
+        } else if (appointment.status.toLowerCase() == 'available') {
+          _availableSchedules.add(Appointment(
+            id: appointment.id.toString(),
+            learnerName: appointment.learnerName ?? '',
+            startAt: appointment.startAt.toString(),
+            endAt: appointment.endAt.toString(),
+          ));
         }
       }
 
@@ -131,6 +142,7 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
       );
       _upcomingAppointments = [];
       _completedAppointments = [];
+      _availableSchedules = [];
     } finally {
       setIsLoading(false);
     }
