@@ -11,10 +11,10 @@ import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/payment_service.dart';
 import 'package:code_bolanon/services/registration_service.dart';
 import 'package:code_bolanon/services/selected_stack_service.dart';
-import 'package:code_bolanon/services/selected_stack_service.dart';
 import 'package:code_bolanon/services/stripe_service.dart';
 import 'package:code_bolanon/services/tech_stack_service.dart';
 import 'package:code_bolanon/services/theme_service.dart';
+import 'package:code_bolanon/services/transactions_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/services/wishlist_service.dart';
 import 'package:mockito/annotations.dart';
@@ -216,13 +216,6 @@ MockTechStackService getAndRegisterTechStackService() {
 
 MockTechStackService getAndRegisterAppointmentService() {
   _removeRegistrationIfExists<AppointmentService>();
-  final service = MockTechStackService();
-  locator.registerSingleton<TechStackService>(service);
-  return service;
-}
-
-MockTechStackService getAndRegisterSelectedStackService() {
-  _removeRegistrationIfExists<SelectedStackService>();
   final service = MockTechStackService();
   locator.registerSingleton<TechStackService>(service);
   return service;
