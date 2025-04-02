@@ -49,6 +49,10 @@ class MenuViewModel extends AppBaseViewModel {
     await navigationService.navigateToTrainerAnalyticsView();
   }
 
+  Future<void> navigateToSettings() async {
+    await navigationService.navigateToSettingsView();
+  }
+
   Future<void> logout() async {
     if (isBusy) return;
 

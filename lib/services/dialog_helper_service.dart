@@ -14,7 +14,7 @@ class DialogHelperService {
     bool barrierDismissible = true,
   }) {
     return _dialogService.showCustomDialog(
-      variant: DialogType.fullscreen,
+      // variant: DialogType.fullscreen,
       barrierDismissible: barrierDismissible,
       data: {
         'child': child,

@@ -28,6 +28,7 @@ import 'package:code_bolanon/ui/views/main_body/main_body_view.dart';
 import 'package:code_bolanon/ui/views/menu/menu_view.dart';
 import 'package:code_bolanon/ui/views/onboarding/onboarding_view.dart';
 import 'package:code_bolanon/ui/views/profile/profile_view.dart';
+import 'package:code_bolanon/ui/views/settings/settings_view.dart';
 import 'package:code_bolanon/ui/views/trainer_courses/trainer_courses_view.dart';
 import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -84,6 +85,7 @@ import 'package:code_bolanon/services/dialog_helper_service.dart';
     MaterialRoute(page: LearnerAppointmentHomeView),
     MaterialRoute(page: LearnerScheduleView),
     MaterialRoute(page: ManageStackView),
+    MaterialRoute(page: SettingsView),
 // @stacked-route
   ],
   dependencies: [

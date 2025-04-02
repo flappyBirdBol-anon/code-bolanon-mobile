@@ -189,8 +189,8 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   }
 
   void openSettings() {
-    debugPrint('Opening settings');
-    // Navigate to reviews screen
+    // debugPrint('Opening settings');
+    _navigationService.navigateTo(Routes.settingsView);
   }
 
   void openAnalytics() {

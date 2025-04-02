@@ -177,7 +177,7 @@ class MenuView extends StackedView<MenuViewModel> {
                     iconColor: const Color(0xFF14B8A6),
                     title: 'Settings',
                     isDark: isDark,
-                    onTap: () {},
+                    onTap: () => viewModel.navigateToSettings(),
                   ),
                   _buildDivider(isDark),
                   _buildSettingsTile(
