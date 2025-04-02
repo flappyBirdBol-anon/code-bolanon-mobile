@@ -163,8 +163,11 @@ class LearnerAppointmentHomeView
 
   Widget _buildTrainerCard(UserModel trainer, bool isDark,
       LearnerAppointmentHomeViewModel viewModel) {
-    // TODO: Get actual tech stacks and ratings from the API
-    final techStacks = ['Flutter', 'React Native', 'iOS', 'Android'];
+    final techStacks = trainer.stacks
+            ?.map((selectedStack) => selectedStack.stack?.tags ?? "")
+            .where((tag) => tag.isNotEmpty)
+            .toList() ??
+        [];
     const rating = 4.8;
     const reviewCount = 24;
 
@@ -294,23 +297,23 @@ class LearnerAppointmentHomeView
                   ),
                 ),
                 // Book Button
-                ElevatedButton(
-                  onPressed: () => viewModel.bookSession(trainer.id!),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                GestureDetector(
+                  onTap: () => viewModel.bookSession(trainer.id!),
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
                     ),
-                  ),
-                  child: Text(
-                    'Book',
-                    style: GoogleFonts.figtree(
-                      fontWeight: FontWeight.w500,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Book',
+                      style: GoogleFonts.figtree(
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

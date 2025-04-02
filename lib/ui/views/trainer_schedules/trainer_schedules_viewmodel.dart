@@ -1,4 +1,5 @@
 import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/services/appointment_service.dart';
@@ -263,17 +264,17 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
       setIsLoading(true);
 
       final updatedAppointment = AppointmentModel(
-        id: appointmentToUpdate.id,
-        startAt: DateTime(_selectedDate.year, _selectedDate.month,
-            _selectedDate.day, _startTime.hour, _startTime.minute),
-        endAt: DateTime(_selectedDate.year, _selectedDate.month,
-            _selectedDate.day, _endTime.hour, _endTime.minute),
-        price: _price,
-        contextDetails: appointmentToUpdate.contextDetails,
-        status: appointmentToUpdate.status,
-        trainerId: appointmentToUpdate.trainerId,
-        gmeetLink: appointmentToUpdate.gmeetLink,
-      );
+          id: appointmentToUpdate.id,
+          startAt: DateTime(_selectedDate.year, _selectedDate.month,
+              _selectedDate.day, _startTime.hour, _startTime.minute),
+          endAt: DateTime(_selectedDate.year, _selectedDate.month,
+              _selectedDate.day, _endTime.hour, _endTime.minute),
+          price: _price,
+          contextDetails: appointmentToUpdate.contextDetails,
+          status: appointmentToUpdate.status,
+          trainerId: appointmentToUpdate.trainerId,
+          gmeetLink: appointmentToUpdate.gmeetLink,
+          trainer: appointmentToUpdate.trainer);
 
       final result = await _appointmentService.updateSchedule(
           appointmentToUpdate.id.toString(), updatedAppointment);
@@ -446,7 +447,7 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     }
   }
 
-  void handleAppointmentTap(appointmentId) {
-    print('Appointment tapped: $appointmentId');
+  void navigateToAppointmentDetails(String appointmentId) {
+    navigationService.navigateTo(Routes.appointmentDetailsView);
   }
 }

@@ -52,15 +52,36 @@ class SelectedStackModel {
   });
 
   factory SelectedStackModel.fromJson(Map<String, dynamic> json) {
-    return SelectedStackModel(
-      id: json['id'] ?? 0,
-      stackId: json['stack_id'] ?? 0,
-      userId: json['user_id'],
-      courseId: json['course_id'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
-      stack: json['stack'] != null ? StackInfo.fromJson(json['stack']) : null,
-    );
+    // If JSON has the structure from your example (with direct 'tags' property)
+    if (json.containsKey('tags')) {
+      return SelectedStackModel(
+        id: json['id'] ?? 0,
+        stackId:
+            json['id'] ?? 0, // Use the same id if stack_id is not available
+        userId: json['pivot']?['user_id'],
+        createdAt: json['created_at'],
+        updatedAt: json['updated_at'],
+        // Create a StackInfo from the current object
+        stack: StackInfo(
+          id: json['id'] ?? 0,
+          tags: json['tags'] ?? '',
+          createdAt: json['created_at'],
+          updatedAt: json['updated_at'],
+        ),
+      );
+    }
+    // Use the original implementation for the expected format
+    else {
+      return SelectedStackModel(
+        id: json['id'] ?? 0,
+        stackId: json['stack_id'] ?? 0,
+        userId: json['user_id'],
+        courseId: json['course_id'],
+        createdAt: json['created_at'],
+        updatedAt: json['updated_at'],
+        stack: json['stack'] != null ? StackInfo.fromJson(json['stack']) : null,
+      );
+    }
   }
 
   Map<String, dynamic> toJson() {

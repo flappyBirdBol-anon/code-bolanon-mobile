@@ -1,5 +1,6 @@
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
+import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:intl/intl.dart';
 
@@ -104,16 +105,38 @@ class AppointmentService {
     }
   }
 
-  Future<List<int>> getAvailableTrainers() async {
+  Future<List<UserModel>> getAvailableTrainers() async {
     try {
+      print('Fetching appointments...');
       final appointments = await fetchAllAppointments();
+      print('Fetched ${appointments.length} appointments');
 
-      return appointments
+      // Filter for available appointments
+      final availableAppointments = appointments
           .where((appointment) => appointment.status == 'available')
-          .map((appointment) => appointment.trainerId)
-          .toSet()
           .toList();
+      print('Found ${availableAppointments.length} available appointments');
+
+      // Create a set to track unique trainers (by ID)
+      final uniqueTrainerIds = <int>{};
+      final availableTrainers = <UserModel>[];
+
+      // Extract unique trainer info
+      for (var appointment in availableAppointments) {
+        // Skip if trainer data is missing
+        if (appointment.trainer == null) continue;
+
+        // Only add if we haven't seen this trainer ID before
+        if (!uniqueTrainerIds.contains(appointment.trainerId)) {
+          uniqueTrainerIds.add(appointment.trainerId);
+          availableTrainers.add(appointment.trainer!);
+        }
+      }
+
+      print('Found ${availableTrainers.length} unique available trainers');
+      return availableTrainers;
     } catch (e) {
+      print('Error in getAvailableTrainers: $e');
       throw Exception('Failed to determine available trainers: $e');
     }
   }
