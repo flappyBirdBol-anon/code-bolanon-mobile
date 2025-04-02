@@ -2,6 +2,7 @@ import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_item.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_list.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_schedule_item.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -67,7 +68,7 @@ class TrainerAppointmentHomeView
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Welcome to Your Schedule',
+                              'Welcome to Your Appointments',
                               style: GoogleFonts.figtree(
                                 fontSize:
                                     MediaQuery.of(context).size.width < 600
@@ -79,7 +80,7 @@ class TrainerAppointmentHomeView
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Manage your appointments and sessions',
+                              'Overview of your appointments and sessions',
                               style: GoogleFonts.figtree(
                                 fontSize:
                                     MediaQuery.of(context).size.width < 600
@@ -93,7 +94,8 @@ class TrainerAppointmentHomeView
                       ),
                       GestureDetector(
                         onTap: () {
-                          viewModel.navigateToSchedules();
+                          viewModel
+                              .navigateToSchedules(); // Ensure this method does not require arguments
                         },
                         child: Container(
                           padding: const EdgeInsets.all(12.0),
@@ -162,6 +164,11 @@ class TrainerAppointmentHomeView
                 ),
 
                 const SizedBox(height: 15),
+                _buildAvailableSchedules(context, viewModel, isDark),
+                const SizedBox(height: 15),
+                _buildSectionHeader('Appointments', viewModel.isLoading, isDark,
+                    false, viewModel),
+                const SizedBox(height: 15),
 
                 // Filter Chips Section
                 Padding(
@@ -210,10 +217,7 @@ class TrainerAppointmentHomeView
                   const SizedBox(height: 15),
                   _buildUpcomingSection(viewModel, isDark, context),
                   const SizedBox(height: 20),
-                  _buildCompletedSection(viewModel, isDark),
-                ] else if (viewModel.currentFilter ==
-                    AppointmentFilter.today) ...[
-                  _buildTodayScheduleSection(context, viewModel, isDark),
+                  _buildCompletedSection(viewModel, isDark, context),
                 ] else ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -234,110 +238,7 @@ class TrainerAppointmentHomeView
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildStatsSection(
-    BuildContext context,
-    TrainerAppointmentHomeViewModel viewModel,
-    bool isDark,
-  ) {
-    return Container(
-      height: 120,
-      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-      child: Row(
-        children: [
-          // Today's Lessons Card
-          Expanded(
-            child: _buildStatCard(
-              title: "Today",
-              value: viewModel.getTodayAppointmentsCount().toString(),
-              icon: Icons.calendar_today_rounded,
-              color: const Color(0xFF4C3575),
-              isDark: isDark,
-            ),
-          ),
-          const SizedBox(width: 12),
-          // This Week's Lessons Card
-          Expanded(
-            child: _buildStatCard(
-              title: "This Week",
-              value: viewModel.getThisWeekAppointmentsCount().toString(),
-              icon: Icons.date_range_rounded,
-              color: const Color(0xFF22C55E),
-              isDark: isDark,
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Total Completed Card
-          Expanded(
-            child: _buildStatCard(
-              title: "Completed",
-              value: viewModel.completedAppointments.length.toString(),
-              icon: Icons.check_circle_outline_rounded,
-              color: const Color(0xFF3B82F6),
-              isDark: isDark,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-    required bool isDark,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            offset: const Offset(0, 3),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: color,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: GoogleFonts.figtree(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF2D3142),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: GoogleFonts.figtree(
-              fontSize: 12,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
+      floatingActionButton: _buildAnimatedFAB(context, viewModel),
     );
   }
 
@@ -353,274 +254,27 @@ class TrainerAppointmentHomeView
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Today's Schedule",
-                style: GoogleFonts.figtree(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : const Color(0xFF2D3142),
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.primary.withOpacity(0.2)
-                      : AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  DateFormat('EEE, MMM d').format(DateTime.now()),
-                  style: GoogleFonts.figtree(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white70 : AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          _buildSectionHeader(
+              "Today", viewModel.isLoading, isDark, true, viewModel),
           const SizedBox(height: 12),
-          todayAppointments.isEmpty
-              ? Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        offset: const Offset(0, 3),
-                        blurRadius: 10,
+          viewModel.isLoading && todayAppointments.isEmpty
+              ? _buildSkeletonLoaders()
+              : todayAppointments.isEmpty
+                  ? Center(
+                      child: _buildEmptyState(
+                      'No appointments today',
+                      'Enjoy your day!',
+                      Icons.event_busy_outlined,
+                      isDark,
+                    ))
+                  : Column(
+                      children: _buildFilteredAppointmentsList(
+                        todayAppointments,
+                        viewModel,
+                        isDark,
+                        context,
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.event_busy_outlined,
-                          size: 24,
-                          color: Colors.orange[600],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "No sessions scheduled for today",
-                              style: GoogleFonts.figtree(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white : Colors.grey[800],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "Enjoy your free time!",
-                              style: GoogleFonts.figtree(
-                                fontSize: 13,
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : Column(
-                  children: todayAppointments.map((appointment) {
-                    final startTime = DateTime.parse(appointment.startAt);
-                    final endTime = DateTime.parse(appointment.endAt);
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: appointment.isCompleted
-                              ? [
-                                  const Color(0xFF059669).withOpacity(0.9),
-                                  const Color(0xFF10B981).withOpacity(0.8),
-                                ]
-                              : [
-                                  AppColors.primary.withOpacity(0.9),
-                                  AppColors.primary.withOpacity(0.8),
-                                ],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: appointment.isCompleted
-                                ? const Color(0xFF059669).withOpacity(0.2)
-                                : AppColors.primary.withOpacity(0.2),
-                            offset: const Offset(0, 4),
-                            blurRadius: 12,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.video_camera_front_outlined,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      appointment.learnerName,
-                                      style: GoogleFonts.figtree(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      "${DateFormat('h:mm a').format(startTime)} - ${DateFormat('h:mm a').format(endTime)}",
-                                      style: GoogleFonts.figtree(
-                                        color: Colors.white.withOpacity(0.9),
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              appointment.isCompleted
-                                  ? Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 5),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            Icons.check_circle,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            "Completed",
-                                            style: GoogleFonts.figtree(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  : Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 5),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            Icons.schedule,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            _getTimeStatus(startTime),
-                                            style: GoogleFonts.figtree(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                            ],
-                          ),
-                          if (!appointment.isCompleted) ...[
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                OutlinedButton.icon(
-                                  onPressed: () {
-                                    // Reschedule functionality
-                                  },
-                                  icon: const Icon(
-                                    Icons.event_repeat,
-                                    size: 18,
-                                    color: Colors.white,
-                                  ),
-                                  label: const Text('Reschedule'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    side: BorderSide(
-                                        color: Colors.white.withOpacity(0.5)),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 8),
-                                  ),
-                                ),
-                                ElevatedButton.icon(
-                                  onPressed: () =>
-                                      viewModel.navigateToAppointmentDetails(
-                                          appointment.id),
-                                  icon: const Icon(
-                                    Icons.video_call_outlined,
-                                    size: 18,
-                                  ),
-                                  label: const Text('Start Session'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: AppColors.primary,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 8),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
+                    ),
         ],
       ),
     );
@@ -642,6 +296,7 @@ class TrainerAppointmentHomeView
   }
 
   Widget _buildSectionHeader(String title, bool isLoading, bool isDark,
+      bool isToday, TrainerAppointmentHomeViewModel viewModel,
       {Widget? trailing}) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -669,64 +324,53 @@ class TrainerAppointmentHomeView
                       ),
                     )
                   : const SizedBox()),
+          if (isToday)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.primary.withOpacity(0.2)
+                    : AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                DateFormat('EEE, MMM d').format(DateTime.now()),
+                style: GoogleFonts.figtree(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white70 : AppColors.primary,
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  List<Widget> _buildUpcomingAppointmentsList(
+  List<Widget> _buildAvailableScheduleList(
     List<Appointment> appointments,
     TrainerAppointmentHomeViewModel viewModel,
     bool isDark,
     BuildContext context,
   ) {
+    appointments.sort((a, b) =>
+        DateTime.parse(a.startAt).compareTo(DateTime.parse(b.startAt)));
     return appointments
+        .take(3)
         .map((appointment) {
-          if (viewModel.isAppointmentToday(appointment)) {
-            return const SizedBox.shrink();
-          }
-
           final startTime = DateTime.parse(appointment.startAt);
           final endTime = DateTime.parse(appointment.endAt);
 
-          return CustomAppointmentItem(
-            learnerName: appointment.learnerName,
+          return CustomScheduleItem(
             date: DateFormat('MMM d').format(startTime),
             startTime: DateFormat('h:mm a').format(startTime),
             endTime: DateFormat('h:mm a').format(endTime),
-            isCompleted: false,
             isDark: isDark,
             onTap: () => viewModel.navigateToAppointmentDetails(appointment.id),
-            onReschedule: () {}, // Add reschedule functionality
-            onPostpone: () => _showPostponeConfirmation(
-                context, viewModel, appointment.id, isDark),
           );
         })
         .where((widget) => widget is! SizedBox)
         .toList();
-  }
-
-  List<Widget> _buildCompletedAppointmentsList(
-    List<Appointment> appointments,
-    TrainerAppointmentHomeViewModel viewModel,
-    bool isDark,
-  ) {
-    return appointments.map((appointment) {
-      final startTime = DateTime.parse(appointment.startAt);
-      final endTime = DateTime.parse(appointment.endAt);
-
-      return CustomAppointmentItem(
-        learnerName: appointment.learnerName,
-        date: DateFormat('MMM d').format(startTime),
-        startTime: DateFormat('h:mm a').format(startTime),
-        endTime: DateFormat('h:mm a').format(endTime),
-        isCompleted: true,
-        isDark: isDark,
-        onTap: () => viewModel.navigateToAppointmentDetails(appointment.id),
-        onReschedule: () {}, // Not used for completed appointments
-        onPostpone: () {}, // Not used for completed appointments
-      );
-    }).toList();
   }
 
   Widget _buildEmptyState(
@@ -988,12 +632,9 @@ class TrainerAppointmentHomeView
         endTime: DateFormat('h:mm a').format(endTime),
         isCompleted: appointment.isCompleted,
         isDark: isDark,
-        onTap: () => viewModel.navigateToAppointmentDetails(appointment.id),
+        onViewDetails: () =>
+            viewModel.navigateToAppointmentDetails(appointment.id),
         onReschedule: appointment.isCompleted ? null : () {},
-        onPostpone: appointment.isCompleted
-            ? null
-            : () => _showPostponeConfirmation(
-                context, viewModel, appointment.id, isDark),
       );
     }).toList();
   }
@@ -1011,10 +652,7 @@ class TrainerAppointmentHomeView
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
-          'Upcoming Appointments',
-          viewModel.isLoading,
-          isDark,
-        ),
+            'Upcoming', viewModel.isLoading, isDark, false, viewModel),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: viewModel.isLoading && upcomingAppointments.isEmpty
@@ -1028,7 +666,7 @@ class TrainerAppointmentHomeView
                       isDark,
                     ))
                   : Column(
-                      children: _buildUpcomingAppointmentsList(
+                      children: _buildFilteredAppointmentsList(
                         upcomingAppointments,
                         viewModel,
                         isDark,
@@ -1040,18 +678,13 @@ class TrainerAppointmentHomeView
     );
   }
 
-  Widget _buildCompletedSection(
-    TrainerAppointmentHomeViewModel viewModel,
-    bool isDark,
-  ) {
+  Widget _buildCompletedSection(TrainerAppointmentHomeViewModel viewModel,
+      bool isDark, BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
-          'Completed Appointments',
-          viewModel.isLoading,
-          isDark,
-        ),
+            'Completed', viewModel.isLoading, isDark, false, viewModel),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: viewModel.isLoading && viewModel.completedAppointments.isEmpty
@@ -1065,14 +698,119 @@ class TrainerAppointmentHomeView
                       isDark,
                     ))
                   : Column(
-                      children: _buildCompletedAppointmentsList(
-                        viewModel.completedAppointments,
-                        viewModel,
-                        isDark,
-                      ),
+                      children: _buildFilteredAppointmentsList(
+                          viewModel.completedAppointments,
+                          viewModel,
+                          isDark,
+                          context),
                     ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAvailableSchedules(
+    BuildContext context,
+    TrainerAppointmentHomeViewModel viewModel,
+    bool isDark,
+  ) {
+    final availableSchedules = viewModel.availableSchedules.toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Available Schedules', viewModel.isLoading, isDark,
+            false, viewModel),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: viewModel.isLoading && availableSchedules.isEmpty
+              ? _buildSkeletonLoaders()
+              : availableSchedules.isEmpty
+                  ? Center(
+                      child: _buildEmptyState(
+                      'No available schedules',
+                      'Please create available schedules',
+                      Icons.event_note_outlined,
+                      isDark,
+                    ))
+                  : Column(children: [
+                      Column(
+                        children: _buildAvailableScheduleList(
+                          availableSchedules,
+                          viewModel,
+                          isDark,
+                          context,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      GestureDetector(
+                        onTap: viewModel.navigateToSchedules,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                offset: const Offset(0, 2),
+                                blurRadius: 3,
+                              ),
+                            ],
+                          ),
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(8.0),
+                          child: Center(
+                            child: Text(
+                              'View more',
+                              style: TextStyle(
+                                color:
+                                    isDark ? Colors.white : AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ]),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAnimatedFAB(
+      BuildContext context, TrainerAppointmentHomeViewModel viewModel) {
+    return Hero(
+      tag: 'fab_appoinmtments',
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withAlpha((0.4 * 255).toInt()),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+              spreadRadius: 0,
+            ),
+          ],
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primary, AppColors.secondary],
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => viewModel.navigateToSchedules(),
+            borderRadius: BorderRadius.circular(16),
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Icon(Icons.calendar_today_rounded,
+                  color: Colors.white, size: 28),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

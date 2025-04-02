@@ -10,9 +10,11 @@ import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/payment_service.dart';
 import 'package:code_bolanon/services/registration_service.dart';
+import 'package:code_bolanon/services/selected_stack_service.dart';
 import 'package:code_bolanon/services/stripe_service.dart';
 import 'package:code_bolanon/services/tech_stack_service.dart';
 import 'package:code_bolanon/services/theme_service.dart';
+import 'package:code_bolanon/services/transactions_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/services/wishlist_service.dart';
 import 'package:mockito/annotations.dart';
@@ -20,7 +22,6 @@ import 'package:mockito/mockito.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 import 'test_helpers.mocks.dart';
-import 'package:code_bolanon/services/selected_stack_service.dart';
 // @stacked-import
 
 @GenerateMocks(
@@ -47,6 +48,8 @@ import 'package:code_bolanon/services/selected_stack_service.dart';
     MockSpec<RegistrationService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<AppointmentService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<SelectedStackService>(onMissingStub: OnMissingStub.returnDefault),
+
+    MockSpec<TransactionsService>(onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
   ],
 )
@@ -68,6 +71,8 @@ void registerServices() {
   getAndRegisterTechStackService();
   getAndRegisterAppointmentService();
   getAndRegisterSelectedStackService();
+
+  getAndRegisterTransactionsService();
 // @stacked-mock-register
 }
 
@@ -210,9 +215,23 @@ MockTechStackService getAndRegisterTechStackService() {
 }
 
 MockTechStackService getAndRegisterAppointmentService() {
-  _removeRegistrationIfExists<TechStackService>();
+  _removeRegistrationIfExists<AppointmentService>();
   final service = MockTechStackService();
   locator.registerSingleton<TechStackService>(service);
+  return service;
+}
+
+MockSelectedStackService getAndRegisterSelectedStackService() {
+  _removeRegistrationIfExists<SelectedStackService>();
+  final service = MockSelectedStackService();
+  locator.registerSingleton<SelectedStackService>(service);
+  return service;
+}
+
+MockTransactionsService getAndRegisterTransactionsService() {
+  _removeRegistrationIfExists<TransactionsService>();
+  final service = MockTransactionsService();
+  locator.registerSingleton<TransactionsService>(service);
   return service;
 }
 

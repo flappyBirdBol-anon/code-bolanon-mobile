@@ -21,7 +21,11 @@ class ProfileView extends StackedView<ProfileViewModel> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : AppColors.background,
-      appBar: const CustomAppBar(title: 'Profile'),
+      appBar: const CustomAppBar(
+        title: 'Profile',
+        showSearchButton: false,
+        showNotificationButton: false,
+      ),
       body: RefreshIndicator(
         color: theme.primaryColor,
         onRefresh: () async => viewModel.initialised,
@@ -156,7 +160,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                     Expanded(
                       child: _buildQuickAction(
                         icon: Icons.lock_outline,
-                        label: 'Change Password',
+                        label: 'Edit Password',
                         onTap: () =>
                             viewModel.navigateToChangePassword(context),
                         color: const Color(

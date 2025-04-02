@@ -23,7 +23,7 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
         title: 'My Courses',
-        showSearchButton: true,
+        showSearchButton: false,
         showNotificationButton: false,
         actions: [
           IconButton(

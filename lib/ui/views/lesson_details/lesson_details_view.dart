@@ -42,6 +42,8 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
           // Disable SafeArea padding in fullscreen for true edge-to-edge
           top: !viewModel.isFullScreen,
           bottom: !viewModel.isFullScreen,
+          left: !viewModel.isFullScreen,
+          right: !viewModel.isFullScreen,
           child: viewModel.isBusy // Check overall ViewModel busy state first
               ? _buildLoadingState("Initializing Lesson...")
               : !viewModel.hasValidLesson
@@ -199,7 +201,43 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
         if (!viewModel.isFullScreen && viewModel.lesson.description.isNotEmpty)
           _buildDescription(viewModel),
 
-        // --- Content Area (Expands to fill remaining space) ---
+        if (viewModel.isFullScreen)
+          SizedBox(
+            height: viewModel.isFullScreen
+                ? MediaQuery.of(context).size.height // Fullscreen height
+                : null, // Auto height in normal mode
+            width: viewModel.isFullScreen
+                ? MediaQuery.of(context).size.width // Fullscreen width
+                : null, // Auto width in normal mode
+            child: Expanded(
+              child: Container(
+                // Add margin and rounded corners only when NOT in fullscreen
+                margin: viewModel.isFullScreen
+                    ? EdgeInsets.zero
+                    : const EdgeInsets.fromLTRB(
+                        16, 0, 16, 16), // Margin only bottom/sides
+                decoration: viewModel.isFullScreen
+                    ? const BoxDecoration(
+                        color: Colors.black) // Base for fullscreen
+                    : BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                // Clip content within rounded corners when not fullscreen
+                clipBehavior:
+                    viewModel.isFullScreen ? Clip.none : Clip.antiAlias,
+                child: _buildFileContentArea(context, viewModel),
+              ),
+            ),
+          ),
+
         Expanded(
           child: Container(
             // Add margin and rounded corners only when NOT in fullscreen
@@ -323,11 +361,11 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
         return Column(
           children: [
             Expanded(child: contentWidget), // Content takes available space
-            Padding(
-              padding:
-                  const EdgeInsets.only(bottom: 16.0, left: 16.0, right: 16.0),
-              child: _buildDownloadButton(viewModel),
-            ),
+            // Padding(
+            //   padding:
+            //       const EdgeInsets.only(bottom: 16.0, left: 16.0, right: 16.0),
+            //   child: _buildDownloadButton(viewModel),
+            // ),
           ],
         );
       }
@@ -552,7 +590,7 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
     return Container(
       color: viewModel.isFullScreen ? Colors.grey[900] : Colors.white,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: viewModel.isFullScreen ? const EdgeInsets.all(16.0) : null,
         child: SelectableText(
           textContent,
           style: GoogleFonts.robotoMono(
@@ -834,15 +872,15 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: double.infinity,
-              height: 200.0, // Adjust height as needed
-              color: Colors.white,
+              width: 400.0, // Adjust width as needed
+              height: 400.0, // Adjust height as needed
+              color: AppColors.primary,
               margin: const EdgeInsets.all(16),
             ),
             verticalSpaceMedium,
             Text(
               message,
-              style: GoogleFonts.figtree(fontSize: 16, color: Colors.grey[600]),
+              style: GoogleFonts.figtree(fontSize: 16, color: Colors.black),
               textAlign: TextAlign.center,
             ),
           ],
@@ -1002,7 +1040,11 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
                 valueColor: AlwaysStoppedAnimation<Color>(
                     isOverlay ? AppColors.primary : Colors.white)),
           )
-        : Icon(Icons.download_rounded, size: isOverlay ? 24 : 20);
+        : Icon(
+            Icons.download_rounded,
+            size: isOverlay ? 24 : 20,
+            color: Colors.white,
+          );
 
     if (isOverlay) {
       // Overlay button is just an icon

@@ -21,14 +21,10 @@ class LearnerWishlistsView extends StackedView<LearnerWishlistsViewModel> {
   ) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(
+      appBar: const CustomAppBar(
         title: 'My Wishlist',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: viewModel.refreshCourses,
-          ),
-        ],
+        showNotificationButton: false,
+        showSearchButton: false,
       ),
       body: viewModel.isBusy
           ? const Center(child: CircularProgressIndicator())

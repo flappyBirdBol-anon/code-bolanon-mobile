@@ -364,27 +364,27 @@ class CoursesListItem extends StatelessWidget {
         onTap: onEditTap,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.edit_outlined,
-                size: 16,
+              Icon(
+                Icons.edit_document,
+                size: 25,
                 color: AppColors.primary,
               ),
-              const SizedBox(width: 4),
-              Text(
-                'Edit',
-                style: GoogleFonts.figtree(
-                  color: AppColors.primary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              // SizedBox(width: 4),
+              // Text(
+              //   'Edit',
+              //   style: GoogleFonts.figtree(
+              //     color: Colors.red,
+              //     fontSize: 12,
+              //     fontWeight: FontWeight.bold,
+              //   ),
+              // ),
             ],
           ),
         ),

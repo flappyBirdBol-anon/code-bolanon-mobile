@@ -1,13 +1,12 @@
 import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/tech_stack_model.dart';
 import 'package:code_bolanon/models/user_model.dart';
-import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:flutter/material.dart';
 
 class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
-  final _apiService = locator<ApiService>();
   final _appointmentService = locator<AppointmentService>();
 
   List<UserModel> _availableTrainers = [];
@@ -61,23 +60,24 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
 
     try {
       // Get available trainer IDs from AppointmentService
-      final availableTrainerIds =
+      final availableTrainers =
           await _appointmentService.getAvailableTrainers();
 
-      // Fetch full trainer details for these IDs
-      final response = await _apiService.get('/trainers');
-      final allTrainers = (response.data as List)
-          .map((item) => UserModel.fromJson(item))
-          .where((trainer) => availableTrainerIds.contains(trainer.id))
-          .toList();
-
       if (_selectedTechStacks.isEmpty) {
-        _availableTrainers = allTrainers;
+        _availableTrainers = availableTrainers;
       } else {
-        _availableTrainers = allTrainers.where((trainer) {
-          final trainerTechStacks = trainer.specialization?.split(',') ?? [];
-          return _selectedTechStacks.any((selected) => trainerTechStacks.any(
-              (stack) => stack.trim().toLowerCase() == selected.toLowerCase()));
+        _availableTrainers = availableTrainers.where((trainer) {
+          // Extract tech stack tags from each trainer
+          final techStackTags = trainer.stacks
+                  ?.map((selectedStack) =>
+                      selectedStack.stack?.tags.toLowerCase() ?? "")
+                  .where((tag) => tag.isNotEmpty)
+                  .toList() ??
+              [];
+
+          // Check if any selected tech stack matches any trainer tech stack
+          return _selectedTechStacks.any(
+              (selected) => techStackTags.contains(selected.toLowerCase()));
         }).toList();
       }
     } catch (e) {
@@ -127,7 +127,6 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
   }
 
   Future<void> bookSession(int trainerId) async {
-    // TODO: Implement booking logic
-    debugPrint('Booking session with trainer: $trainerId');
+    navigationService.navigateTo(Routes.learnerBookAppointmentView);
   }
 }

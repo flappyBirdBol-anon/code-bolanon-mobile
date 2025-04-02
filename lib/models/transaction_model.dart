@@ -18,7 +18,7 @@ class Transaction {
     required this.timestamp,
     required this.status,
     required this.userId,
-    this.currency = 'usd',
+    this.currency = 'php',
   });
 
   Map<String, dynamic> toJson() {

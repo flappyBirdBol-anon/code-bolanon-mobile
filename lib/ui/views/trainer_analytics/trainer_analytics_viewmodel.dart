@@ -16,6 +16,8 @@ class TrainerAnalyticsViewModel extends BaseViewModel {
   final _snackbarService = locator<SnackbarService>();
   final _imageService = locator<ImageService>();
 
+  double? revenue;
+
   // User data for the trainer
   UserModel? get currentUser => _userService.currentUser;
   List<String> trainerStacks = ['Flutter', 'Dart', 'Firebase', 'Node.js'];
@@ -83,6 +85,7 @@ class TrainerAnalyticsViewModel extends BaseViewModel {
     if (currentUser == null) {
       await _userService.fetchUserProfile();
     }
+
     _generateRevenueChartData();
     // Get tech stacks for the current trainer (in a real app, would be from the backend)
     _loadTrainerTechStacks();
@@ -106,6 +109,7 @@ class TrainerAnalyticsViewModel extends BaseViewModel {
     endDate = DateTime.now();
     startDate = DateTime(endDate!.year - 1, endDate!.month, endDate!.day);
 
+    revenue = await _analyticsService.totalRevenue();
     setBusy(false);
   }
 

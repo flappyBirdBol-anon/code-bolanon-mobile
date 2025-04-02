@@ -270,7 +270,7 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
               Expanded(
                 child: _buildRevenueCard(
                   'Total Revenue',
-                  '\$${revenue['totalRevenue']}',
+                  'P${viewModel.revenue}',
                   Icons.attach_money,
                   Colors.green,
                 ),
@@ -310,7 +310,7 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
                         labelRotation: 0,
                       ),
                       primaryYAxis: NumericAxis(
-                        numberFormat: NumberFormat.currency(symbol: '\$'),
+                        numberFormat: NumberFormat.currency(symbol: 'P'),
                         majorGridLines: const MajorGridLines(width: 0.5),
                       ),
                       legend: const Legend(
