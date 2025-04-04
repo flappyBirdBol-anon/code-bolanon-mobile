@@ -366,6 +366,7 @@ class TrainerAppointmentHomeView
             startTime: DateFormat('h:mm a').format(startTime),
             endTime: DateFormat('h:mm a').format(endTime),
             isDark: isDark,
+            isBook: false,
             onTap: () => viewModel.navigateToAppointmentDetails(appointment.id),
           );
         })

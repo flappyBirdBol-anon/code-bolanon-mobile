@@ -157,6 +157,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                   startTime: DateFormat('h:mm a').format(slot.startAt),
                   endTime: DateFormat('h:mm a').format(slot.endAt),
                   isDark: isDark,
+                  isBook: false,
                   onTap: () => _showAppointmentOptions(
                       context, viewModel, slot.id.toString(), isDark),
                 ),

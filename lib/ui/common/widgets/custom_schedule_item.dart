@@ -1,3 +1,4 @@
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -7,6 +8,7 @@ class CustomScheduleItem extends StatelessWidget {
   final String endTime;
   final VoidCallback onTap;
   final bool isDark;
+  final bool isBook;
 
   const CustomScheduleItem({
     super.key,
@@ -15,6 +17,7 @@ class CustomScheduleItem extends StatelessWidget {
     required this.endTime,
     required this.onTap,
     required this.isDark,
+    required this.isBook,
   });
 
   @override
@@ -90,11 +93,32 @@ class CustomScheduleItem extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onTap,
-                  icon: Icon(
-                    Icons.more_vert,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
-                    size: 20,
-                  ),
+                  icon: isBook
+                      ? ElevatedButton(
+                          onPressed: onTap,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                isDark ? Colors.white : AppColors.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                          ),
+                          child: Text(
+                            'Book',
+                            style: GoogleFonts.figtree(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          Icons.more_vert,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          size: 20,
+                        ),
                 ),
               ],
             ),

@@ -1,5 +1,10 @@
+import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_schedule_item.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_weekly_calendar.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:stacked/stacked.dart';
 
 import 'learner_book_appointment_viewmodel.dart';
@@ -14,25 +19,259 @@ class LearnerBookAppointmentView
     LearnerBookAppointmentViewModel viewModel,
     Widget? child,
   ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: const CustomAppBar(
-        title: 'Book an Appointment',
-        showNotificationButton: false,
+      backgroundColor: isDark ? const Color(0xFF0F172A) : AppColors.background,
+      appBar: CustomAppBar(
+        title: 'Book Appointment',
         showSearchButton: false,
+        showNotificationButton: false,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       ),
-      body: Container(
-        padding: const EdgeInsets.only(left: 25.0, right: 25.0),
-        child: const Center(
-          child: Text('Book an appointment page'),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await viewModel.loadAvailableSchedules();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomWeeklyCalendar(
+                  selectedDate: viewModel.selectedDate,
+                  onDateSelected: viewModel.setSelectedDate,
+                  weekDays: viewModel.getWeekDays(),
+                  weekdays: viewModel.weekdays,
+                  onPreviousWeek: viewModel.previousWeek,
+                  onNextWeek: viewModel.nextWeek,
+                  onCalendarTap: (context) => _selectDate(context, viewModel),
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 20),
+                _buildAvailableSchedulesSection(context, viewModel, isDark),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  @override
-  LearnerBookAppointmentViewModel viewModelBuilder(
+  Widget _buildAvailableSchedulesSection(
     BuildContext context,
-  ) =>
+    LearnerBookAppointmentViewModel viewModel,
+    bool isDark,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Text(
+            'Available Schedules',
+            style: GoogleFonts.figtree(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : const Color(0xFF2D3142),
+            ),
+          ),
+        ),
+        if (viewModel.isLoading && viewModel.availableTimeSlots.isEmpty)
+          _buildSkeletonLoaders(3)
+        else if (viewModel.availableTimeSlots.isEmpty)
+          viewModel.isSelectedDateActive(viewModel.selectedDate)
+              ? _buildEmptyState(
+                  'No available schedules',
+                  'Check back later for new schedules',
+                  isDark,
+                )
+              : _buildEmptyState(
+                  'Past date selected',
+                  'Please select a future date to view available schedules',
+                  isDark,
+                )
+        else
+          Column(
+            children: viewModel.availableTimeSlots.map((slot) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: CustomScheduleItem(
+                  date: DateFormat('MMM d').format(slot.startAt),
+                  startTime: DateFormat('h:mm a').format(slot.startAt),
+                  endTime: DateFormat('h:mm a').format(slot.endAt),
+                  isDark: isDark,
+                  isBook: true,
+                  onTap: () => _showBookingConfirmation(
+                      context, viewModel, slot.id, isDark),
+                ),
+              );
+            }).toList(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(String title, String subtitle, bool isDark) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.event_busy_outlined,
+            size: 40,
+            color: isDark ? Colors.grey[400] : Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: GoogleFonts.figtree(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : Colors.grey[800],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: GoogleFonts.figtree(
+              fontSize: 14,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonLoaders(int count) {
+    return Column(
+      children: List.generate(
+        count,
+        (index) => Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          height: 70,
+          decoration: BoxDecoration(
+            color: Colors.grey.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showBookingConfirmation(
+    BuildContext context,
+    LearnerBookAppointmentViewModel viewModel,
+    int appointmentId,
+    bool isDark,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        title: Text(
+          'Confirm Booking',
+          style: GoogleFonts.figtree(
+            color: isDark ? Colors.white : Colors.grey[800],
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'Would you like to book this appointment?',
+          style: GoogleFonts.figtree(
+            color: isDark ? Colors.white70 : Colors.grey[700],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'CANCEL',
+              style: GoogleFonts.figtree(
+                color: isDark ? Colors.grey[400] : Colors.grey[700],
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              viewModel.bookAppointment(appointmentId);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              'BOOK',
+              style: GoogleFonts.figtree(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _selectDate(
+      BuildContext context, LearnerBookAppointmentViewModel viewModel) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: viewModel.selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2025, 12, 31),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+            dialogBackgroundColor: Colors.white,
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      viewModel.selectDateFromCalendar(picked);
+    }
+  }
+
+  @override
+  LearnerBookAppointmentViewModel viewModelBuilder(BuildContext context) =>
       LearnerBookAppointmentViewModel();
+
+  @override
+  void onViewModelReady(LearnerBookAppointmentViewModel viewModel) {
+    viewModel.initialize();
+    super.onViewModelReady(viewModel);
+  }
 }
