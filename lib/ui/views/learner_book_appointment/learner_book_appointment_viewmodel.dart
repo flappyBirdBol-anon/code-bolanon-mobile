@@ -62,19 +62,27 @@ class LearnerBookAppointmentViewModel extends AppBaseViewModel {
     }
   }
 
-  // Book appointment
-  Future<void> bookAppointment(int appointmentId) async {
+// Book appointment
+  Future<void> bookAppointment(int appointmentId, String contextDetails) async {
     print('Booking appointment with ID: $appointmentId');
-    // setIsLoading(true);
-    // try {
-    //   await _appointmentService.bookSchedule(appointmentId.toString());
-    //   _showSuccessMessage('Appointment booked successfully');
-    //   await loadAvailableSchedules();
-    // } catch (e) {
-    //   _showErrorMessage('Failed to book appointment: $e');
-    // } finally {
-    //   setIsLoading(false);
-    // }
+    setIsLoading(true);
+    try {
+      final result = await _appointmentService.bookSchedule(
+          appointmentId.toString(), contextDetails);
+
+      if (result['success']) {
+        _showSuccessMessage(result['message']);
+        await loadAvailableSchedules();
+      } else {
+        _showErrorMessage(result['message']);
+      }
+      _showSuccessMessage('Appointment booked successfully');
+      await loadAvailableSchedules();
+    } catch (e) {
+      _showErrorMessage('Failed to book appointment: $e');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   // Calendar navigation methods

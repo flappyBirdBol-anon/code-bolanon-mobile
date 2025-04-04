@@ -140,4 +140,41 @@ class AppointmentService {
       throw Exception('Failed to determine available trainers: $e');
     }
   }
+
+  Future<Map<String, dynamic>> bookSchedule(
+      String appointmentId, String context) async {
+    try {
+      final Map<String, dynamic> appointmentData = {
+        'context': context,
+      };
+
+      print('Updating appointment: $appointmentId');
+      print('Request data: $appointmentData');
+
+      final response = await _apiService.put('/appointments/$appointmentId',
+          data: appointmentData);
+
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        return {
+          'success': false,
+          'message': 'Failed to book a schedule: ${response.statusCode}'
+        };
+      }
+
+      if (response.data == null) {
+        return {'success': false, 'message': 'No response data received'};
+      }
+
+      return {'success': true, 'message': 'Schedule booked successfully'};
+    } catch (e) {
+      print('Error updating schedule: $e');
+      return {
+        'success': false,
+        'message': 'Failed to book schedule. Please try again.'
+      };
+    }
+  }
 }

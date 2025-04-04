@@ -185,6 +185,8 @@ class LearnerBookAppointmentView
     int appointmentId,
     bool isDark,
   ) {
+    final TextEditingController contextController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -196,11 +198,41 @@ class LearnerBookAppointmentView
             fontWeight: FontWeight.w600,
           ),
         ),
-        content: Text(
-          'Would you like to book this appointment?',
-          style: GoogleFonts.figtree(
-            color: isDark ? Colors.white70 : Colors.grey[700],
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Would you like to book this appointment?',
+              style: GoogleFonts.figtree(
+                color: isDark ? Colors.white70 : Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: contextController,
+              decoration: InputDecoration(
+                labelText: 'Booking Context',
+                labelStyle: GoogleFonts.figtree(
+                  color: isDark ? Colors.white70 : Colors.grey[700],
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey[600]! : Colors.grey[400]!,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              style: GoogleFonts.figtree(
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -216,7 +248,7 @@ class LearnerBookAppointmentView
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              viewModel.bookAppointment(appointmentId);
+              viewModel.bookAppointment(appointmentId, contextController.text);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
