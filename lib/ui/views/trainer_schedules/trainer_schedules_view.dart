@@ -2,6 +2,7 @@ import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_appointment_item.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_schedule_item.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_weekly_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -42,7 +43,17 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCalendarSection(context, viewModel, isDark),
+                    CustomWeeklyCalendar(
+                      selectedDate: viewModel.selectedDate,
+                      onDateSelected: (date) => viewModel.setSelectedDate(date),
+                      weekDays: viewModel.getWeekDays(),
+                      weekdays: viewModel.weekdays,
+                      onPreviousWeek: viewModel.previousWeek,
+                      onNextWeek: viewModel.nextWeek,
+                      onCalendarTap: (context) =>
+                          _selectDate(context, viewModel),
+                      isDark: isDark,
+                    ),
                     const SizedBox(height: 15),
                     _buildAvailableAppointmentsSection(
                         context, viewModel, isDark),
@@ -99,170 +110,6 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                 ),
               )
             : const SizedBox.shrink(),
-      ),
-    );
-  }
-
-  Widget _buildCalendarSection(
-    BuildContext context,
-    TrainerSchedulesViewModel viewModel,
-    bool isDark,
-  ) {
-    final weekDays = viewModel.getWeekDays();
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
-              : [AppColors.primary.withOpacity(0.95), AppColors.secondary],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.15),
-            offset: const Offset(0, 4),
-            blurRadius: 15,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Calendar Header with improved styling
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  onPressed: viewModel.previousWeek,
-                  icon: const Icon(
-                    Icons.chevron_left,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      child: Text(
-                        '${DateFormat('MMM d').format(weekDays.first)} - ${DateFormat('MMM d').format(weekDays.last)}',
-                        style: GoogleFonts.figtree(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    InkWell(
-                      onTap: () => _selectDate(context, viewModel),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.calendar_today,
-                          size: 18,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  onPressed: viewModel.nextWeek,
-                  icon: const Icon(
-                    Icons.chevron_right,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Days of Week with enhanced styling
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: List.generate(7, (index) {
-                final date = weekDays[index];
-                final isToday = _isToday(date);
-                final isSelected = _isSameDay(date, viewModel.selectedDate);
-
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () => viewModel.selectDate(date, index),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Colors.white.withOpacity(0.2)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Column(
-                        children: [
-                          Text(
-                            viewModel.weekdays[index],
-                            style: GoogleFonts.figtree(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white
-                                  .withOpacity(isSelected || isToday ? 1 : 0.7),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: isToday
-                                  ? Colors.white.withOpacity(0.9)
-                                  : Colors.transparent,
-                              shape: BoxShape.circle,
-                              border: isSelected || isToday
-                                  ? Border.all(color: Colors.white, width: 2)
-                                  : null,
-                            ),
-                            child: Center(
-                              child: Text(
-                                date.day.toString(),
-                                style: GoogleFonts.figtree(
-                                  fontSize: 16,
-                                  fontWeight: isSelected || isToday
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  color: isToday
-                                      ? AppColors.primary
-                                      : Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
       ),
     );
   }

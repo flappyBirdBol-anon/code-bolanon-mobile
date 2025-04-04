@@ -345,6 +345,12 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     notifyListeners();
   }
 
+  void setSelectedDate(DateTime date) {
+    _selectedDate = date;
+    notifyListeners();
+    loadAppointments(); // Reload appointments for the new date
+  }
+
   // Set loading state
   void setIsLoading(bool value) {
     _isLoading = value;
