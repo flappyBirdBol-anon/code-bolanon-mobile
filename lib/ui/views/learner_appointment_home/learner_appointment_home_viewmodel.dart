@@ -108,7 +108,9 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
     // TODO: Implement filter logic
   }
 
-  void navigateToAppointments() {}
+  void navigateToAppointments() {
+    navigationService.navigateTo(Routes.learnerScheduleView);
+  }
 
   Color getTechColor(String tech, bool isDark) {
     // Define colors for different tech stacks

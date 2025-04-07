@@ -25,17 +25,10 @@ class LearnerAppointmentHomeView
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : AppColors.background,
       appBar: CustomAppBar(
-          title: 'Book a Session',
-          showSearchButton: true,
-          onSearchTap: viewModel.setSearchQuery,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.calendar_today, color: Color(0xFF4C3575)),
-              onPressed: () {
-                viewModel.navigateToAppointments();
-              },
-            ),
-          ]),
+        title: 'Book a Session',
+        showSearchButton: true,
+        onSearchTap: viewModel.setSearchQuery,
+      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () => viewModel.fetchAvailableTrainers(),
@@ -54,6 +47,45 @@ class LearnerAppointmentHomeView
 
                 const SizedBox(height: 20),
               ],
+            ),
+          ),
+        ),
+      ),
+      floatingActionButton: _buildAnimatedFAB(context, viewModel),
+    );
+  }
+
+  Widget _buildAnimatedFAB(
+      BuildContext context, LearnerAppointmentHomeViewModel viewModel) {
+    return Hero(
+      tag: 'fab_learner_appointments',
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+              spreadRadius: 0,
+            ),
+          ],
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primary, AppColors.secondary],
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => viewModel.navigateToAppointments(),
+            borderRadius: BorderRadius.circular(16),
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Icon(Icons.calendar_today_rounded,
+                  color: Colors.white, size: 28),
             ),
           ),
         ),

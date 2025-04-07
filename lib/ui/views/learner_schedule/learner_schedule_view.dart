@@ -1,3 +1,5 @@
+import 'package:code_bolanon/ui/common/app_colors.dart';
+import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
@@ -12,10 +14,18 @@ class LearnerScheduleView extends StackedView<LearnerScheduleViewModel> {
     LearnerScheduleViewModel viewModel,
     Widget? child,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
-      body: Container(
-        padding: const EdgeInsets.only(left: 25.0, right: 25.0),
+      appBar: CustomAppBar(
+        title: 'Your Scheduled Appointments',
+        showSearchButton: true,
+        showNotificationButton: false,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      ),
+      backgroundColor: AppColors.background,
+      body: const SafeArea(
+        child: CustomScrollView(),
       ),
     );
   }
