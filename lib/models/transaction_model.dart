@@ -1,6 +1,6 @@
 class Transaction {
   final String id; // transaction_id in backend
-  final String courseId;
+  final String paymentId;
   final String particulars;
   final double amount;
   final String paymentMethod;
@@ -11,7 +11,7 @@ class Transaction {
 
   Transaction({
     required this.id,
-    required this.courseId,
+    required this.paymentId,
     required this.particulars,
     required this.amount,
     required this.paymentMethod,
@@ -24,7 +24,7 @@ class Transaction {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'course_id': courseId,
+      'payment_id': paymentId,
       'particulars': particulars,
       'amount': amount,
       'payment_method': paymentMethod,
@@ -38,7 +38,7 @@ class Transaction {
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
       id: json['transaction_id'] ?? json['id'],
-      courseId: json['course_id'],
+      paymentId: json['payment_id'],
       particulars: json['particulars'] ?? '',
       amount: (json['amount'] as num).toDouble() / 100, // Convert from cents
       paymentMethod: json['payment_method'],

@@ -1,11 +1,13 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:stacked/stacked.dart';
+
 import '../app/app.locator.dart';
+import '../models/payment_param.dart';
 import '../models/transaction_model.dart';
-import '../models/course_param.dart';
 import 'api_service.dart';
 
 class PaymentService with ListenableServiceMixin {
@@ -15,7 +17,7 @@ class PaymentService with ListenableServiceMixin {
 
   // Completer to handle in-app purchase results
   Completer<Map<String, dynamic>>? _purchaseCompleter;
-  CourseParam? _currentCourse;
+  PaymentParam? _currentCourse;
 
   PaymentService() {
     // Listen to in-app purchase updates
@@ -46,7 +48,7 @@ class PaymentService with ListenableServiceMixin {
           if (_currentCourse != null) {
             final transaction = Transaction(
               id: purchaseDetails.purchaseID ?? 'unknown',
-              courseId: _currentCourse!.id,
+              paymentId: _currentCourse!.id,
               particulars: _currentCourse!.title,
               amount: _calculateTotalAmount(_currentCourse!),
               paymentMethod: 'In-App Purchase',
@@ -99,7 +101,7 @@ class PaymentService with ListenableServiceMixin {
 
   // Process Stripe payment using the Payment Sheet (built-in UI)
   Future<Map<String, dynamic>> processStripePayment({
-    required CourseParam course,
+    required PaymentParam payment,
     required String cardNumber,
     required String expiryDate,
     required String cvv,
@@ -109,9 +111,9 @@ class PaymentService with ListenableServiceMixin {
     try {
       // Create payment intent first
       final paymentIntentResponse = await _apiService.createPaymentIntent(
-        amount: (_calculateTotalAmount(course) * 100).toInt(),
+        amount: (_calculateTotalAmount(payment) * 100).toInt(),
         currency: 'PHP',
-        courseId: course.id,
+        paymentId: payment.id,
       );
 
       if (!paymentIntentResponse['success']) {
@@ -145,9 +147,9 @@ class PaymentService with ListenableServiceMixin {
       final transaction = Transaction(
         id: paymentIntentResponse['id'] ??
             'stripe-${DateTime.now().millisecondsSinceEpoch}',
-        courseId: course.id,
-        particulars: course.title,
-        amount: _calculateTotalAmount(course),
+        paymentId: payment.id,
+        particulars: payment.title,
+        amount: _calculateTotalAmount(payment),
         paymentMethod: useGooglePay ? 'Google Pay' : 'Stripe',
         timestamp: DateTime.now(),
         status: 'completed',
@@ -181,7 +183,7 @@ class PaymentService with ListenableServiceMixin {
 
   // Process payment using the manual card entry method
   Future<Map<String, dynamic>> processManualCardPayment({
-    required CourseParam course,
+    required PaymentParam payment,
     required String cardNumber,
     required String expiryDate,
     required String cvv,
@@ -209,9 +211,9 @@ class PaymentService with ListenableServiceMixin {
 
       // Create payment intent first
       final paymentIntentResponse = await _apiService.createPaymentIntent(
-        amount: (_calculateTotalAmount(course) * 100).toInt(),
+        amount: (_calculateTotalAmount(payment) * 100).toInt(),
         currency: 'usd',
-        courseId: course.id,
+        paymentId: payment.id,
       );
 
       if (!paymentIntentResponse['success']) {
@@ -250,9 +252,9 @@ class PaymentService with ListenableServiceMixin {
       // Create and save transaction
       final transaction = Transaction(
         id: paymentIntent.id,
-        courseId: course.id,
-        particulars: course.title,
-        amount: _calculateTotalAmount(course),
+        paymentId: payment.id,
+        particulars: payment.title,
+        amount: _calculateTotalAmount(payment),
         paymentMethod: 'Stripe',
         timestamp: DateTime.now(),
         status: 'completed',
@@ -285,7 +287,7 @@ class PaymentService with ListenableServiceMixin {
 
   // Process In-App Purchase
   Future<Map<String, dynamic>> processInAppPurchase({
-    required CourseParam course,
+    required PaymentParam payment,
   }) async {
     try {
       // Check if in-app purchases are available
@@ -297,12 +299,12 @@ class PaymentService with ListenableServiceMixin {
         };
       }
 
-      _currentCourse = course;
+      _currentCourse = payment;
       _purchaseCompleter = Completer<Map<String, dynamic>>();
 
       // Get product details
       final ProductDetailsResponse response =
-          await _inAppPurchase.queryProductDetails({course.id});
+          await _inAppPurchase.queryProductDetails({payment.id});
 
       if (response.notFoundIDs.isNotEmpty) {
         return {
@@ -321,7 +323,7 @@ class PaymentService with ListenableServiceMixin {
       if (response.productDetails.isEmpty) {
         return {
           'success': false,
-          'message': 'No product details found for this course.',
+          'message': 'No product details found for this payment.',
         };
       }
 
@@ -360,10 +362,10 @@ class PaymentService with ListenableServiceMixin {
     }
   }
 
-  double _calculateTotalAmount(CourseParam course) {
-    double discountAmount = course.price * course.discountPercentage;
-    double priceAfterDiscount = course.price - discountAmount;
-    double taxAmount = priceAfterDiscount * course.taxRate;
+  double _calculateTotalAmount(PaymentParam payment) {
+    double discountAmount = payment.price * payment.discountPercentage;
+    double priceAfterDiscount = payment.price - discountAmount;
+    double taxAmount = priceAfterDiscount * payment.taxRate;
     return priceAfterDiscount + taxAmount;
   }
 

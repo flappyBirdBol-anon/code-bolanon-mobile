@@ -294,14 +294,14 @@ class ApiService {
   Future<Map<String, dynamic>> createPaymentIntent({
     required int amount,
     required String currency,
-    required String courseId,
+    required String paymentId,
     String? paymentMethodId,
   }) async {
     try {
       final response = await post('/create-payment-intent', data: {
         'amount': amount,
         'currency': currency,
-        'course_id': courseId,
+        'course_id': paymentId,
         if (paymentMethodId != null) 'payment_method_id': paymentMethodId,
       });
 
@@ -330,7 +330,7 @@ class ApiService {
         'currency': 'usd', // Hardcoded for now, could be made dynamic
         'status': transaction.status,
         'payment_method': transaction.paymentMethod,
-        'course_id': transaction.courseId,
+        'course_id': transaction.paymentId,
         'user_id':
             transaction.userId, // This will come from auth()->id() on backend
         'created_at': transaction.timestamp.toIso8601String(),

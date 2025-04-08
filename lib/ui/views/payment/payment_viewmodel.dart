@@ -1,6 +1,6 @@
 import 'package:code_bolanon/app/app.dialogs.dart';
 import 'package:code_bolanon/app/app.locator.dart';
-import 'package:code_bolanon/models/course_param.dart';
+import 'package:code_bolanon/models/payment_param.dart';
 import 'package:code_bolanon/models/transaction_model.dart';
 import 'package:code_bolanon/services/payment_service.dart';
 import 'package:stacked/stacked.dart';
@@ -13,7 +13,7 @@ class PaymentViewModel extends BaseViewModel {
   final _dialogService = locator<DialogService>();
   final _navigationService = locator<NavigationService>();
 
-  CourseParam? _course;
+  PaymentParam? _payment;
   PaymentMethod _selectedPaymentMethod = PaymentMethod.stripe;
   bool _isProcessing = false;
   Transaction? _lastTransaction;
@@ -25,7 +25,7 @@ class PaymentViewModel extends BaseViewModel {
   String _cardHolderName = '';
 
   // Getters
-  CourseParam? get course => _course;
+  PaymentParam? get payment => _payment;
   PaymentMethod get selectedPaymentMethod => _selectedPaymentMethod;
   bool get isProcessing => _isProcessing;
   Transaction? get lastTransaction => _lastTransaction;
@@ -36,15 +36,15 @@ class PaymentViewModel extends BaseViewModel {
   String get cardHolderName => _cardHolderName;
 
   // Price breakdown calculations
-  double get subtotal => _course?.price ?? 0.0;
-  double get discountAmount => subtotal * (_course?.discountPercentage ?? 0.0);
+  double get subtotal => _payment?.price ?? 0.0;
+  double get discountAmount => subtotal * (_payment?.discountPercentage ?? 0.0);
   double get priceAfterDiscount => subtotal - discountAmount;
-  double get taxAmount => priceAfterDiscount * (_course?.taxRate ?? 0.0);
+  double get taxAmount => priceAfterDiscount * (_payment?.taxRate ?? 0.0);
   double get total => priceAfterDiscount + taxAmount;
 
-  // Initialize with course
-  void initialize(CourseParam course) {
-    _course = course;
+  // Initialize with payment
+  void initialize(PaymentParam payment) {
+    _payment = payment;
     notifyListeners();
   }
 
@@ -114,8 +114,8 @@ class PaymentViewModel extends BaseViewModel {
 
   // Process payment
   Future<Map<String, dynamic>> processPayment() async {
-    if (_course == null) {
-      return {'success': false, 'message': 'No course information provided'};
+    if (_payment == null) {
+      return {'success': false, 'message': 'No payment information provided'};
     }
 
     _isProcessing = true;
@@ -127,7 +127,7 @@ class PaymentViewModel extends BaseViewModel {
       if (_selectedPaymentMethod == PaymentMethod.stripe) {
         // Use Stripe's pre-built UI with Payment Sheet
         result = await _paymentService.processStripePayment(
-          course: _course!,
+          payment: _payment!,
           cardNumber: _cardNumber,
           expiryDate: _expiryDate,
           cvv: _cvv,
@@ -136,7 +136,7 @@ class PaymentViewModel extends BaseViewModel {
       } else if (_selectedPaymentMethod == PaymentMethod.googlePay) {
         // Use Google Pay through Stripe's Payment Sheet
         result = await _paymentService.processStripePayment(
-          course: _course!,
+          payment: _payment!,
           cardNumber: _cardNumber,
           expiryDate: _expiryDate,
           cvv: _cvv,
@@ -146,7 +146,7 @@ class PaymentViewModel extends BaseViewModel {
       } else {
         // Use native in-app purchase
         result = await _paymentService.processInAppPurchase(
-          course: _course!,
+          payment: _payment!,
         );
       }
 

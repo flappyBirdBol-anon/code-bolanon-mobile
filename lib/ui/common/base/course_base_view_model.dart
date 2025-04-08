@@ -127,7 +127,7 @@ abstract class CourseBaseViewModel extends BaseViewModel
       course: course,
     );
     // navigationService.navigateToPaymentView(
-    //   course: CourseParam(
+    //   course: PaymentParam(
     //     id: "7",
     //     title: "Firebase ",
     //     description:

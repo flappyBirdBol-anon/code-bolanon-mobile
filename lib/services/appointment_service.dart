@@ -1,15 +1,22 @@
 import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
+import 'package:code_bolanon/models/payment_param.dart';
 import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:intl/intl.dart';
+import 'package:stacked_services/stacked_services.dart';
 
 class AppointmentService {
   final ApiService _apiService;
   final DateFormat dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
+  final NavigationService _navigationService; // Added property
 
-  AppointmentService({ApiService? apiService})
-      : _apiService = apiService ?? locator<ApiService>();
+  AppointmentService(
+      {ApiService? apiService, NavigationService? navigationService})
+      : _apiService = apiService ?? locator<ApiService>(),
+        _navigationService =
+            navigationService ?? locator<NavigationService>(); // Initialize
 
   final List<AppointmentModel> _appointments = [];
   List<AppointmentModel> get appointmentList => _appointments;
@@ -144,33 +151,64 @@ class AppointmentService {
   Future<Map<String, dynamic>> bookSchedule(
       String appointmentId, String context) async {
     try {
-      final Map<String, dynamic> appointmentData = {
-        'context': context,
-      };
+      // Fetch the appointment details first
+      final appointmentResponse =
+          await _apiService.get('/appointments/$appointmentId');
+      if (appointmentResponse.statusCode != 200) {
+        throw Exception(
+            'Failed to fetch appointment: ${appointmentResponse.statusCode}');
+      }
 
-      print('Updating appointment: $appointmentId');
-      print('Request data: $appointmentData');
+      final appointmentData = appointmentResponse.data['data'];
+      final appointmentModel = AppointmentModel.fromJson(appointmentData);
 
-      final response = await _apiService.put('/appointments/$appointmentId',
-          data: appointmentData);
+      // Navigate to payment view first with Appointment details
+      final paymentResult = await _navigationService.navigateToPaymentView(
+        payment: PaymentParam(
+          id: appointmentModel.id.toString(),
+          title: appointmentModel.contextDetails ?? 'No context provided',
+          price: appointmentModel.price,
+          startAt: appointmentModel.startAt,
+          endAt: appointmentModel.endAt,
+        ),
+      );
+      print('Payment result: $paymentResult');
 
-      print('Response status: ${response.statusCode}');
-      print('Response data: ${response.data}');
+      // If payment was successful, proceed to book the appointment
+      if (paymentResult != null && paymentResult['success'] == true) {
+        final Map<String, dynamic> bookingData = {
+          'context': context,
+        };
 
-      if (response.statusCode != 200 && response.statusCode != 201) {
+        print('Booking appointment: $appointmentId');
+        print('Request data: $bookingData');
+
+        final response = await _apiService.put('/appointments/$appointmentId',
+            data: bookingData);
+
+        print('Response status: ${response.statusCode}');
+        print('Response data: ${response.data}');
+
+        if (response.statusCode != 200 && response.statusCode != 201) {
+          return {
+            'success': false,
+            'message': 'Failed to book a schedule: ${response.statusCode}'
+          };
+        }
+
+        if (response.data == null) {
+          return {'success': false, 'message': 'No response data received'};
+        }
+
+        return {'success': true, 'message': 'Schedule booked successfully'};
+      } else {
         return {
           'success': false,
-          'message': 'Failed to book a schedule: ${response.statusCode}'
+          'message': 'Payment was not successful. Booking canceled.'
         };
       }
-
-      if (response.data == null) {
-        return {'success': false, 'message': 'No response data received'};
-      }
-
-      return {'success': true, 'message': 'Schedule booked successfully'};
     } catch (e) {
-      print('Error updating schedule: $e');
+      print('Error booking schedule: $e');
       return {
         'success': false,
         'message': 'Failed to book schedule. Please try again.'

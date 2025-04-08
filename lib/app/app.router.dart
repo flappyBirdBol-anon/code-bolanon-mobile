@@ -6,8 +6,8 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:code_bolanon/models/course_model.dart' as _i32;
-import 'package:code_bolanon/models/course_param.dart' as _i34;
 import 'package:code_bolanon/models/lessons_model.dart' as _i33;
+import 'package:code_bolanon/models/payment_param.dart' as _i34;
 import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart' as _i11;
 import 'package:code_bolanon/ui/views/appointment_details/appointment_details_view.dart'
     as _i28;
@@ -387,7 +387,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<PaymentViewArguments>(nullOk: false);
       return _i31.MaterialPageRoute<dynamic>(
         builder: (context) =>
-            _i17.PaymentView(key: args.key, course: args.course),
+            _i17.PaymentView(key: args.key, payment: args.payment),
         settings: data,
       );
     },
@@ -622,27 +622,27 @@ class LessonsFullViewArguments {
 class PaymentViewArguments {
   const PaymentViewArguments({
     this.key,
-    required this.course,
+    required this.payment,
   });
 
   final _i31.Key? key;
 
-  final _i34.CourseParam course;
+  final _i34.PaymentParam payment;
 
   @override
   String toString() {
-    return '{"key": "$key", "course": "$course"}';
+    return '{"key": "$key", "payment": "$payment"}';
   }
 
   @override
   bool operator ==(covariant PaymentViewArguments other) {
     if (identical(this, other)) return true;
-    return other.key == key && other.course == course;
+    return other.key == key && other.payment == payment;
   }
 
   @override
   int get hashCode {
-    return key.hashCode ^ course.hashCode;
+    return key.hashCode ^ payment.hashCode;
   }
 }
 
@@ -903,7 +903,7 @@ extension NavigatorStateExtension on _i35.NavigationService {
 
   Future<dynamic> navigateToPaymentView({
     _i31.Key? key,
-    required _i34.CourseParam course,
+    required _i34.PaymentParam payment,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -911,7 +911,7 @@ extension NavigatorStateExtension on _i35.NavigationService {
         transition,
   }) async {
     return navigateTo<dynamic>(Routes.paymentView,
-        arguments: PaymentViewArguments(key: key, course: course),
+        arguments: PaymentViewArguments(key: key, payment: payment),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -1333,7 +1333,7 @@ extension NavigatorStateExtension on _i35.NavigationService {
 
   Future<dynamic> replaceWithPaymentView({
     _i31.Key? key,
-    required _i34.CourseParam course,
+    required _i34.PaymentParam payment,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1341,7 +1341,7 @@ extension NavigatorStateExtension on _i35.NavigationService {
         transition,
   }) async {
     return replaceWith<dynamic>(Routes.paymentView,
-        arguments: PaymentViewArguments(key: key, course: course),
+        arguments: PaymentViewArguments(key: key, payment: payment),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,

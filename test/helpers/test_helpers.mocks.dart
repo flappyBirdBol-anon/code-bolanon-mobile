@@ -10,8 +10,8 @@ import 'dart:ui' as _i14;
 
 import 'package:code_bolanon/models/appointment_model.dart' as _i9;
 import 'package:code_bolanon/models/course_model.dart' as _i3;
-import 'package:code_bolanon/models/course_param.dart' as _i30;
 import 'package:code_bolanon/models/lessons_model.dart' as _i6;
+import 'package:code_bolanon/models/payment_param.dart' as _i30;
 import 'package:code_bolanon/models/registration_model.dart' as _i38;
 import 'package:code_bolanon/models/selected_stack_model.dart' as _i41;
 import 'package:code_bolanon/models/tech_stack_model.dart' as _i25;
@@ -1409,7 +1409,7 @@ class MockApiService extends _i1.Mock implements _i4.ApiService {
   _i13.Future<Map<String, dynamic>> createPaymentIntent({
     required int? amount,
     required String? currency,
-    required String? courseId,
+    required String? paymentId,
     String? paymentMethodId,
   }) =>
       (super.noSuchMethod(
@@ -1419,7 +1419,7 @@ class MockApiService extends _i1.Mock implements _i4.ApiService {
           {
             #amount: amount,
             #currency: currency,
-            #courseId: courseId,
+            #paymentId: paymentId,
             #paymentMethodId: paymentMethodId,
           },
         ),
@@ -3204,7 +3204,7 @@ class MockPaymentService extends _i1.Mock implements _i29.PaymentService {
 
   @override
   _i13.Future<Map<String, dynamic>> processStripePayment({
-    required _i30.CourseParam? course,
+    required _i30.PaymentParam? payment,
     required String? cardNumber,
     required String? expiryDate,
     required String? cvv,
@@ -3216,7 +3216,7 @@ class MockPaymentService extends _i1.Mock implements _i29.PaymentService {
           #processStripePayment,
           [],
           {
-            #course: course,
+            #payment: payment,
             #cardNumber: cardNumber,
             #expiryDate: expiryDate,
             #cvv: cvv,
@@ -3232,7 +3232,7 @@ class MockPaymentService extends _i1.Mock implements _i29.PaymentService {
 
   @override
   _i13.Future<Map<String, dynamic>> processManualCardPayment({
-    required _i30.CourseParam? course,
+    required _i30.PaymentParam? payment,
     required String? cardNumber,
     required String? expiryDate,
     required String? cvv,
@@ -3243,7 +3243,7 @@ class MockPaymentService extends _i1.Mock implements _i29.PaymentService {
           #processManualCardPayment,
           [],
           {
-            #course: course,
+            #payment: payment,
             #cardNumber: cardNumber,
             #expiryDate: expiryDate,
             #cvv: cvv,
@@ -3258,12 +3258,12 @@ class MockPaymentService extends _i1.Mock implements _i29.PaymentService {
 
   @override
   _i13.Future<Map<String, dynamic>> processInAppPurchase(
-          {required _i30.CourseParam? course}) =>
+          {required _i30.PaymentParam? payment}) =>
       (super.noSuchMethod(
         Invocation.method(
           #processInAppPurchase,
           [],
-          {#course: course},
+          {#payment: payment},
         ),
         returnValue:
             _i13.Future<Map<String, dynamic>>.value(<String, dynamic>{}),

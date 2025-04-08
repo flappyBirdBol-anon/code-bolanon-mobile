@@ -2,7 +2,7 @@ import 'package:code_bolanon/app/app.dialogs.dart';
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course_model.dart';
-import 'package:code_bolanon/models/course_param.dart';
+import 'package:code_bolanon/models/payment_param.dart';
 import 'package:code_bolanon/models/registration_model.dart';
 import 'package:code_bolanon/models/transaction_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
@@ -40,9 +40,9 @@ class RegistrationService with ReactiveServiceMixin {
       final courseData = courseResponse.data['data'];
       final courseModel = CourseModel.fromJson(courseData);
 
-      // Navigate to payment view first with CourseParam
+      // Navigate to payment view first with PaymentParam
       final paymentResult = await _navigationService.navigateToPaymentView(
-        course: CourseParam(
+        payment: PaymentParam(
           id: courseModel.id,
           title: courseModel.title,
           description: courseModel.description,

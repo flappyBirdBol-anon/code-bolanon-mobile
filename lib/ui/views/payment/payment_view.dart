@@ -2,18 +2,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:stacked/stacked.dart';
 import 'package:intl/intl.dart';
+import 'package:stacked/stacked.dart';
 
-import '../../../models/course_param.dart';
+import '../../../models/payment_param.dart';
 import 'payment_viewmodel.dart';
 
 class PaymentView extends StackedView<PaymentViewModel> {
-  final CourseParam course;
+  final PaymentParam payment;
 
   const PaymentView({
     Key? key,
-    required this.course,
+    required this.payment,
   }) : super(key: key);
 
   @override
@@ -25,7 +25,7 @@ class PaymentView extends StackedView<PaymentViewModel> {
     final currencyFormat = NumberFormat.currency(symbol: '\$');
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         backgroundColor: const Color(0xFF0D47A1),
         elevation: 0,
@@ -127,7 +127,7 @@ class PaymentView extends StackedView<PaymentViewModel> {
           ),
           const SizedBox(height: 12),
           Text(
-            viewModel.course?.title ?? '',
+            viewModel.payment?.title ?? '',
             style: GoogleFonts.figtree(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -135,7 +135,7 @@ class PaymentView extends StackedView<PaymentViewModel> {
           ),
           const SizedBox(height: 8),
           Text(
-            viewModel.course?.description ?? '',
+            viewModel.payment?.description ?? '',
             style: GoogleFonts.figtree(
               fontSize: 14,
               color: Colors.grey[700],
@@ -177,14 +177,14 @@ class PaymentView extends StackedView<PaymentViewModel> {
           if (viewModel.discountAmount > 0) ...[
             const SizedBox(height: 8),
             _buildPriceRow(
-              'Discount (${(viewModel.course?.discountPercentage ?? 0) * 100}%)',
+              'Discount (${(viewModel.payment?.discountPercentage ?? 0) * 100}%)',
               '- ${format.format(viewModel.discountAmount)}',
               isDiscount: true,
             ),
           ],
           const SizedBox(height: 8),
           _buildPriceRow(
-            'Tax (${(viewModel.course?.taxRate ?? 0) * 100}%)',
+            'Tax (${(viewModel.payment?.taxRate ?? 0) * 100}%)',
             format.format(viewModel.taxAmount),
           ),
           const Padding(
@@ -448,7 +448,7 @@ class PaymentView extends StackedView<PaymentViewModel> {
 
   @override
   void onViewModelReady(PaymentViewModel viewModel) {
-    viewModel.initialize(course);
+    viewModel.initialize(payment);
   }
 }
 
