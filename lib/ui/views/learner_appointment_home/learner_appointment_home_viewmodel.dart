@@ -129,6 +129,7 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
   }
 
   Future<void> bookSession(int trainerId) async {
-    navigationService.navigateTo(Routes.learnerBookAppointmentView);
+    navigationService.navigateToLearnerBookAppointmentView(
+        trainerId: trainerId);
   }
 }

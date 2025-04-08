@@ -11,7 +11,9 @@ import 'learner_book_appointment_viewmodel.dart';
 
 class LearnerBookAppointmentView
     extends StackedView<LearnerBookAppointmentViewModel> {
-  const LearnerBookAppointmentView({Key? key}) : super(key: key);
+  final int trainerId;
+  const LearnerBookAppointmentView({Key? key, required this.trainerId})
+      : super(key: key);
 
   @override
   Widget builder(
@@ -303,7 +305,7 @@ class LearnerBookAppointmentView
 
   @override
   void onViewModelReady(LearnerBookAppointmentViewModel viewModel) {
-    viewModel.initialize();
+    viewModel.initialize(trainerId: trainerId);
     super.onViewModelReady(viewModel);
   }
 }

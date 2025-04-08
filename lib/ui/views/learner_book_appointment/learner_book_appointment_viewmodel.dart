@@ -8,6 +8,9 @@ import 'package:intl/intl.dart';
 class LearnerBookAppointmentViewModel extends AppBaseViewModel {
   final _appointmentService = locator<AppointmentService>();
 
+  int? _trainerId;
+  int? get trainerId => _trainerId;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -33,8 +36,9 @@ class LearnerBookAppointmentViewModel extends AppBaseViewModel {
   List<AppointmentModel> _availableTimeSlots = [];
   List<AppointmentModel> get availableTimeSlots => _availableTimeSlots;
 
-  // Initialize
-  Future<void> initialize() async {
+  // Initialize with trainerId
+  Future<void> initialize({int? trainerId}) async {
+    _trainerId = trainerId;
     await runBusyFuture(loadAvailableSchedules());
   }
 
@@ -44,13 +48,14 @@ class LearnerBookAppointmentViewModel extends AppBaseViewModel {
     try {
       final appointments = await _appointmentService.fetchAllAppointments();
 
-      // Filter appointments for the selected date and available status
+      // Filter appointments for the selected date, available status, and trainer
       final selectedDateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
       _availableTimeSlots = appointments
           .where((apt) =>
               DateFormat('yyyy-MM-dd').format(apt.startAt) == selectedDateStr &&
-              apt.status.toLowerCase() == 'available')
+              apt.status.toLowerCase() == 'available' &&
+              (_trainerId == null || apt.trainerId == _trainerId))
           .toList()
         ..sort((a, b) => a.startAt.compareTo(b.startAt));
 
@@ -62,7 +67,7 @@ class LearnerBookAppointmentViewModel extends AppBaseViewModel {
     }
   }
 
-// Book appointment
+  // Book appointment
   Future<void> bookAppointment(int appointmentId, String contextDetails) async {
     print('Booking appointment with ID: $appointmentId');
     setIsLoading(true);

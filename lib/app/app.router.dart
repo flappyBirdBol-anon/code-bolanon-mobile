@@ -458,8 +458,11 @@ class StackedRouter extends _i1.RouterBase {
       );
     },
     _i29.LearnerBookAppointmentView: (data) {
+      final args =
+          data.getArgs<LearnerBookAppointmentViewArguments>(nullOk: false);
       return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i29.LearnerBookAppointmentView(),
+        builder: (context) => _i29.LearnerBookAppointmentView(
+            key: args.key, trainerId: args.trainerId),
         settings: data,
       );
     },
@@ -640,6 +643,33 @@ class PaymentViewArguments {
   @override
   int get hashCode {
     return key.hashCode ^ course.hashCode;
+  }
+}
+
+class LearnerBookAppointmentViewArguments {
+  const LearnerBookAppointmentViewArguments({
+    this.key,
+    required this.trainerId,
+  });
+
+  final _i31.Key? key;
+
+  final int trainerId;
+
+  @override
+  String toString() {
+    return '{"key": "$key", "trainerId": "$trainerId"}';
+  }
+
+  @override
+  bool operator ==(covariant LearnerBookAppointmentViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key && other.trainerId == trainerId;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode ^ trainerId.hashCode;
   }
 }
 
@@ -1042,14 +1072,18 @@ extension NavigatorStateExtension on _i35.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> navigateToLearnerBookAppointmentView([
+  Future<dynamic> navigateToLearnerBookAppointmentView({
+    _i31.Key? key,
+    required int trainerId,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return navigateTo<dynamic>(Routes.learnerBookAppointmentView,
+        arguments:
+            LearnerBookAppointmentViewArguments(key: key, trainerId: trainerId),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -1468,14 +1502,18 @@ extension NavigatorStateExtension on _i35.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> replaceWithLearnerBookAppointmentView([
+  Future<dynamic> replaceWithLearnerBookAppointmentView({
+    _i31.Key? key,
+    required int trainerId,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return replaceWith<dynamic>(Routes.learnerBookAppointmentView,
+        arguments:
+            LearnerBookAppointmentViewArguments(key: key, trainerId: trainerId),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
