@@ -143,7 +143,8 @@ class LearnerScheduleView extends StackedView<LearnerScheduleViewModel> {
           const SizedBox(height: 16),
           if (viewModel.isLoading)
             _buildAppointmentSkeletonLoader(isDark)
-          else if (viewModel.filteredAppointments.isEmpty)
+          else if (!viewModel.isLoading &&
+              viewModel.filteredAppointments.isEmpty)
             _buildEmptyAppointmentsView(viewModel.selectedFilter, isDark)
           else
             ListView.builder(

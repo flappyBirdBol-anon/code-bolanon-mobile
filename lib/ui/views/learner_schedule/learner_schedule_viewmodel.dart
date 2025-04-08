@@ -50,14 +50,16 @@ class LearnerScheduleViewModel extends AppBaseViewModel {
   }
 
   Future<void> initialize() async {
-    setBusy(true);
+    _isLoading = true;
+    notifyListeners();
     try {
       await userService.fetchUserProfile();
       await fetchAppointments();
     } catch (e) {
       setError(e.toString());
     } finally {
-      setBusy(false);
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

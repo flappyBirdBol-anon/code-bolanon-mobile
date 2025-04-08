@@ -103,6 +103,7 @@ class LearnerAppointmentHomeView
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(16),
+      width: double.infinity, // This will make the container take full width
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -114,20 +115,23 @@ class LearnerAppointmentHomeView
           ),
         ],
       ),
-      child: IntrinsicWidth(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Filter by Interests',
-              style: GoogleFonts.figtree(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : const Color(0xFF2D3142),
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Filter by Interests',
+            style: GoogleFonts.figtree(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : const Color(0xFF2D3142),
             ),
-            const SizedBox(height: 12),
-            Wrap(
+          ),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Wrap(
+              alignment: WrapAlignment.start,
               spacing: 8,
               runSpacing: 8,
               children: [
@@ -142,8 +146,8 @@ class LearnerAppointmentHomeView
                   ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -354,45 +358,26 @@ class LearnerAppointmentHomeView
           ),
           // Tech Stack Section
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.black12 : Colors.grey[50],
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
+            margin: const EdgeInsets.only(left: 16, bottom: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: techStacks.map((stack) {
+                  return CustomStackChip(
+                    label: stack,
+                    selected: true,
+                    isDark: isDark,
+                    color: viewModel.getTechColor(stack, isDark),
+                    textStyle: GoogleFonts.figtree(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    onTap: () {},
+                  );
+                }).toList(),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Expertise',
-                  style: GoogleFonts.figtree(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: techStacks.map((stack) {
-                    return CustomStackChip(
-                      label: stack,
-                      selected: true,
-                      isDark: isDark,
-                      icon: Icons.code,
-                      color: viewModel.getTechColor(stack, isDark),
-                      textStyle: GoogleFonts.figtree(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      onTap: () {},
-                    );
-                  }).toList(),
-                ),
-              ],
             ),
           ),
         ],
