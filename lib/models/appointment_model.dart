@@ -10,6 +10,7 @@ class AppointmentModel {
   final String status;
   final String? gmeetLink;
   final int trainerId;
+  final int? learnerId;
   final String? learnerName;
   final UserModel? trainer;
 
@@ -22,6 +23,7 @@ class AppointmentModel {
     required this.status,
     this.gmeetLink,
     required this.trainerId,
+    this.learnerId,
     this.learnerName,
     required this.trainer,
   });
@@ -36,6 +38,7 @@ class AppointmentModel {
       contextDetails: json['context'],
       status: json['status'],
       gmeetLink: json['gmeet_link'],
+      learnerId: json['learner_id'],
       trainerId: json['trainer_id'],
       learnerName: json['learner_name'],
       trainer:
@@ -55,6 +58,7 @@ class AppointmentModel {
       'status': status,
       'gmeet_link': gmeetLink,
       'trainer_id': trainerId,
+      'learner_id': learnerId,
       'learner_name': learnerName,
       'trainer': trainer
     };

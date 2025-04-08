@@ -25,7 +25,7 @@ class LearnerAppointmentHomeView
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : AppColors.background,
       appBar: CustomAppBar(
-        title: 'Book a Session',
+        title: 'Book Appointments',
         showSearchButton: true,
         onSearchTap: viewModel.setSearchQuery,
       ),
