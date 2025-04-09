@@ -296,12 +296,14 @@ class ApiService {
     required String currency,
     required String paymentId,
     String? paymentMethodId,
+    String? paymentType,
   }) async {
     try {
       final response = await post('/create-payment-intent', data: {
         'amount': amount,
         'currency': currency,
-        'course_id': paymentId,
+        'payment_id': paymentId,
+        'payment_type': paymentType,
         if (paymentMethodId != null) 'payment_method_id': paymentMethodId,
       });
 
@@ -330,7 +332,8 @@ class ApiService {
         'currency': 'usd', // Hardcoded for now, could be made dynamic
         'status': transaction.status,
         'payment_method': transaction.paymentMethod,
-        'course_id': transaction.paymentId,
+        'payment_id': transaction.paymentId,
+        'type': transaction.type,
         'user_id':
             transaction.userId, // This will come from auth()->id() on backend
         'created_at': transaction.timestamp.toIso8601String(),

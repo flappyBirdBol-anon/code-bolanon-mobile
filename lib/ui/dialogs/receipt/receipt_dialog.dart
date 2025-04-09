@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/models/payment_param.dart';
 import 'package:code_bolanon/models/transaction_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -32,10 +32,10 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final courseData = widget.request.data?['course'] as CourseModel?;
+    final paymentData = widget.request.data?['payment'] as PaymentParam?;
     final transactionData = widget.request.data?['transaction'] as Transaction?;
 
-    if (courseData == null || transactionData == null) {
+    if (paymentData == null || transactionData == null) {
       return _buildErrorDialog();
     }
 
@@ -53,7 +53,7 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: _buildReceiptContent(courseData, transactionData),
+                child: _buildReceiptContent(paymentData, transactionData),
               ),
             ),
             const SizedBox(height: 16),
@@ -99,10 +99,6 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
                       onPressed: () => widget.completer(DialogResponse(
                         confirmed: true,
                       )),
-                      child: Text(
-                        'Close',
-                        style: GoogleFonts.figtree(),
-                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF0D47A1),
                         side: const BorderSide(color: Color(0xFF0D47A1)),
@@ -110,6 +106,10 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
+                      ),
+                      child: Text(
+                        'Close',
+                        style: GoogleFonts.figtree(),
                       ),
                     ),
                   ),
@@ -123,7 +123,7 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
     );
   }
 
-  Widget _buildReceiptContent(CourseModel course, Transaction transaction) {
+  Widget _buildReceiptContent(PaymentParam payment, Transaction transaction) {
     final currencyFormat = NumberFormat.currency(symbol: '\$');
     final dateFormat = DateFormat('MMM dd, yyyy • hh:mm a');
 
@@ -196,7 +196,7 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
 
           // Course details
           Text(
-            'Course Details',
+            payment.startAt != null ? 'Appointment Details' : 'Course Details',
             style: GoogleFonts.figtree(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -232,7 +232,7 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        course.title,
+                        payment.title,
                         style: GoogleFonts.figtree(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -242,7 +242,7 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        course.description,
+                        payment.description!,
                         style: GoogleFonts.figtree(
                           fontSize: 14,
                           color: Colors.grey[700],
@@ -268,13 +268,13 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
             ),
           ),
           const SizedBox(height: 12),
-          _buildPriceRow('Subtotal', currencyFormat.format(course.price)),
+          _buildPriceRow('Subtotal', currencyFormat.format(payment.price)),
           //These zeros are discounts and taxes. They are not used in the app yet.
           if (0 > 0) ...[
             const SizedBox(height: 8),
             _buildPriceRow(
               'Discount (${(0 * 100).toStringAsFixed(0)}%)',
-              '- ${currencyFormat.format(course.price * 0)}',
+              '- ${currencyFormat.format(payment.price * 0)}',
               isDiscount: true,
             ),
           ],
@@ -405,11 +405,11 @@ class _ReceiptDialogState extends State<ReceiptDialog> {
               child: ElevatedButton(
                 onPressed: () =>
                     widget.completer(DialogResponse(confirmed: true)),
-                child: const Text('Close'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
+                child: const Text('Close'),
               ),
             ),
           ],

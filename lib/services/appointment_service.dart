@@ -1,7 +1,9 @@
+import 'package:code_bolanon/app/app.dialogs.dart';
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/models/payment_param.dart';
+import 'package:code_bolanon/models/transaction_model.dart';
 import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:intl/intl.dart';
@@ -11,6 +13,7 @@ class AppointmentService {
   final ApiService _apiService;
   final DateFormat dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
   final NavigationService _navigationService; // Added property
+  final DialogService _dialogService = locator<DialogService>();
 
   AppointmentService(
       {ApiService? apiService, NavigationService? navigationService})
@@ -166,8 +169,11 @@ class AppointmentService {
       final paymentResult = await _navigationService.navigateToPaymentView(
         payment: PaymentParam(
           id: appointmentModel.id.toString(),
-          title: appointmentModel.contextDetails ?? 'No context provided',
+          title: 'Appointment with ${appointmentModel.trainer?.fullName}',
+          description: context,
           price: appointmentModel.price,
+          taxRate: 0.00,
+          discountPercentage: 0.00,
           startAt: appointmentModel.startAt,
           endAt: appointmentModel.endAt,
         ),
@@ -200,6 +206,36 @@ class AppointmentService {
           return {'success': false, 'message': 'No response data received'};
         }
 
+        // Add the appointment to tracked appointments if successful
+        final bookingJson = response.data['data'];
+        print('Booking JSON: $bookingJson');
+
+        // // Add to local state management (assuming you have these lists)
+        // _bookedAppointments.add(AppointmentModel.fromJson(bookingJson));
+        // notifyListeners();
+
+        // Show receipt dialog if transaction data is available
+        if (paymentResult.containsKey('transaction')) {
+          print('Transaction data found, showing receipt dialog');
+          final transactionData = paymentResult['transaction'];
+
+          Transaction transaction;
+          if (transactionData is Map<String, dynamic>) {
+            print('Parsing transaction from map');
+            transaction = Transaction.fromJson(transactionData);
+          } else {
+            print('Using transaction object directly');
+            transaction = transactionData as Transaction;
+          }
+
+          // Use Future.delayed to ensure the dialog appears after navigation completes
+          await Future.delayed(const Duration(milliseconds: 300));
+          await _showAppointmentReceiptDialog(
+              appointmentModel, transaction, context);
+        } else {
+          print('No transaction data in payment result: $paymentResult');
+        }
+
         return {'success': true, 'message': 'Schedule booked successfully'};
       } else {
         return {
@@ -214,5 +250,26 @@ class AppointmentService {
         'message': 'Failed to book schedule. Please try again.'
       };
     }
+  }
+
+  Future<void> _showAppointmentReceiptDialog(AppointmentModel appointment,
+      Transaction transaction, String context) async {
+    final payment = PaymentParam(
+      id: appointment.id.toString(),
+      title: ' Appointment with ${appointment.trainer?.fullName}',
+      price: appointment.price,
+      description: context,
+      startAt: appointment.startAt,
+      endAt: appointment.endAt,
+    );
+    await _dialogService.showCustomDialog(
+      variant: DialogType.receipt,
+      title: context,
+      description: payment.description,
+      data: {
+        'payment': payment,
+        'transaction': transaction,
+      },
+    );
   }
 }

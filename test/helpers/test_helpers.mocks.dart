@@ -1411,6 +1411,7 @@ class MockApiService extends _i1.Mock implements _i4.ApiService {
     required String? currency,
     required String? paymentId,
     String? paymentMethodId,
+    String? paymentType,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -1421,6 +1422,7 @@ class MockApiService extends _i1.Mock implements _i4.ApiService {
             #currency: currency,
             #paymentId: paymentId,
             #paymentMethodId: paymentMethodId,
+            #paymentType: paymentType,
           },
         ),
         returnValue:

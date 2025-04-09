@@ -118,7 +118,7 @@ class PaymentView extends StackedView<PaymentViewModel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Course Details',
+            payment.startAt != null ? 'Appointment Details' : 'Course Details',
             style: GoogleFonts.figtree(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -141,6 +141,16 @@ class PaymentView extends StackedView<PaymentViewModel> {
               color: Colors.grey[700],
             ),
           ),
+          const SizedBox(height: 8),
+          if (payment.startAt != null && payment.endAt != null)
+            Text(
+              '${payment.startAt} - ${payment.endAt}',
+              style: GoogleFonts.figtree(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF0D47A1),
+              ),
+            ),
         ],
       ),
     );

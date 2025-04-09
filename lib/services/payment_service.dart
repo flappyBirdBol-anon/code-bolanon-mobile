@@ -17,7 +17,7 @@ class PaymentService with ListenableServiceMixin {
 
   // Completer to handle in-app purchase results
   Completer<Map<String, dynamic>>? _purchaseCompleter;
-  PaymentParam? _currentCourse;
+  PaymentParam? _currentPayment;
 
   PaymentService() {
     // Listen to in-app purchase updates
@@ -45,17 +45,18 @@ class PaymentService with ListenableServiceMixin {
             purchaseDetails.status == PurchaseStatus.restored) {
           // Verify purchase on your backend
           // Then deliver the product
-          if (_currentCourse != null) {
+          if (_currentPayment != null) {
             final transaction = Transaction(
               id: purchaseDetails.purchaseID ?? 'unknown',
-              paymentId: _currentCourse!.id,
-              particulars: _currentCourse!.title,
-              amount: _calculateTotalAmount(_currentCourse!),
+              paymentId: _currentPayment!.id,
+              particulars: _currentPayment!.title,
+              amount: _calculateTotalAmount(_currentPayment!),
               paymentMethod: 'In-App Purchase',
               timestamp: DateTime.now(),
               status: 'completed',
               userId: await _getCurrentUserId(), // Fixed: Added user ID
               currency: 'PHP',
+              type: _currentPayment?.startAt == null ? 'course' : 'appointment',
             );
 
             // Save transaction to API
@@ -114,6 +115,7 @@ class PaymentService with ListenableServiceMixin {
         amount: (_calculateTotalAmount(payment) * 100).toInt(),
         currency: 'PHP',
         paymentId: payment.id,
+        paymentType: payment.startAt == null ? 'course' : 'appointment',
       );
 
       if (!paymentIntentResponse['success']) {
@@ -155,6 +157,7 @@ class PaymentService with ListenableServiceMixin {
         status: 'completed',
         userId: await _getCurrentUserId(),
         currency: 'PHP',
+        type: _currentPayment?.startAt == null ? 'course' : 'appointment',
       );
 
       final saveResult = await _apiService.saveTransaction(transaction);
@@ -260,6 +263,7 @@ class PaymentService with ListenableServiceMixin {
         status: 'completed',
         userId: await _getCurrentUserId(),
         currency: 'PHP',
+        type: _currentPayment?.startAt == null ? 'course' : 'appointment',
       );
 
       final saveResult = await _apiService.saveTransaction(transaction);
@@ -299,7 +303,7 @@ class PaymentService with ListenableServiceMixin {
         };
       }
 
-      _currentCourse = payment;
+      _currentPayment = payment;
       _purchaseCompleter = Completer<Map<String, dynamic>>();
 
       // Get product details

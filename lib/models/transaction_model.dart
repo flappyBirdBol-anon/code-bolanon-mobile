@@ -1,5 +1,5 @@
 class Transaction {
-  final String id; // transaction_id in backend
+  final String id;
   final String paymentId;
   final String particulars;
   final double amount;
@@ -8,6 +8,7 @@ class Transaction {
   final String status;
   final String userId;
   final String currency;
+  final String type;
 
   Transaction({
     required this.id,
@@ -19,6 +20,7 @@ class Transaction {
     required this.status,
     required this.userId,
     this.currency = 'php',
+    required this.type,
   });
 
   Map<String, dynamic> toJson() {
@@ -32,20 +34,21 @@ class Transaction {
       'status': status,
       'user_id': userId,
       'currency': currency,
+      'type': type,
     };
   }
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
-      id: json['transaction_id'] ?? json['id'],
-      paymentId: json['payment_id'],
-      particulars: json['particulars'] ?? '',
-      amount: (json['amount'] as num).toDouble() / 100, // Convert from cents
-      paymentMethod: json['payment_method'],
-      timestamp: DateTime.parse(json['created_at']),
-      status: json['status'],
-      userId: json['user_id'].toString(),
-      currency: json['currency'] ?? 'usd',
-    );
+        id: json['transaction_id'] ?? json['id'],
+        paymentId: json['payment_id'],
+        particulars: json['particulars'] ?? '',
+        amount: (json['amount'] as num).toDouble() / 100, // Convert from cents
+        paymentMethod: json['payment_method'],
+        timestamp: DateTime.parse(json['created_at']),
+        status: json['status'],
+        userId: json['user_id'].toString(),
+        currency: json['currency'] ?? 'usd',
+        type: json['type']);
   }
 }

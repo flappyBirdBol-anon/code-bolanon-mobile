@@ -103,13 +103,19 @@ class RegistrationService with ReactiveServiceMixin {
   // Show receipt dialog
   Future<void> _showReceiptDialog(
       CourseModel course, Transaction transaction) async {
+    final payment = PaymentParam(
+      id: course.id.toString(),
+      title: course.title,
+      price: course.price,
+      description: course.description,
+    );
     await _dialogService.showCustomDialog(
       variant: DialogType.receipt,
       title: 'Payment Receipt',
       description: 'Your payment was successful!',
       mainButtonTitle: 'Close',
       data: {
-        'course': course,
+        'payment': payment,
         'transaction': transaction,
       },
     );
