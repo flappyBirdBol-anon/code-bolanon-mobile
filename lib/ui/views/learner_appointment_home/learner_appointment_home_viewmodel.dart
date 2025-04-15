@@ -132,7 +132,10 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
   }
 
   Future<void> bookSession(int trainerId) async {
-    navigationService.navigateToLearnerBookAppointmentView(
+    // Navigate to book appointment view and refresh on return
+    await navigationService.navigateToLearnerBookAppointmentView(
         trainerId: trainerId);
+    // Refresh the trainers list when returning from booking
+    await fetchAvailableTrainers();
   }
 }

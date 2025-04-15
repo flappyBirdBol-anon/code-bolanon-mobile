@@ -186,7 +186,49 @@ class LearnerBookAppointmentView
     LearnerBookAppointmentViewModel viewModel,
     int appointmentId,
     bool isDark,
-  ) {
+  ) async {
+    // First check for overlapping appointments
+    final selectedSlot = viewModel.availableTimeSlots
+        .firstWhere((slot) => slot.id == appointmentId);
+    final hasOverlap = await viewModel.hasOverlappingAppointment(selectedSlot);
+
+    if (hasOverlap) {
+      // Show error dialog for overlapping appointment
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          title: Text(
+            'Schedule Conflict',
+            style: GoogleFonts.figtree(
+              color: isDark ? Colors.white : Colors.grey[800],
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Text(
+            'You already have a booked appointment that overlaps with this time slot.',
+            style: GoogleFonts.figtree(
+              color: isDark ? Colors.white70 : Colors.grey[700],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'OK',
+                style: GoogleFonts.figtree(
+                  color: isDark ? Colors.grey[400] : Colors.grey[700],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // If no overlap, proceed with booking confirmation
     final TextEditingController contextController = TextEditingController();
     bool isContextValid = false;
 

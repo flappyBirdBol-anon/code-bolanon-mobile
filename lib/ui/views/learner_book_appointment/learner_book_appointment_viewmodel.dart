@@ -67,22 +67,55 @@ class LearnerBookAppointmentViewModel extends AppBaseViewModel {
     }
   }
 
+  Future<bool> hasOverlappingAppointment(AppointmentModel selectedSlot) async {
+    try {
+      final appointments = await _appointmentService.fetchAllAppointments();
+
+      // Filter appointments that are booked by the current user
+      final userAppointments = appointments.where((apt) =>
+          apt.learnerId == userService.currentUser?.id &&
+          apt.status.toLowerCase() != 'available');
+
+      // Check for overlap
+      return userAppointments.any((apt) {
+        return (selectedSlot.startAt.isBefore(apt.endAt) &&
+            selectedSlot.endAt.isAfter(apt.startAt));
+      });
+    } catch (e) {
+      _showErrorMessage('Error checking appointments: $e');
+      return false;
+    }
+  }
+
   // Book appointment
   Future<void> bookAppointment(int appointmentId, String contextDetails) async {
     print('Booking appointment with ID: $appointmentId');
     setIsLoading(true);
     try {
+      // Find the selected appointment slot
+      final selectedSlot =
+          _availableTimeSlots.firstWhere((slot) => slot.id == appointmentId);
+
+      // Check for overlapping appointments
+      final hasOverlap = await hasOverlappingAppointment(selectedSlot);
+      if (hasOverlap) {
+        _showErrorMessage(
+            'You already have a booked appointment that overlaps with this time slot');
+        setIsLoading(false);
+        return;
+      }
+
       final result = await _appointmentService.bookSchedule(
           appointmentId.toString(), contextDetails);
 
       if (result['success']) {
         _showSuccessMessage(result['message']);
         await loadAvailableSchedules();
+        // Notify the home view to refresh
+        navigationService.back();
       } else {
         _showErrorMessage(result['message']);
       }
-      // _showSuccessMessage('Appointment booked successfully');
-      await loadAvailableSchedules();
     } catch (e) {
       _showErrorMessage('Failed to book appointment: $e');
     } finally {
