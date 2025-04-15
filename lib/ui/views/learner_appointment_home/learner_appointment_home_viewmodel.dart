@@ -40,10 +40,13 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
   List<String> get selectedTechStacks => _selectedTechStacks.toList();
 
   void toggleTechStack(String tag) {
+    // Clear all selections first
     if (_selectedTechStacks.contains(tag)) {
-      _selectedTechStacks.remove(tag);
+      _selectedTechStacks
+          .clear(); // If clicking the same tag again, clear selection
     } else {
-      _selectedTechStacks.add(tag);
+      _selectedTechStacks.clear(); // Clear previous selection
+      _selectedTechStacks.add(tag); // Add new selection
     }
     validateTechStack();
     fetchAvailableTrainers(); // Refresh the list when tech stacks are toggled
