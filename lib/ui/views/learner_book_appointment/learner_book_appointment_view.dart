@@ -188,85 +188,98 @@ class LearnerBookAppointmentView
     bool isDark,
   ) {
     final TextEditingController contextController = TextEditingController();
+    bool isContextValid = false;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-        title: Text(
-          'Confirm Booking',
-          style: GoogleFonts.figtree(
-            color: isDark ? Colors.white : Colors.grey[800],
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Would you like to book this appointment?',
-              style: GoogleFonts.figtree(
-                color: isDark ? Colors.white70 : Colors.grey[700],
-              ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          title: Text(
+            'Confirm Booking',
+            style: GoogleFonts.figtree(
+              color: isDark ? Colors.white : Colors.grey[800],
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: contextController,
-              decoration: InputDecoration(
-                labelText: 'Booking Context',
-                labelStyle: GoogleFonts.figtree(
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Would you like to book this appointment?',
+                style: GoogleFonts.figtree(
                   color: isDark ? Colors.white70 : Colors.grey[700],
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: isDark ? Colors.grey[600]! : Colors.grey[400]!,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: contextController,
+                onChanged: (value) {
+                  setState(() {
+                    isContextValid = value.trim().isNotEmpty;
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Booking Context *',
+                  labelStyle: GoogleFonts.figtree(
+                    color: isDark ? Colors.white70 : Colors.grey[700],
                   ),
-                  borderRadius: BorderRadius.circular(8),
+                  errorText:
+                      contextController.text.isEmpty ? 'Required field' : null,
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey[600]! : Colors.grey[400]!,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(
-                    color: AppColors.primary,
-                  ),
+                style: GoogleFonts.figtree(
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'CANCEL',
+                style: GoogleFonts.figtree(
+                  color: isDark ? Colors.grey[400] : Colors.grey[700],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: isContextValid
+                  ? () {
+                      Navigator.pop(context);
+                      viewModel.bookAppointment(
+                          appointmentId, contextController.text);
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              style: GoogleFonts.figtree(
-                color: isDark ? Colors.white : Colors.black,
+              child: Text(
+                'BOOK',
+                style: GoogleFonts.figtree(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'CANCEL',
-              style: GoogleFonts.figtree(
-                color: isDark ? Colors.grey[400] : Colors.grey[700],
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              viewModel.bookAppointment(appointmentId, contextController.text);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Text(
-              'BOOK',
-              style: GoogleFonts.figtree(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

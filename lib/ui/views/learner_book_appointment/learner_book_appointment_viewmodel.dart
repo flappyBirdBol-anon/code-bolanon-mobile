@@ -81,7 +81,7 @@ class LearnerBookAppointmentViewModel extends AppBaseViewModel {
       } else {
         _showErrorMessage(result['message']);
       }
-      _showSuccessMessage('Appointment booked successfully');
+      // _showSuccessMessage('Appointment booked successfully');
       await loadAvailableSchedules();
     } catch (e) {
       _showErrorMessage('Failed to book appointment: $e');
