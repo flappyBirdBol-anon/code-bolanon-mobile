@@ -245,113 +245,189 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
           child: GestureDetector(
             onTap: () {}, // Prevent tap from closing the form
             child: Container(
-              width: 300,
+              width: 400,
+              constraints: const BoxConstraints(maxHeight: 600),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      'Add Schedule',
-                      style: GoogleFonts.figtree(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : Colors.grey[800],
+                  // Header with gradient
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.primary,
+                          AppColors.primary.withOpacity(0.8),
+                        ],
                       ),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(16)),
                     ),
-                  ),
-                  if (viewModel.errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        viewModel.errorMessage!,
-                        style: GoogleFonts.figtree(
-                          color: Colors.red[400],
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  Divider(color: isDark ? Colors.grey[800] : Colors.grey[300]),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Text(
-                          DateFormat('EEEE, MMMM d, yyyy')
-                              .format(viewModel.selectedDate),
-                          style: GoogleFonts.figtree(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white70 : Colors.grey[700],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        _buildTimeSelector(
-                          context,
-                          'Start Time',
-                          viewModel.formatTimeOfDay(viewModel.startTime),
-                          () => _selectTime(context, viewModel, true),
-                          isDark,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTimeSelector(
-                          context,
-                          'End Time',
-                          viewModel.formatTimeOfDay(viewModel.endTime),
-                          () => _selectTime(context, viewModel, false),
-                          isDark,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildPriceField(viewModel, isDark),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        TextButton(
-                          onPressed: viewModel.toggleAddScheduleForm,
-                          child: Text(
-                            'CANCEL',
-                            style: GoogleFonts.figtree(
-                              color:
-                                  isDark ? Colors.grey[400] : Colors.grey[700],
-                              fontWeight: FontWeight.w600,
-                            ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.add_chart,
+                            color: Colors.white.withOpacity(0.9),
+                            size: 24,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: viewModel.createAvailableTimeSlot,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4C3575),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Text(
-                            'ADD',
-                            style: GoogleFonts.figtree(
-                              fontWeight: FontWeight.w600,
-                            ),
+                        const SizedBox(width: 16),
+                        Text(
+                          'Add New Schedule',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white.withOpacity(0.9),
                           ),
                         ),
                       ],
                     ),
+                  ),
+
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (viewModel.errorMessage != null)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.red.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Colors.red[400],
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      viewModel.errorMessage!,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.red[400],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Text(
+                            'Set up your availability for this day.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color:
+                                  isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildDateSelector(
+                            context,
+                            'Date',
+                            viewModel.formSelectedDate,
+                            (date) => viewModel.setFormSelectedDate(date),
+                            isDark,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTimeSelector(
+                            context,
+                            'Start Time',
+                            viewModel.formatTimeOfDay(viewModel.startTime),
+                            () => _selectTime(context, viewModel, true),
+                            isDark,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTimeSelector(
+                            context,
+                            'End Time',
+                            viewModel.formatTimeOfDay(viewModel.endTime),
+                            () => _selectTime(context, viewModel, false),
+                            isDark,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildPriceField(viewModel, isDark),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Action buttons with divider
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Divider(),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: viewModel.toggleAddScheduleForm,
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () =>
+                                  viewModel.createAvailableTimeSlot(),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                backgroundColor: AppColors.primary,
+                              ),
+                              child: viewModel.isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Add Schedule',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -377,102 +453,207 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
           child: GestureDetector(
             onTap: () {}, // Prevent tap from closing the form
             child: Container(
-              width: 300,
+              width: 400,
+              constraints: const BoxConstraints(maxHeight: 600),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      'Reschedule',
-                      style: GoogleFonts.figtree(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : Colors.grey[800],
+                  // Header with gradient
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.primary,
+                          AppColors.primary.withOpacity(0.8),
+                        ],
+                      ),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            viewModel.isReschedulingBookedAppointment
+                                ? Icons.event_repeat
+                                : Icons.edit_calendar,
+                            color: Colors.white.withOpacity(0.9),
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          viewModel.isReschedulingBookedAppointment
+                              ? 'Reschedule Appointment'
+                              : 'Edit Schedule',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (viewModel.errorMessage != null)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.red.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Colors.red[400],
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      viewModel.errorMessage!,
+                                      style: GoogleFonts.figtree(
+                                        color: Colors.red[400],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Text(
+                            viewModel.isReschedulingBookedAppointment
+                                ? 'Please select a new date and time for this appointment.'
+                                : 'Update the schedule details below.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color:
+                                  isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildDateSelector(
+                            context,
+                            'Date',
+                            viewModel.formSelectedDate,
+                            (date) => viewModel.setFormSelectedDate(date),
+                            isDark,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTimeSelector(
+                            context,
+                            'Start Time',
+                            viewModel.formatTimeOfDay(viewModel.startTime),
+                            () => _selectTime(context, viewModel, true),
+                            isDark,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTimeSelector(
+                            context,
+                            'End Time',
+                            viewModel.formatTimeOfDay(viewModel.endTime),
+                            () => _selectTime(context, viewModel, false),
+                            isDark,
+                          ),
+                          if (!viewModel.isReschedulingBookedAppointment) ...[
+                            const SizedBox(height: 16),
+                            _buildPriceField(viewModel, isDark),
+                          ],
+                        ],
                       ),
                     ),
                   ),
-                  Divider(color: isDark ? Colors.grey[800] : Colors.grey[300]),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Text(
-                          DateFormat('EEEE, MMMM d, yyyy')
-                              .format(viewModel.selectedDate),
-                          style: GoogleFonts.figtree(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white70 : Colors.grey[700],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        _buildTimeSelector(
-                          context,
-                          'Start Time',
-                          viewModel.formatTimeOfDay(viewModel.startTime),
-                          () => _selectTime(context, viewModel, true),
-                          isDark,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTimeSelector(
-                          context,
-                          'End Time',
-                          viewModel.formatTimeOfDay(viewModel.endTime),
-                          () => _selectTime(context, viewModel, false),
-                          isDark,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildPriceField(viewModel, isDark),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: viewModel.hideRescheduleForm,
-                          child: Text(
-                            'CANCEL',
-                            style: GoogleFonts.figtree(
-                              color:
-                                  isDark ? Colors.grey[400] : Colors.grey[700],
-                              fontWeight: FontWeight.w600,
+
+                  // Action buttons with divider
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Divider(),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: viewModel.hideRescheduleForm,
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: viewModel.updateAppointment,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4C3575),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: viewModel.hasChanges
+                                  ? () => viewModel.updateAppointment()
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                backgroundColor: AppColors.primary,
+                                disabledBackgroundColor: isDark
+                                    ? Colors.grey[700]
+                                    : Colors.grey[300],
+                              ),
+                              child: viewModel.isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
+                                      ),
+                                    )
+                                  : Text(
+                                      viewModel.isReschedulingBookedAppointment
+                                          ? 'Reschedule'
+                                          : 'Save Changes',
+                                      style: TextStyle(
+                                        color: viewModel.hasChanges
+                                            ? Colors.white
+                                            : isDark
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
+                                      ),
+                                    ),
                             ),
-                          ),
-                          child: Text(
-                            'SAVE',
-                            style: GoogleFonts.figtree(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -652,7 +833,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                viewModel.showRescheduleFormForAppointment(appointmentId);
+                viewModel.showEditForm(appointmentId);
               },
             ),
             ListTile(
@@ -674,61 +855,6 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showPostponeConfirmation(
-    BuildContext context,
-    TrainerSchedulesViewModel viewModel,
-    String appointmentId,
-    bool isDark,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-        title: Text(
-          'Postpone Appointment',
-          style: GoogleFonts.figtree(
-            color: isDark ? Colors.white : Colors.grey[800],
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to postpone this appointment? The learner will be notified.',
-          style: GoogleFonts.figtree(
-            color: isDark ? Colors.white70 : Colors.grey[700],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'CANCEL',
-              style: GoogleFonts.figtree(
-                color: isDark ? Colors.grey[400] : Colors.grey[700],
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              viewModel.postponeAppointment(appointmentId);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber[700],
-              foregroundColor: Colors.white,
-            ),
-            child: Text(
-              'POSTPONE',
-              style: GoogleFonts.figtree(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -770,8 +896,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              viewModel.postponeAppointment(
-                  appointmentId); // Reusing postpone for cancel
+              viewModel.postponeAppointment(appointmentId);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red[400],
@@ -787,17 +912,6 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
         ],
       ),
     );
-  }
-
-  bool _isToday(DateTime date) {
-    final now = DateTime.now();
-    return date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day;
-  }
-
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   @override
@@ -840,61 +954,6 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
     }
   }
 
-  void _showDeleteConfirmation(
-    BuildContext context,
-    TrainerSchedulesViewModel viewModel,
-    int slotId,
-    bool isDark,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-        title: Text(
-          'Delete Time Slot',
-          style: GoogleFonts.figtree(
-            color: isDark ? Colors.white : Colors.grey[800],
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to delete this time slot? This action cannot be undone.',
-          style: GoogleFonts.figtree(
-            color: isDark ? Colors.white70 : Colors.grey[700],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'CANCEL',
-              style: GoogleFonts.figtree(
-                color: isDark ? Colors.grey[400] : Colors.grey[700],
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              viewModel.removeTimeSlot(slotId);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[400],
-              foregroundColor: Colors.white,
-            ),
-            child: Text(
-              'DELETE',
-              style: GoogleFonts.figtree(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPriceField(
     TrainerSchedulesViewModel viewModel,
     bool isDark,
@@ -933,6 +992,82 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
           ),
           style: GoogleFonts.figtree(
             color: isDark ? Colors.white : Colors.grey[800],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateSelector(
+    BuildContext context,
+    String label,
+    DateTime selectedDate,
+    Function(DateTime) onDateChanged,
+    bool isDark,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.figtree(
+            fontSize: 14,
+            color: isDark ? Colors.grey[400] : Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () async {
+            final DateTime? picked = await showDatePicker(
+              context: context,
+              initialDate: selectedDate,
+              firstDate: DateTime.now(),
+              lastDate: DateTime(2025, 12, 31),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: ColorScheme.light(
+                      primary: AppColors.primary,
+                      onPrimary: Colors.white,
+                      surface: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      onSurface: isDark ? Colors.white : Colors.black,
+                    ),
+                    dialogBackgroundColor:
+                        isDark ? const Color(0xFF1E293B) : Colors.white,
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (picked != null) {
+              onDateChanged(picked);
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  DateFormat('EEEE, MMMM d, yyyy').format(selectedDate),
+                  style: GoogleFonts.figtree(
+                    fontSize: 16,
+                    color: isDark ? Colors.white : Colors.grey[800],
+                  ),
+                ),
+                Icon(
+                  Icons.calendar_today,
+                  size: 20,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ],
+            ),
           ),
         ),
       ],

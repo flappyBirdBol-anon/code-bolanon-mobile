@@ -73,6 +73,18 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   double _price = 500.0;
   double get price => _price;
 
+  DateTime _formSelectedDate = DateTime.now();
+  DateTime get formSelectedDate => _formSelectedDate;
+
+  AppointmentModel? _originalAppointment;
+  AppointmentModel? get originalAppointment => _originalAppointment;
+
+  bool _hasChanges = false;
+  bool get hasChanges => _hasChanges;
+
+  bool _isReschedulingBookedAppointment = false;
+  bool get isReschedulingBookedAppointment => _isReschedulingBookedAppointment;
+
   bool isSelectedDateActive(DateTime date) {
     final now = DateTime.now();
     return date.year == _selectedDate.year &&
@@ -83,6 +95,44 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
 
   void setPrice(double value) {
     _price = value;
+    _checkForChanges();
+    notifyListeners();
+  }
+
+  void setFormSelectedDate(DateTime date) {
+    _formSelectedDate = date;
+    _checkForChanges();
+    notifyListeners();
+  }
+
+  void _checkForChanges() {
+    if (_originalAppointment == null && _showAddScheduleForm) {
+      _hasChanges = true;
+      notifyListeners();
+      return;
+    }
+
+    if (_originalAppointment != null) {
+      final newStart = DateTime(
+        _formSelectedDate.year,
+        _formSelectedDate.month,
+        _formSelectedDate.day,
+        _startTime.hour,
+        _startTime.minute,
+      );
+      final newEnd = DateTime(
+        _formSelectedDate.year,
+        _formSelectedDate.month,
+        _formSelectedDate.day,
+        _endTime.hour,
+        _endTime.minute,
+      );
+
+      _hasChanges = newStart != _originalAppointment!.startAt ||
+          newEnd != _originalAppointment!.endAt ||
+          _price != _originalAppointment!.price;
+    }
+
     notifyListeners();
   }
 
@@ -155,10 +205,10 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     setIsLoading(true);
     try {
       final newAppointment = {
-        'startAt': DateTime(_selectedDate.year, _selectedDate.month,
-            _selectedDate.day, _startTime.hour, _startTime.minute),
-        'endAt': DateTime(_selectedDate.year, _selectedDate.month,
-            _selectedDate.day, _endTime.hour, _endTime.minute),
+        'startAt': DateTime(_formSelectedDate.year, _formSelectedDate.month,
+            _formSelectedDate.day, _startTime.hour, _startTime.minute),
+        'endAt': DateTime(_formSelectedDate.year, _formSelectedDate.month,
+            _formSelectedDate.day, _endTime.hour, _endTime.minute),
         'price': _price,
       };
       await _appointmentService.createSchedule(newAppointment);
@@ -176,10 +226,10 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
 
   // Add helper method to check for overlapping appointments
   bool _checkForOverlap({int? excludeId}) {
-    final newStart = DateTime(_selectedDate.year, _selectedDate.month,
-        _selectedDate.day, _startTime.hour, _startTime.minute);
-    final newEnd = DateTime(_selectedDate.year, _selectedDate.month,
-        _selectedDate.day, _endTime.hour, _endTime.minute);
+    final newStart = DateTime(_formSelectedDate.year, _formSelectedDate.month,
+        _formSelectedDate.day, _startTime.hour, _startTime.minute);
+    final newEnd = DateTime(_formSelectedDate.year, _formSelectedDate.month,
+        _formSelectedDate.day, _endTime.hour, _endTime.minute);
 
     // Check overlap with available time slots
     for (var slot in _availableTimeSlots) {
@@ -209,13 +259,14 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   // Single unified method for editing/rescheduling
   void showEditForm(String id) {
     try {
-      // Find the appointment in either list
       final appointment = [..._availableTimeSlots, ..._scheduledAppointments]
           .firstWhere((apt) => apt.id.toString() == id);
 
       _selectedTimeSlotId = appointment.id;
       _selectedAppointmentId = null;
       _showRescheduleForm = true;
+      _originalAppointment = appointment;
+      _formSelectedDate = appointment.startAt;
 
       // Set form data
       _startTime = TimeOfDay(
@@ -226,7 +277,8 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
         hour: appointment.endAt.hour,
         minute: appointment.endAt.minute,
       );
-      _price = appointment.price ?? 500.0;
+      _price = appointment.price;
+      _hasChanges = false;
 
       notifyListeners();
     } catch (e) {
@@ -236,23 +288,28 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   }
 
   // Replace these methods to use the unified showEditForm
-  void showRescheduleFormForAppointment(String id) => showEditForm(id);
-  void openEditScheduleForm(int slotId) => showEditForm(slotId.toString());
+  void showRescheduleFormForAppointment(String id) {
+    _isReschedulingBookedAppointment = true;
+    showEditForm(id);
+  }
+
+  void openEditScheduleForm(int slotId) {
+    _isReschedulingBookedAppointment = false;
+    showEditForm(slotId.toString());
+  }
 
   // Update this method to be simpler
   Future<void> updateAppointment() async {
     if (!_validateTimes()) return;
+    if (!_hasChanges) {
+      _showErrorMessage('No changes have been made');
+      return;
+    }
 
     try {
       if (_selectedTimeSlotId == null) {
         throw Exception('No appointment selected for update');
       }
-
-      // Find the appointment to update
-      final appointmentToUpdate = [
-        ..._availableTimeSlots,
-        ..._scheduledAppointments
-      ].firstWhere((apt) => apt.id == _selectedTimeSlotId);
 
       // Check for overlaps excluding current appointment
       if (_checkForOverlap(excludeId: _selectedTimeSlotId)) {
@@ -264,20 +321,22 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
       setIsLoading(true);
 
       final updatedAppointment = AppointmentModel(
-          id: appointmentToUpdate.id,
-          startAt: DateTime(_selectedDate.year, _selectedDate.month,
-              _selectedDate.day, _startTime.hour, _startTime.minute),
-          endAt: DateTime(_selectedDate.year, _selectedDate.month,
-              _selectedDate.day, _endTime.hour, _endTime.minute),
-          price: _price,
-          contextDetails: appointmentToUpdate.contextDetails,
-          status: appointmentToUpdate.status,
-          trainerId: appointmentToUpdate.trainerId,
-          gmeetLink: appointmentToUpdate.gmeetLink,
-          trainer: appointmentToUpdate.trainer);
+          id: _originalAppointment!.id,
+          startAt: DateTime(_formSelectedDate.year, _formSelectedDate.month,
+              _formSelectedDate.day, _startTime.hour, _startTime.minute),
+          endAt: DateTime(_formSelectedDate.year, _formSelectedDate.month,
+              _formSelectedDate.day, _endTime.hour, _endTime.minute),
+          price: _isReschedulingBookedAppointment
+              ? _originalAppointment!.price
+              : _price,
+          contextDetails: _originalAppointment!.contextDetails,
+          status: _originalAppointment!.status,
+          trainerId: _originalAppointment!.trainerId,
+          gmeetLink: _originalAppointment!.gmeetLink,
+          trainer: _originalAppointment!.trainer);
 
       final result = await _appointmentService.updateSchedule(
-          appointmentToUpdate.id.toString(), updatedAppointment);
+          _originalAppointment!.id.toString(), updatedAppointment);
 
       if (result['success']) {
         _showSuccessMessage(result['message']);
@@ -324,6 +383,8 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     _price = 500.0;
     _showAddScheduleForm = false;
     _errorMessage = null;
+    _originalAppointment = null;
+    _hasChanges = false;
     notifyListeners();
   }
 
@@ -406,12 +467,14 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   // Set start time for new schedule
   void setStartTime(TimeOfDay time) {
     _startTime = time;
+    _checkForChanges();
     notifyListeners();
   }
 
   // Set end time for new schedule
   void setEndTime(TimeOfDay time) {
     _endTime = time;
+    _checkForChanges();
     notifyListeners();
   }
 
@@ -419,9 +482,11 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   void toggleAddScheduleForm() {
     _showAddScheduleForm = !_showAddScheduleForm;
     if (_showAddScheduleForm) {
-      // Reset to default times when opening the form
+      _formSelectedDate = _selectedDate;
       _startTime = const TimeOfDay(hour: 9, minute: 0);
       _endTime = const TimeOfDay(hour: 10, minute: 0);
+      _price = 500.0;
+      _originalAppointment = null;
     }
     notifyListeners();
   }
@@ -437,6 +502,9 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   void hideRescheduleForm() {
     _showRescheduleForm = false;
     _selectedAppointmentId = null;
+    _originalAppointment = null;
+    _hasChanges = false;
+    _isReschedulingBookedAppointment = false;
     notifyListeners();
   }
 
