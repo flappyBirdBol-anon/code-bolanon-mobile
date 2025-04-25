@@ -77,21 +77,25 @@ class AvailableCoursesViewModel extends CourseBaseViewModel {
   Future<void> loadInitialCourses() async {
     setBusy(true);
     try {
-      // Always load registrations for learners, even if it returns empty
+      // Always load registrations for learners first
       if (isLearner) {
         print('Loading registered courses...'); // Debug log
         await _registrationService.loadRegisteredCourses();
       }
 
-      final initialCourses = await loadCourses();
-      print('Loaded ${initialCourses.length} courses'); // Debug log
+      final allCourses = await loadCourses();
+      print('Loaded ${allCourses.length} total courses'); // Debug log
 
-      // Debug log registered courses
-      if (isLearner) {
-        print('Registered courses: ${_registrationService.registeredCourses}');
-      }
+      // Filter out courses that the user is already enrolled in
+      final availableCourses = allCourses.where((course) {
+        final isEnrolled = _registrationService.isRegistered(course.id);
+        return !isEnrolled; // Only keep courses where the user is not enrolled
+      }).toList();
 
-      updateCourses(initialCourses);
+      print(
+          '${availableCourses.length} courses available for enrollment'); // Debug log
+
+      updateCourses(availableCourses);
       notifyListeners();
     } catch (e) {
       print('Error loading courses: $e'); // Debug log
