@@ -452,8 +452,13 @@ class StackedRouter extends _i1.RouterBase {
       );
     },
     _i28.AppointmentDetailsView: (data) {
+      final args = data.getArgs<AppointmentDetailsViewArguments>(
+        orElse: () => const AppointmentDetailsViewArguments(),
+      );
       return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i28.AppointmentDetailsView(),
+        builder: (context) => _i28.AppointmentDetailsView(
+          appointmentId: args.appointmentId ?? '',
+        ),
         settings: data,
       );
     },
@@ -670,6 +675,30 @@ class LearnerBookAppointmentViewArguments {
   @override
   int get hashCode {
     return key.hashCode ^ trainerId.hashCode;
+  }
+}
+
+class AppointmentDetailsViewArguments {
+  const AppointmentDetailsViewArguments({
+    this.appointmentId,
+  });
+
+  final String? appointmentId;
+
+  @override
+  String toString() {
+    return '{"appointmentId": "$appointmentId"}';
+  }
+
+  @override
+  bool operator ==(covariant AppointmentDetailsViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.appointmentId == appointmentId;
+  }
+
+  @override
+  int get hashCode {
+    return appointmentId.hashCode;
   }
 }
 
@@ -1058,14 +1087,17 @@ extension NavigatorStateExtension on _i35.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> navigateToAppointmentDetailsView([
+  Future<dynamic> navigateToAppointmentDetailsView({
+    String? appointmentId,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return navigateTo<dynamic>(Routes.appointmentDetailsView,
+        arguments:
+            AppointmentDetailsViewArguments(appointmentId: appointmentId),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -1488,14 +1520,17 @@ extension NavigatorStateExtension on _i35.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> replaceWithAppointmentDetailsView([
+  Future<dynamic> replaceWithAppointmentDetailsView({
+    String? appointmentId,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
+  }) async {
     return replaceWith<dynamic>(Routes.appointmentDetailsView,
+        arguments:
+            AppointmentDetailsViewArguments(appointmentId: appointmentId),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,

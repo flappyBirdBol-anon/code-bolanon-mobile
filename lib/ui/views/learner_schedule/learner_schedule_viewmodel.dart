@@ -103,10 +103,8 @@ class LearnerScheduleViewModel extends AppBaseViewModel {
   }
 
   Future<void> viewAppointmentDetails(int appointmentId) async {
-    navigationService.navigateTo(
-      Routes.appointmentDetailsView,
-      arguments: {'appointmentId': appointmentId},
-    );
+    navigationService.navigateToAppointmentDetailsView(
+        appointmentId: appointmentId.toString());
   }
 
   Future<void> launchGoogleMeet(String? meetLink) async {
