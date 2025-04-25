@@ -16,6 +16,7 @@ import 'package:code_bolanon/ui/views/add_lesson/add_lesson_view.dart';
 import 'package:code_bolanon/ui/views/lessons_full/lessons_full_view.dart';
 import 'package:code_bolanon/ui/views/trainer_courses/add_course.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -39,6 +40,36 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   // User data for the trainer
   UserModel? get currentUser => _userService.currentUser;
 
+  // Get current user ID in string format for comparison
+  String get currentUserId {
+    final id = _userService.currentUser?.id?.toString().trim() ?? '';
+    print('Current User ID from UserService: ${_userService.currentUser?.id}');
+    print('Current User ID after toString: $id');
+    return id;
+  }
+
+  // Helper method to compare user IDs
+  bool isReviewByCurrentUser(RegistrationModel review) {
+    final currentId = currentUserId;
+    // Safely handle null userId
+    final reviewerId = review.userId.toString().trim() ?? '';
+
+    print('Debug: Review object: ${review.toString()}');
+    print('Debug: Current User ID: "$currentId"');
+    print('Debug: Reviewer ID: "$reviewerId"');
+    print('Debug: Raw review.userId: "${review.userId}"');
+
+    if (currentId.isEmpty || reviewerId.isEmpty) {
+      print(
+          'Debug: One or both IDs are empty - currentId: $currentId, reviewerId: $reviewerId');
+      return false;
+    }
+
+    final isMatch = reviewerId == currentId;
+    print('Debug: ID comparison result: $isMatch');
+    return isMatch;
+  }
+
   final TextEditingController reviewController = TextEditingController();
   final TextEditingController reportReasonController = TextEditingController();
   double userRating = 0;
@@ -52,6 +83,11 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   void setReviewSortBy(String sortBy) {
     _reviewSortBy = sortBy;
     _sortReviews();
+    notifyListeners();
+  }
+
+  void setRating(double rating) {
+    userRating = rating;
     notifyListeners();
   }
 
@@ -453,14 +489,8 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     }
   }
 
-  void setRating(double rating) {
-    userRating = rating;
-    notifyListeners();
-  }
-
   Future<void> submitReview() async {
     if (reviewController.text.isEmpty || userRating == 0) {
-      // Show error message
       await _dialogService.showDialog(
         title: 'Invalid Review',
         description: 'Please provide both a rating and review text.',
@@ -471,12 +501,9 @@ class CourseDetailsViewModel extends ReactiveViewModel {
 
     try {
       setBusy(true);
-
-      // Find current registration for this course
       final registration = _registrationService.registrations
           .firstWhere((reg) => reg.courseId == course!.id);
 
-      // Submit the review using registration service
       final success = await _registrationService.submitReviewOrReport(
         registrationId: registration.id,
         rating: userRating,
@@ -485,34 +512,78 @@ class CourseDetailsViewModel extends ReactiveViewModel {
       );
 
       if (success) {
-        await _dialogService.showDialog(
-          title: 'Review Submitted',
-          description: 'Thank you for your feedback!',
-          buttonTitle: 'OK',
-        );
+        // Schedule state updates for after the frame completes
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          // Create new review and add it to the list
+          final newReview = registration.copyWith(
+            rating: userRating.toInt(),
+            feedback: reviewController.text,
+            updatedAt: DateTime.now(),
+            createdAt: DateTime.now(),
+          );
 
-        // Clear the form
-        reviewController.clear();
-        userRating = 0;
+          _reviews.insert(0, newReview);
+          _sortReviews();
 
-        // Refresh data
-        await initialize(course);
-      } else {
-        await _dialogService.showDialog(
-          title: 'Error',
-          description: 'Failed to submit your review. Please try again later.',
-          buttonTitle: 'OK',
-        );
+          // Clear form
+          reviewController.clear();
+          userRating = 0;
+
+          snackbarService.showCustomSnackBar(
+              message: 'Review submitted successfully',
+              variant: SnackbarType.success);
+
+          // Refresh full data
+          initialize(course);
+          notifyListeners();
+        });
       }
     } catch (e) {
-      await _dialogService.showDialog(
-        title: 'Error',
-        description: 'An error occurred: ${e.toString()}',
-        buttonTitle: 'OK',
-      );
+      snackbarService.showCustomSnackBar(
+          message: 'Failed to submit review: $e', variant: SnackbarType.error);
     } finally {
       setBusy(false);
-      notifyListeners();
+    }
+  }
+
+  Future<void> updateReview(RegistrationModel review) async {
+    try {
+      setBusy(true);
+      final success = await _registrationService.submitReviewOrReport(
+        registrationId: review.id,
+        rating: userRating,
+        feedback: reviewController.text,
+        type: 'review',
+      );
+
+      if (success) {
+        // Schedule state updates for after the frame completes
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          // Update the review in the local list
+          final index = _reviews.indexWhere((r) => r.id == review.id);
+          if (index != -1) {
+            _reviews[index] = review.copyWith(
+              rating: userRating.toInt(),
+              feedback: reviewController.text,
+              updatedAt: DateTime.now(),
+            );
+            _sortReviews();
+          }
+
+          snackbarService.showCustomSnackBar(
+              message: 'Review updated successfully',
+              variant: SnackbarType.success);
+
+          // Refresh full data
+          initialize(course);
+          notifyListeners();
+        });
+      }
+    } catch (e) {
+      snackbarService.showCustomSnackBar(
+          message: 'Failed to update review: $e', variant: SnackbarType.error);
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -709,7 +780,21 @@ class CourseDetailsViewModel extends ReactiveViewModel {
       _course!.author == currentUser!.fullName;
 
   // Add this getter to control review section visibility
-  bool get canWriteReview => isLearner && isRegistered;
+  bool get canWriteReview {
+    if (!isLearner || !isRegistered || course == null) return false;
+
+    // Find user's registration for this course
+    try {
+      final registration = _registrationService.registrations
+          .firstWhere((reg) => reg.courseId == course!.id);
+
+      // Can write review only if feedback and rating are null
+      return registration.feedback == null && registration.rating == null;
+    } catch (e) {
+      // If registration not found, user cannot write review
+      return false;
+    }
+  }
 
   // Add this getter to control visibility of wishlist button
   bool get showWishlistButton => isLearner && !isRegistered;

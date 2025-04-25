@@ -160,7 +160,6 @@ class RegistrationService with ReactiveServiceMixin {
       final response = await _apiService.get('/registrations');
       print('Registration Response Status: ${response.statusCode}');
       print('Registration Raw Data: ${response.data}');
-      print('Response headers: ${response.headers}');
 
       if (response.statusCode == 200) {
         if (response.data == null) {
@@ -174,12 +173,17 @@ class RegistrationService with ReactiveServiceMixin {
         }
 
         final List<dynamic> registrationsJson = response.data['data'] ?? [];
-        print('Processing registration JSON data: $registrationsJson');
+        print('Number of registrations found: ${registrationsJson.length}');
 
         _registrations = registrationsJson
             .map((json) {
               try {
-                return RegistrationModel.fromJson(json);
+                print('Processing registration entry: $json');
+                print('User ID from root: ${json['user_id']}');
+                print('User data if nested: ${json['user']}');
+                final registration = RegistrationModel.fromJson(json);
+                print('Processed registration userId: ${registration.userId}');
+                return registration;
               } catch (e, stackTrace) {
                 print('Error parsing registration JSON: $json');
                 print('Parse error: $e');
@@ -187,15 +191,21 @@ class RegistrationService with ReactiveServiceMixin {
                 return null;
               }
             })
-            .whereType<RegistrationModel>()
+            .where((reg) => reg != null)
+            .cast<RegistrationModel>()
             .toList();
 
-        print('Successfully parsed registrations: $_registrations');
+        print('Successfully processed ${_registrations.length} registrations');
+        // Log each registration's userId
+        for (var reg in _registrations) {
+          print('Registration ID: ${reg.id}, UserID: ${reg.userId}');
+        }
+
+        notifyListeners();
         return _registrations;
-      } else {
-        print('Failed response: ${response.data}');
-        throw Exception('Failed to load registrations: ${response.statusCode}');
       }
+      print('Unexpected response status: ${response.statusCode}');
+      return [];
     } catch (e, stackTrace) {
       print('Error in getUserRegistrations: $e');
       print('StackTrace: $stackTrace');
