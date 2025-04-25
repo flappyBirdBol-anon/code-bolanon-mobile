@@ -23,7 +23,7 @@ class LearnerScheduleView extends StackedView<LearnerScheduleViewModel> {
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Your Schedule',
-        showSearchButton: true,
+        showSearchButton: false,
         showNotificationButton: true,
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       ),

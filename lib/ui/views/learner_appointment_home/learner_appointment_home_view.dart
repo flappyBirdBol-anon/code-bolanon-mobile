@@ -27,7 +27,9 @@ class LearnerAppointmentHomeView
       appBar: CustomAppBar(
         title: 'Book Appointments',
         showSearchButton: true,
-        onSearchTap: viewModel.setSearchQuery,
+        showNotificationButton: true,
+        onSearchTap: (query) => viewModel.setSearchQuery(query),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       ),
       body: SafeArea(
         child: RefreshIndicator(

@@ -61,14 +61,13 @@ class _CustomAppBarState extends State<CustomAppBar>
   }
 
   void _stopSearch() {
-    _animationController.reverse().then((_) {
-      setState(() {
-        _isSearching = false;
-        _searchController.clear();
-      });
-      // Call onSearchTap with empty string to reset search
+    setState(() {
+      _isSearching = false;
+      _searchController.clear();
+      // Call onSearchTap with empty string to trigger reset
       widget.onSearchTap?.call('');
     });
+    _animationController.reverse();
   }
 
   @override
@@ -99,7 +98,7 @@ class _CustomAppBarState extends State<CustomAppBar>
                     fontSize: 16,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Search courses...',
+                    hintText: 'Search...',
                     hintStyle: TextStyle(
                       color: isDark ? Colors.white70 : Colors.black54,
                       fontSize: 16,

@@ -10,6 +10,7 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
   final _appointmentService = locator<AppointmentService>();
 
   List<UserModel> _availableTrainers = [];
+  List<UserModel> _unfilteredTrainers = []; // Keep original list
   List<String> techStacks = [];
   bool _isLoading = false;
   String _searchQuery = '';
@@ -40,16 +41,14 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
   List<String> get selectedTechStacks => _selectedTechStacks.toList();
 
   void toggleTechStack(String tag) {
-    // Clear all selections first
     if (_selectedTechStacks.contains(tag)) {
-      _selectedTechStacks
-          .clear(); // If clicking the same tag again, clear selection
+      _selectedTechStacks.clear();
     } else {
-      _selectedTechStacks.clear(); // Clear previous selection
-      _selectedTechStacks.add(tag); // Add new selection
+      _selectedTechStacks.clear();
+      _selectedTechStacks.add(tag);
     }
     validateTechStack();
-    fetchAvailableTrainers(); // Refresh the list when tech stacks are toggled
+    _filterTrainers(); // Apply both search and tech stack filters
     notifyListeners();
   }
 
@@ -62,30 +61,15 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
     notifyListeners();
 
     try {
-      // Get available trainer IDs from AppointmentService
-      final availableTrainers =
-          await _appointmentService.getAvailableTrainers();
-
-      if (_selectedTechStacks.isEmpty) {
-        _availableTrainers = availableTrainers;
-      } else {
-        _availableTrainers = availableTrainers.where((trainer) {
-          // Extract tech stack tags from each trainer
-          final techStackTags = trainer.stacks
-                  ?.map((selectedStack) =>
-                      selectedStack.stack?.tags.toLowerCase() ?? "")
-                  .where((tag) => tag.isNotEmpty)
-                  .toList() ??
-              [];
-
-          // Check if any selected tech stack matches any trainer tech stack
-          return _selectedTechStacks.any(
-              (selected) => techStackTags.contains(selected.toLowerCase()));
-        }).toList();
-      }
+      final trainers = await _appointmentService.getAvailableTrainers();
+      _unfilteredTrainers = trainers;
+      _availableTrainers = List.from(_unfilteredTrainers);
+      _searchQuery = ''; // Reset search query
     } catch (e) {
       setError('Error fetching trainers: $e');
       debugPrint('Error fetching trainers: $e');
+      _unfilteredTrainers = [];
+      _availableTrainers = [];
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -100,9 +84,36 @@ class LearnerAppointmentHomeViewModel extends AppBaseViewModel {
   }
 
   void setSearchQuery(String query) {
-    _searchQuery = query;
+    _searchQuery = query.toLowerCase().trim();
+    _filterTrainers();
     notifyListeners();
-    // TODO: Implement search filtering
+  }
+
+  void _filterTrainers() {
+    if (_searchQuery.isEmpty) {
+      // Reset to original list when search is empty
+      _availableTrainers = List.from(_unfilteredTrainers);
+    } else {
+      // Filter by name
+      _availableTrainers = _unfilteredTrainers.where((trainer) {
+        return trainer.fullName.toLowerCase().contains(_searchQuery);
+      }).toList();
+    }
+
+    // Apply tech stack filter if needed
+    if (_selectedTechStacks.isNotEmpty) {
+      _availableTrainers = _availableTrainers.where((trainer) {
+        return trainer.stacks?.any((stack) =>
+                _selectedTechStacks.contains(stack.stack?.tags ?? "")) ??
+            false;
+      }).toList();
+    }
+  }
+
+  void resetSearch() {
+    _searchQuery = '';
+    _availableTrainers = List.from(_unfilteredTrainers);
+    notifyListeners();
   }
 
   void setFilter(String filter) {
