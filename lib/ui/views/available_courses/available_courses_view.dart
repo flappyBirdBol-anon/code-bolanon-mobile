@@ -35,7 +35,9 @@ class AvailableCoursesView extends StackedView<AvailableCoursesViewModel> {
         title: 'Available Courses',
         showSearchButton: true,
         showNotificationButton: false,
-        onSearchTap: (query) => viewModel.onSearchChanged(query),
+        onSearchTap: (query) {
+          viewModel.onSearchChanged(query);
+        },
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       ),
       backgroundColor: AppColors.background,

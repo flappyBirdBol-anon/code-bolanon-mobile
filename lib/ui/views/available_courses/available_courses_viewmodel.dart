@@ -74,6 +74,9 @@ class AvailableCoursesViewModel extends CourseBaseViewModel {
     loadInitialCourses();
   }
 
+  List<CourseModel> _allCourses = [];
+  String _searchQuery = '';
+
   Future<void> loadInitialCourses() async {
     setBusy(true);
     try {
@@ -87,15 +90,15 @@ class AvailableCoursesViewModel extends CourseBaseViewModel {
       print('Loaded ${allCourses.length} total courses'); // Debug log
 
       // Filter out courses that the user is already enrolled in
-      final availableCourses = allCourses.where((course) {
+      _allCourses = allCourses.where((course) {
         final isEnrolled = _registrationService.isRegistered(course.id);
         return !isEnrolled; // Only keep courses where the user is not enrolled
       }).toList();
 
       print(
-          '${availableCourses.length} courses available for enrollment'); // Debug log
+          '${_allCourses.length} courses available for enrollment'); // Debug log
 
-      updateCourses(availableCourses);
+      _filterCourses();
       notifyListeners();
     } catch (e) {
       print('Error loading courses: $e'); // Debug log
@@ -103,6 +106,27 @@ class AvailableCoursesViewModel extends CourseBaseViewModel {
     } finally {
       setBusy(false);
     }
+  }
+
+  @override
+  void onSearchChanged(String query) {
+    _searchQuery = query.toLowerCase().trim();
+    _filterCourses();
+    notifyListeners();
+  }
+
+  void _filterCourses() {
+    if (_searchQuery.isEmpty) {
+      updateCourses(_allCourses);
+      return;
+    }
+
+    final filteredCourses = _allCourses.where((course) {
+      return course.title.toLowerCase().contains(_searchQuery) ||
+          course.description.toLowerCase().contains(_searchQuery);
+    }).toList();
+
+    updateCourses(filteredCourses);
   }
 
   @override

@@ -56,6 +56,32 @@ class LearnerCoursesViewModel extends CourseBaseViewModel {
     applyFilters();
   }
 
+  String _searchQuery = '';
+  @override
+  String get searchQuery => _searchQuery;
+
+  @override
+  void onSearchChanged(String query) {
+    _searchQuery = query.toLowerCase().trim();
+    if (_searchQuery.isEmpty) {
+      // Reset to show all courses when search is cleared
+      _filteredCourses = _allCourses;
+    } else {
+      _filteredCourses = _allCourses.where((course) {
+        return course.title.toLowerCase().contains(_searchQuery) ||
+            course.description.toLowerCase().contains(_searchQuery);
+      }).toList();
+    }
+    notifyListeners();
+  }
+
+  // Method to handle search reset
+  void resetSearch() {
+    _searchQuery = '';
+    _filteredCourses = _allCourses;
+    notifyListeners();
+  }
+
   LearnerCoursesViewModel({
     required this.registrationService,
     required this.courseService,
@@ -66,6 +92,8 @@ class LearnerCoursesViewModel extends CourseBaseViewModel {
 
   void _init() {
     print('LearnerCoursesViewModel - init started');
+    _searchQuery = ''; // Reset search query
+    _activeFilters = {'All'}; // Reset filters
     loadCourses();
   }
 
@@ -111,7 +139,6 @@ class LearnerCoursesViewModel extends CourseBaseViewModel {
     }
   }
 
-  @override
   Future<void> initialise() async {
     setBusy(true);
     try {

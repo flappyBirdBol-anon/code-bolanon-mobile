@@ -23,7 +23,7 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
         title: 'My Courses',
-        showSearchButton: false,
+        showSearchButton: true,
         showNotificationButton: false,
         actions: [
           IconButton(
@@ -86,14 +86,13 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
                   debugPrint('Building course at index $index: $course');
 
                   return CourseListProgress(
-                    title: course.title ?? 'Untitled Course',
-                    description:
-                        course.description ?? 'No description available',
-                    thumbnail: course.thumbnail ?? '',
-                    thumbnailUrl: course.thumbnail ?? '',
+                    title: course.title,
+                    description: course.description,
+                    thumbnail: course.thumbnail,
+                    thumbnailUrl: course.thumbnail,
                     progress: viewModel.computeProgress(course),
-                    rating: course.rating ?? 0.0,
-                    reviews: course.reviews ?? 0,
+                    rating: course.rating,
+                    reviews: course.reviews,
                     onTap: () => viewModel.navigateToCourseDetails(course),
                     imageService: viewModel.imageService,
                     tags: viewModel.getCourseTags(course),

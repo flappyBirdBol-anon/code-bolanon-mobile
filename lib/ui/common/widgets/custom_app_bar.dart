@@ -1,106 +1,145 @@
-import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
-  final List<Widget>? actions;
   final bool showSearchButton;
   final bool showNotificationButton;
-  final void Function(String)? onSearchTap;
-  final VoidCallback? onNotificationTap;
+  final Function(String)? onSearchTap;
   final Color? backgroundColor;
-  final TextEditingController? searchController;
+  final List<Widget>? actions;
 
   const CustomAppBar({
     Key? key,
     required this.title,
-    this.actions,
-    this.showSearchButton = true,
+    this.showSearchButton = false,
     this.showNotificationButton = true,
     this.onSearchTap,
-    this.onNotificationTap,
     this.backgroundColor,
-    this.searchController,
+    this.actions,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: backgroundColor,
-      elevation: 0,
-      centerTitle: false, // Changed to false for left alignment
-      title: Text(
-        title,
-        style: GoogleFonts.figtree(
-          color: Color(0xFF2D3142),
-          fontSize: 24, // Increased font size
-          fontWeight: FontWeight.bold, // Made it bold for better emphasis
-        ),
-      ),
-      actions: [
-        if (showSearchButton)
-          IconButton(
-            iconSize: 26, // Increased icon size
-            icon: const Icon(Icons.search, color: AppColors.primary),
-            onPressed: () {
-              _showSearchBottomSheet(context);
-            },
-          ),
-        if (showNotificationButton)
-          IconButton(
-            iconSize: 26, // Increased icon size
-            icon:
-                const Icon(Icons.notifications_none, color: AppColors.primary),
-            onPressed: onNotificationTap ?? () {},
-          ),
-        if (actions != null) ...actions!,
-        const SizedBox(height: 8), // Added padding at the end
-      ],
-    );
-  }
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
-  void _showSearchBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-        ),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Search $title...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onChanged: onSearchTap,
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
+  @override
+  State<CustomAppBar> createState() => _CustomAppBarState();
+}
+
+class _CustomAppBarState extends State<CustomAppBar>
+    with SingleTickerProviderStateMixin {
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  void dispose() {
+    _searchController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _startSearch() {
+    setState(() {
+      _isSearching = true;
+    });
+    _animationController.forward();
+  }
+
+  void _stopSearch() {
+    _animationController.reverse().then((_) {
+      setState(() {
+        _isSearching = false;
+        _searchController.clear();
+      });
+      // Call onSearchTap with empty string to reset search
+      widget.onSearchTap?.call('');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AppBar(
+      backgroundColor: widget.backgroundColor,
+      elevation: 0,
+      titleSpacing: _isSearching ? 0 : NavigationToolbar.kMiddleSpacing,
+      leading: _isSearching
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: _stopSearch,
+            )
+          : null,
+      title: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: _isSearching
+            ? Container(
+                height: kToolbarHeight,
+                alignment: Alignment.center,
+                child: TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontSize: 16,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Search courses...',
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                      fontSize: 16,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                  ),
+                  onChanged: widget.onSearchTap,
+                ),
+              )
+            : Text(
+                widget.title,
+                style: GoogleFonts.figtree(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+      ),
+      actions: [
+        if (widget.showSearchButton && !_isSearching)
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              if (_isSearching) {
+                _stopSearch();
+              } else {
+                _startSearch();
+              }
+            },
+          ),
+        if (!_isSearching && widget.showNotificationButton)
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {
+              // Handle notification tap
+            },
+          ),
+        if (widget.actions != null) ...widget.actions!,
+      ],
+    );
+  }
 }
