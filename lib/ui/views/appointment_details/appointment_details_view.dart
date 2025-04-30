@@ -1,5 +1,6 @@
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
+import 'package:code_bolanon/ui/views/reschedule_appointment/reschedule_appointment_view.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -29,210 +30,234 @@ class AppointmentDetailsView extends StackedView<AppointmentDetailsViewModel> {
         showNotificationButton: false,
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       ),
-      body: viewModel.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : viewModel.appointment == null
-              ? Center(
-                  child: Text(
-                    'Appointment not found',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.grey[800],
-                    ),
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Date/Time Header with Status Chip
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              AppColors.primary,
-                              AppColors.primary.withOpacity(0.8),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
+      body: Stack(
+        children: [
+          // Main content
+          viewModel.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : viewModel.appointment == null
+                  ? Center(
+                      child: Text(
+                        'Appointment not found',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.grey[800],
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Date/Time Header with Status Chip
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  AppColors.primary,
+                                  AppColors.primary.withOpacity(0.8),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      DateFormat('EEE, MMMM d, yyyy').format(
+                                          viewModel.appointment!.startAt),
+                                      style: GoogleFonts.figtree(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: _getStatusColor(
+                                                viewModel.appointment!.status)
+                                            .withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        viewModel.appointment!.status
+                                            .toUpperCase(),
+                                        style: GoogleFonts.figtree(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: _getStatusColor(
+                                              viewModel.appointment!.status),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
                                 Text(
-                                  DateFormat('EEEE, MMMM d, yyyy')
-                                      .format(viewModel.appointment!.startAt),
+                                  '${DateFormat('h:mm a').format(viewModel.appointment!.startAt)} - ${DateFormat('h:mm a').format(viewModel.appointment!.endAt)}',
                                   style: GoogleFonts.figtree(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    fontSize: 15,
+                                    color: Colors.white.withOpacity(0.9),
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(
-                                            viewModel.appointment!.status)
-                                        .withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    viewModel.appointment!.status.toUpperCase(),
-                                    style: GoogleFonts.figtree(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: _getStatusColor(
-                                          viewModel.appointment!.status),
-                                    ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  'P ${viewModel.appointment!.price.toStringAsFixed(2)}',
+                                  style: GoogleFonts.figtree(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.blue[200],
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${DateFormat('h:mm a').format(viewModel.appointment!.startAt)} - ${DateFormat('h:mm a').format(viewModel.appointment!.endAt)}',
-                              style: GoogleFonts.figtree(
-                                fontSize: 15,
-                                color: Colors.white.withOpacity(0.9),
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              'P ${viewModel.appointment!.price.toStringAsFixed(2)}',
-                              style: GoogleFonts.figtree(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.blue[200],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Consultation Details with GMeet Link and Participant Info
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color:
-                              isDark ? const Color(0xFF1E293B) : Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              offset: const Offset(0, 2),
-                              blurRadius: 5,
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Details',
-                              style: GoogleFonts.figtree(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white : Colors.grey[800],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildDetailItem(
-                              isDark,
-                              viewModel.isTrainerView ? 'Learner' : 'Trainer',
-                              viewModel.isTrainerView
-                                  ? viewModel.appointment!.learnerName ??
-                                      'Unknown'
-                                  : viewModel.appointment!.trainer?.fullName ??
-                                      'Unknown',
-                              Icons.person,
-                            ),
-                            if (viewModel.appointment!.contextDetails !=
-                                null) ...[
-                              const SizedBox(height: 12),
-                              _buildDetailItem(
-                                isDark,
-                                'Context',
-                                viewModel.appointment!.contextDetails!,
-                                Icons.description,
-                              ),
-                            ],
-                            if (viewModel.isBooked) ...[
-                              const SizedBox(height: 12),
-                              _buildDetailItem(
-                                isDark,
-                                'Meet Link',
-                                viewModel.appointment!.gmeetLink ??
-                                    'Not available',
-                                Icons.video_camera_front,
-                                isLink: true,
-                                onTap: viewModel.launchGoogleMeet,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-
-                      if (viewModel.canReschedule &&
-                          !viewModel.isCompleted) ...[
-                        const SizedBox(height: 24),
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color:
-                                isDark ? const Color(0xFF1E293B) : Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                offset: const Offset(0, 2),
-                                blurRadius: 5,
-                              ),
-                            ],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                'Actions',
-                                style: GoogleFonts.figtree(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color:
-                                      isDark ? Colors.white : Colors.grey[800],
+
+                          const SizedBox(height: 24),
+
+                          // Consultation Details with GMeet Link and Participant Info
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  offset: const Offset(0, 2),
+                                  blurRadius: 5,
                                 ),
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: viewModel.showRescheduleForm,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Details',
+                                  style: GoogleFonts.figtree(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.grey[800],
                                   ),
                                 ),
-                                child: const Text(
-                                  'Reschedule Appointment',
-                                  style: TextStyle(color: Colors.white),
+                                const SizedBox(height: 16),
+                                _buildDetailItem(
+                                  isDark,
+                                  viewModel.isTrainerView
+                                      ? 'Learner'
+                                      : 'Trainer',
+                                  viewModel.isTrainerView
+                                      ? viewModel.appointment!.learnerName ??
+                                          'Unknown'
+                                      : viewModel
+                                              .appointment!.trainer?.fullName ??
+                                          'Unknown',
+                                  Icons.person,
                                 ),
-                              ),
-                            ],
+                                if (viewModel.appointment!.contextDetails !=
+                                    null) ...[
+                                  const SizedBox(height: 12),
+                                  _buildDetailItem(
+                                    isDark,
+                                    'Context',
+                                    viewModel.appointment!.contextDetails!,
+                                    Icons.description,
+                                  ),
+                                ],
+                                if (viewModel.isBooked) ...[
+                                  const SizedBox(height: 12),
+                                  _buildDetailItem(
+                                    isDark,
+                                    'Meet Link',
+                                    viewModel.appointment!.gmeetLink ??
+                                        'Not available',
+                                    Icons.video_camera_front,
+                                    isLink: true,
+                                    onTap: viewModel.launchGoogleMeet,
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+
+                          if (viewModel.isTrainerView &&
+                              viewModel.canReschedule &&
+                              !viewModel.isCompleted) ...[
+                            const SizedBox(height: 24),
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color(0xFF1E293B)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    offset: const Offset(0, 2),
+                                    blurRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(
+                                    'Actions',
+                                    style: GoogleFonts.figtree(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.grey[800],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: viewModel.openRescheduleForm,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Reschedule Appointment',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+          // Reschedule Form Overlay
+          if (viewModel.showRescheduleForm)
+            RescheduleAppointmentView(
+              appointmentId: appointmentId,
+              isEdit: false,
+              onClose: () => viewModel.hideRescheduleForm(),
+            ),
+        ],
+      ),
     );
   }
 

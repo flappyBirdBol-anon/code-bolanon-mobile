@@ -49,6 +49,7 @@ import 'package:code_bolanon/ui/views/menu/menu_view.dart';
 import 'package:code_bolanon/ui/views/onboarding/onboarding_view.dart';
 import 'package:code_bolanon/ui/views/payment/payment_view.dart';
 import 'package:code_bolanon/ui/views/profile/profile_view.dart';
+import 'package:code_bolanon/ui/views/reschedule_appointment/reschedule_appointment_view.dart';
 import 'package:code_bolanon/ui/views/settings/settings_view.dart';
 import 'package:code_bolanon/ui/views/tos/tos_view.dart';
 import 'package:code_bolanon/ui/views/trainer_analytics/trainer_analytics_view.dart';
@@ -89,6 +90,7 @@ import 'package:stacked_services/stacked_services.dart';
     MaterialRoute(page: AppointmentDetailsView),
     MaterialRoute(page: LearnerBookAppointmentView),
     MaterialRoute(page: SettingsView),
+    MaterialRoute(page: RescheduleAppointmentView),
 // @stacked-route
   ],
   dependencies: [

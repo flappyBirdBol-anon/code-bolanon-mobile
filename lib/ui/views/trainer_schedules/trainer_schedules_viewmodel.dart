@@ -263,7 +263,7 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
           .firstWhere((apt) => apt.id.toString() == id);
 
       _selectedTimeSlotId = appointment.id;
-      _selectedAppointmentId = null;
+      _selectedAppointmentId = id; // Set this to the appointment ID
       _showRescheduleForm = true;
       _originalAppointment = appointment;
       _formSelectedDate = appointment.startAt;
@@ -505,6 +505,7 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     _originalAppointment = null;
     _hasChanges = false;
     _isReschedulingBookedAppointment = false;
+    loadAppointments(); // Refresh appointments after hiding form
     notifyListeners();
   }
 

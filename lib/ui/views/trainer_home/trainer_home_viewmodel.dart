@@ -4,7 +4,6 @@ import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/tech_stack_model.dart';
-import 'package:code_bolanon/models/transaction_model.dart';
 import 'package:code_bolanon/models/transactions_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
@@ -200,8 +199,7 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   }
 
   void openAppointment() {
-    _navigationService.navigateToTrainerAppointmentHomeView();
-    // Navigate to schedule screen
+    _navigationService.navigateToTrainerSchedulesView();
   }
 
   // Course related actions

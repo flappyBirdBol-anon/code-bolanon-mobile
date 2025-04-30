@@ -1,38 +1,54 @@
 import 'package:code_bolanon/app/app.locator.dart';
-import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/services/appointment_service.dart';
-import 'package:code_bolanon/ui/common/enums/enums.dart';
+import 'package:code_bolanon/services/user_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppointmentDetailsViewModel extends AppBaseViewModel {
   final _appointmentService = locator<AppointmentService>();
-
-  AppointmentModel? _appointment;
-  AppointmentModel? get appointment => _appointment;
+  final _userService = locator<UserService>();
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  bool get isTrainerView =>
-      userService.currentUser?.role.toLowerCase() == 'trainer';
-  bool get isBooked => appointment?.status.toLowerCase() == 'ongoing';
-  bool get isCompleted => appointment?.status.toLowerCase() == 'completed';
-  bool get canReschedule => isTrainerView && isBooked;
-  bool get canViewMeetLink => isBooked || isCompleted;
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  AppointmentModel? _appointment;
+  AppointmentModel? get appointment => _appointment;
+
+  bool _showRescheduleForm = false;
+  bool get showRescheduleForm => _showRescheduleForm;
+
+  bool get isBooked => _appointment?.status.toLowerCase() == 'ongoing';
+  bool get isCompleted => _appointment?.status.toLowerCase() == 'completed';
+  bool get isTrainerView => _userService.currentUser?.role == 'trainer';
+
+  bool get canReschedule {
+    if (_appointment == null) return false;
+    if (isCompleted) return false;
+    if (!isTrainerView)
+      return false; // If user is not a trainer, they can't reschedule
+
+    // Only trainers can reschedule their own available slots and ongoing appointments
+    return _appointment!.status.toLowerCase() == 'available' ||
+        _appointment!.status.toLowerCase() == 'ongoing';
+  }
 
   Future<void> initialize(String appointmentId) async {
+    await loadAppointment(appointmentId);
+  }
+
+  Future<void> loadAppointment(String appointmentId) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final appointments = await _appointmentService.fetchAllAppointments();
-      _appointment =
-          appointments.firstWhere((apt) => apt.id.toString() == appointmentId);
-      notifyListeners();
+      _appointment = await _appointmentService.getAppointment(appointmentId);
     } catch (e) {
-      setError('Failed to load appointment details: $e');
+      _errorMessage = 'Failed to load appointment details';
+      notifyListeners();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -40,35 +56,25 @@ class AppointmentDetailsViewModel extends AppBaseViewModel {
   }
 
   Future<void> launchGoogleMeet() async {
-    if (_appointment?.gmeetLink == null || _appointment!.gmeetLink!.isEmpty) {
-      snackbarService.showCustomSnackBar(
-        message: 'No Google Meet link available for this appointment',
-        duration: const Duration(seconds: 2),
-        variant: SnackbarType.error,
-      );
-      return;
-    }
+    if (_appointment?.gmeetLink == null) return;
 
-    try {
-      final Uri url = Uri.parse(_appointment!.gmeetLink!);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        snackbarService.showCustomSnackBar(
-          message: 'Could not launch Google Meet',
-          duration: const Duration(seconds: 2),
-          variant: SnackbarType.error,
-        );
-      }
-    } catch (e) {
-      setError('Error launching Google Meet: $e');
+    final uri = Uri.parse(_appointment!.gmeetLink!);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
     }
   }
 
-  void showRescheduleForm() {
-    if (_appointment != null) {
-      navigationService.back();
-      navigationService.navigateTo(Routes.trainerSchedulesView);
+  void openRescheduleForm() {
+    _showRescheduleForm = true;
+    notifyListeners();
+  }
+
+  void hideRescheduleForm() {
+    if (_showRescheduleForm) {
+      _showRescheduleForm = false;
+      loadAppointment(
+          _appointment!.id.toString()); // Refresh the appointment data
+      notifyListeners();
     }
   }
 }

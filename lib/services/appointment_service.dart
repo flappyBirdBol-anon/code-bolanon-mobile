@@ -252,6 +252,24 @@ class AppointmentService {
     }
   }
 
+  Future<AppointmentModel> getAppointment(String appointmentId) async {
+    try {
+      final response = await _apiService.get('/appointments/$appointmentId');
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to fetch appointment: ${response.statusCode}');
+      }
+
+      if (response.data == null || response.data['data'] == null) {
+        throw Exception('No appointment data received');
+      }
+
+      return AppointmentModel.fromJson(response.data['data']);
+    } catch (e) {
+      throw Exception('Failed to get appointment details: $e');
+    }
+  }
+
   Future<void> _showAppointmentReceiptDialog(AppointmentModel appointment,
       Transaction transaction, String context) async {
     final payment = PaymentParam(

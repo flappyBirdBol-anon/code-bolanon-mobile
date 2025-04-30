@@ -4016,6 +4016,31 @@ class MockAppointmentService extends _i1.Mock
         returnValueForMissingStub:
             _i13.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
       ) as _i13.Future<Map<String, dynamic>>);
+
+  @override
+  _i13.Future<_i9.AppointmentModel> getAppointment(String? appointmentId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getAppointment,
+          [appointmentId],
+        ),
+        returnValue:
+            _i13.Future<_i9.AppointmentModel>.value(_FakeAppointmentModel_10(
+          this,
+          Invocation.method(
+            #getAppointment,
+            [appointmentId],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i13.Future<_i9.AppointmentModel>.value(_FakeAppointmentModel_10(
+          this,
+          Invocation.method(
+            #getAppointment,
+            [appointmentId],
+          ),
+        )),
+      ) as _i13.Future<_i9.AppointmentModel>);
 }
 
 /// A class which mocks [SelectedStackService].
