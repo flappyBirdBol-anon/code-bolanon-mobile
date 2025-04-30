@@ -7,22 +7,39 @@ import 'package:code_bolanon/models/transaction_model.dart';
 import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:intl/intl.dart';
+import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 
-class AppointmentService {
+class AppointmentService extends BaseViewModel {
   final ApiService _apiService;
   final DateFormat dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
-  final NavigationService _navigationService; // Added property
+  final NavigationService _navigationService;
   final DialogService _dialogService = locator<DialogService>();
 
   AppointmentService(
       {ApiService? apiService, NavigationService? navigationService})
       : _apiService = apiService ?? locator<ApiService>(),
-        _navigationService =
-            navigationService ?? locator<NavigationService>(); // Initialize
+        _navigationService = navigationService ?? locator<NavigationService>();
 
   final List<AppointmentModel> _appointments = [];
   List<AppointmentModel> get appointmentList => _appointments;
+
+  // Notify all listeners that appointments have changed
+  void notifyAppointmentsChanged() {
+    notifyListeners();
+  }
+
+  // Updates the internal appointments list and notifies listeners
+  Future<void> refreshAppointments() async {
+    try {
+      final fetchedAppointments = await fetchAllAppointments();
+      _appointments.clear();
+      _appointments.addAll(fetchedAppointments);
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to refresh appointments: $e');
+    }
+  }
 
   Future<AppointmentModel> createSchedule(
       Map<String, dynamic> appointmentData) async {
@@ -40,7 +57,12 @@ class AppointmentService {
         throw Exception('No data received from server');
       }
 
-      return AppointmentModel.fromJson(response.data['data'] ?? response.data);
+      final newAppointment =
+          AppointmentModel.fromJson(response.data['data'] ?? response.data);
+
+      // Update local appointments and notify
+      await refreshAppointments();
+      return newAppointment;
     } catch (e) {
       throw Exception('Failed to create schedule: $e');
     }
@@ -49,29 +71,10 @@ class AppointmentService {
   Future<Map<String, dynamic>> updateSchedule(
       String appointmentId, AppointmentModel appointment) async {
     try {
-      final Map<String, dynamic> appointmentData = {
-        'start_at': dateFormat.format(appointment.startAt),
-        'end_at': dateFormat.format(appointment.endAt),
-        'price': appointment.price.toString(),
-      };
-
-      print('Updating appointment: $appointmentId');
-      print('Request data: $appointmentData');
-
-      final response = await _apiService.put('/appointments/$appointmentId',
-          data: appointmentData);
-
-      print('Response status: ${response.statusCode}');
-      print('Response data: ${response.data}');
-
-      // Handle specific error cases
-      if (response.statusCode == 409) {
-        return {
-          'success': false,
-          'message': response.data['message'] ??
-              'Schedule overlaps with existing appointment'
-        };
-      }
+      final response = await _apiService.put(
+        '/appointments/$appointmentId',
+        data: appointment.toJson(),
+      );
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         return {
@@ -80,23 +83,24 @@ class AppointmentService {
         };
       }
 
-      if (response.data == null) {
-        return {'success': false, 'message': 'No response data received'};
-      }
-
-      return {'success': true, 'message': 'Schedule updated successfully'};
-    } catch (e) {
-      print('Error updating schedule: $e');
+      // Update local appointments and notify
+      await refreshAppointments();
       return {
-        'success': false,
-        'message': 'Failed to update schedule. Please try again.'
+        'success': true,
+        'message': 'Schedule updated successfully',
+        'data': response.data
       };
+    } catch (e) {
+      return {'success': false, 'message': 'Failed to update schedule: $e'};
     }
   }
 
-  Future<void> deleteSchedule(String id) async {
+  Future<void> deleteSchedule(String appointmentId) async {
     try {
-      await _apiService.delete('/appointments/$id');
+      await _apiService.delete('/appointments/$appointmentId');
+
+      // Update local appointments and notify
+      await refreshAppointments();
     } catch (e) {
       throw Exception('Failed to delete schedule: $e');
     }
@@ -178,7 +182,6 @@ class AppointmentService {
           endAt: appointmentModel.endAt,
         ),
       );
-      print('Payment result: $paymentResult');
 
       // If payment was successful, proceed to book the appointment
       if (paymentResult != null && paymentResult['success'] == true) {
@@ -186,14 +189,8 @@ class AppointmentService {
           'context': context,
         };
 
-        print('Booking appointment: $appointmentId');
-        print('Request data: $bookingData');
-
         final response = await _apiService.put('/appointments/$appointmentId',
             data: bookingData);
-
-        print('Response status: ${response.statusCode}');
-        print('Response data: ${response.data}');
 
         if (response.statusCode != 200 && response.statusCode != 201) {
           return {
@@ -202,53 +199,18 @@ class AppointmentService {
           };
         }
 
-        if (response.data == null) {
-          return {'success': false, 'message': 'No response data received'};
-        }
-
-        // Add the appointment to tracked appointments if successful
-        final bookingJson = response.data['data'];
-        print('Booking JSON: $bookingJson');
-
-        // // Add to local state management (assuming you have these lists)
-        // _bookedAppointments.add(AppointmentModel.fromJson(bookingJson));
-        // notifyListeners();
-
-        // Show receipt dialog if transaction data is available
-        if (paymentResult.containsKey('transaction')) {
-          print('Transaction data found, showing receipt dialog');
-          final transactionData = paymentResult['transaction'];
-
-          Transaction transaction;
-          if (transactionData is Map<String, dynamic>) {
-            print('Parsing transaction from map');
-            transaction = Transaction.fromJson(transactionData);
-          } else {
-            print('Using transaction object directly');
-            transaction = transactionData as Transaction;
-          }
-
-          // Use Future.delayed to ensure the dialog appears after navigation completes
-          await Future.delayed(const Duration(milliseconds: 300));
-          await _showAppointmentReceiptDialog(
-              appointmentModel, transaction, context);
-        } else {
-          print('No transaction data in payment result: $paymentResult');
-        }
-
-        return {'success': true, 'message': 'Schedule booked successfully'};
-      } else {
+        // Update local appointments and notify
+        await refreshAppointments();
         return {
-          'success': false,
-          'message': 'Payment was not successful. Booking canceled.'
+          'success': true,
+          'message': 'Appointment booked successfully',
+          'data': response.data
         };
       }
+
+      return {'success': false, 'message': 'Payment was not completed'};
     } catch (e) {
-      print('Error booking schedule: $e');
-      return {
-        'success': false,
-        'message': 'Failed to book schedule. Please try again.'
-      };
+      return {'success': false, 'message': 'Failed to book schedule: $e'};
     }
   }
 

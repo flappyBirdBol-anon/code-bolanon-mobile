@@ -36,18 +36,31 @@ class AppointmentDetailsViewModel extends AppBaseViewModel {
         _appointment!.status.toLowerCase() == 'ongoing';
   }
 
+  @override
+  void dispose() {
+    _appointmentService.removeListener(_refreshAppointment);
+    super.dispose();
+  }
+
   Future<void> initialize(String appointmentId) async {
+    _appointmentService.addListener(_refreshAppointment);
     await loadAppointment(appointmentId);
+  }
+
+  Future<void> _refreshAppointment() async {
+    if (_appointment != null) {
+      await loadAppointment(_appointment!.id.toString());
+    }
   }
 
   Future<void> loadAppointment(String appointmentId) async {
     _isLoading = true;
     notifyListeners();
-
     try {
       _appointment = await _appointmentService.getAppointment(appointmentId);
+      notifyListeners();
     } catch (e) {
-      _errorMessage = 'Failed to load appointment details';
+      _errorMessage = 'Failed to load appointment: $e';
       notifyListeners();
     } finally {
       _isLoading = false;
@@ -70,10 +83,18 @@ class AppointmentDetailsViewModel extends AppBaseViewModel {
   }
 
   void hideRescheduleForm() {
-    if (_showRescheduleForm) {
-      _showRescheduleForm = false;
-      loadAppointment(
-          _appointment!.id.toString()); // Refresh the appointment data
+    _showRescheduleForm = false;
+    notifyListeners();
+  }
+
+  Future<void> openGmeetLink() async {
+    if (_appointment?.gmeetLink == null) return;
+
+    final url = Uri.parse(_appointment!.gmeetLink!);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      _errorMessage = 'Could not launch Google Meet';
       notifyListeners();
     }
   }

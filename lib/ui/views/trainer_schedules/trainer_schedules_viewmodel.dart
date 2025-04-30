@@ -85,6 +85,12 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   bool _isReschedulingBookedAppointment = false;
   bool get isReschedulingBookedAppointment => _isReschedulingBookedAppointment;
 
+  @override
+  void dispose() {
+    _appointmentService.removeListener(_onAppointmentsChanged);
+    super.dispose();
+  }
+
   bool isSelectedDateActive(DateTime date) {
     final now = DateTime.now();
     return date.year == _selectedDate.year &&
@@ -153,8 +159,33 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   }
 
   // Initialize
-  Future<void> initialize() async {
+  Future<void> initialize({Map<String, dynamic>? arguments}) async {
+    _appointmentService.addListener(_onAppointmentsChanged);
+
+    // Check if we were passed an appointment ID to reschedule
+    if (arguments != null && arguments['appointmentId'] != null) {
+      String appointmentId = arguments['appointmentId'];
+      bool openRescheduleForm = arguments['openRescheduleForm'] ?? false;
+      bool isBookedAppointment = arguments['isBookedAppointment'] ?? false;
+
+      if (openRescheduleForm) {
+        // Set delayed to ensure the view is fully loaded
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (isBookedAppointment) {
+            showRescheduleFormForAppointment(appointmentId);
+          } else {
+            openEditScheduleForm(int.parse(appointmentId));
+          }
+        });
+      }
+    }
+
     await runBusyFuture(loadAppointments());
+  }
+
+  // Callback for appointment service changes
+  void _onAppointmentsChanged() {
+    loadAppointments();
   }
 
   // Load appointments for selected date
@@ -352,15 +383,15 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     }
   }
 
-  // Postpone or cancel an appointment
+  // Remove an available time slot or cancel appointment
   Future<void> postponeAppointment(String id) async {
     setIsLoading(true);
     try {
       await _appointmentService.deleteSchedule(id);
-      _showSuccessMessage('Appointment cancelled successfully');
+      _showSuccessMessage('Schedule cancelled successfully');
       await loadAppointments();
     } catch (e) {
-      _showErrorMessage('Failed to cancel appointment: $e');
+      _showErrorMessage('Failed to cancel schedule: $e');
     } finally {
       setIsLoading(false);
     }

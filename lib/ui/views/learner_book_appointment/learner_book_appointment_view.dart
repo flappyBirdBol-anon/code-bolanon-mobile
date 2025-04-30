@@ -106,6 +106,7 @@ class LearnerBookAppointmentView
                   endTime: DateFormat('h:mm a').format(slot.endAt),
                   isDark: isDark,
                   isBook: true,
+                  id: slot.id.toString(),
                   onTap: () => _showBookingConfirmation(
                       context, viewModel, slot.id, isDark),
                 ),

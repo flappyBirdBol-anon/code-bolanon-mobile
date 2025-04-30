@@ -9,6 +9,7 @@ class CustomAppointmentItem extends StatelessWidget {
   final String endTime;
   final bool isCompleted;
   final VoidCallback? onReschedule;
+  final VoidCallback? onCancel;
   final VoidCallback? onViewDetails;
   final bool isDark;
 
@@ -20,6 +21,7 @@ class CustomAppointmentItem extends StatelessWidget {
     required this.endTime,
     this.isCompleted = false,
     this.onReschedule,
+    this.onCancel,
     this.onViewDetails,
     required this.isDark,
   });
@@ -131,8 +133,9 @@ class CustomAppointmentItem extends StatelessWidget {
             ),
           ),
           if (!isCompleted &&
-              onReschedule != null &&
-              onViewDetails != null) ...[
+              (onReschedule != null ||
+                  onCancel != null ||
+                  onViewDetails != null)) ...[
             Divider(
               height: 1,
               thickness: 1,
@@ -142,79 +145,139 @@ class CustomAppointmentItem extends StatelessWidget {
             ),
             Row(
               children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: onReschedule,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.event_repeat,
-                            size: 16,
-                            color: isDark ? Colors.grey[400] : Colors.grey[700],
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Reschedule',
-                            style: GoogleFonts.figtree(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                if (onReschedule != null)
+                  Expanded(
+                    child: InkWell(
+                      onTap: onReschedule,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: onCancel == null && onViewDetails == null
+                            ? const Radius.circular(16)
+                            : Radius.zero,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.event_repeat,
+                              size: 16,
                               color:
                                   isDark ? Colors.grey[400] : Colors.grey[700],
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              'Reschedule',
+                              style: GoogleFonts.figtree(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(
-                  height: 24,
-                  child: VerticalDivider(
-                    width: 1,
-                    thickness: 1,
-                    color: isDark
-                        ? Colors.grey[800]!.withOpacity(0.3)
-                        : Colors.grey[200],
-                  ),
-                ),
-                Expanded(
-                  child: InkWell(
-                    onTap: onViewDetails,
-                    borderRadius: const BorderRadius.only(
-                      bottomRight: Radius.circular(16),
+                if (onReschedule != null &&
+                    (onCancel != null || onViewDetails != null))
+                  SizedBox(
+                    height: 24,
+                    child: VerticalDivider(
+                      width: 1,
+                      thickness: 1,
+                      color: isDark
+                          ? Colors.grey[800]!.withOpacity(0.3)
+                          : Colors.grey[200],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.remove_red_eye_outlined,
-                            size: 16,
-                            color:
-                                isDark ? Colors.grey[400] : AppColors.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'View',
-                            style: GoogleFonts.figtree(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                  ),
+                if (onCancel != null)
+                  Expanded(
+                    child: InkWell(
+                      onTap: onCancel,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft:
+                            onReschedule == null && onViewDetails != null
+                                ? const Radius.circular(16)
+                                : Radius.zero,
+                        bottomRight: onViewDetails == null
+                            ? const Radius.circular(16)
+                            : Radius.zero,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.cancel_outlined,
+                              size: 16,
+                              color: isDark ? Colors.redAccent : Colors.red,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Cancel',
+                              style: GoogleFonts.figtree(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: isDark ? Colors.redAccent : Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                if (onCancel != null && onViewDetails != null)
+                  SizedBox(
+                    height: 24,
+                    child: VerticalDivider(
+                      width: 1,
+                      thickness: 1,
+                      color: isDark
+                          ? Colors.grey[800]!.withOpacity(0.3)
+                          : Colors.grey[200],
+                    ),
+                  ),
+                if (onViewDetails != null)
+                  Expanded(
+                    child: InkWell(
+                      onTap: onViewDetails,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: onReschedule == null && onCancel == null
+                            ? const Radius.circular(16)
+                            : Radius.zero,
+                        bottomRight: const Radius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.remove_red_eye_outlined,
+                              size: 16,
                               color:
                                   isDark ? Colors.grey[400] : AppColors.primary,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              'View',
+                              style: GoogleFonts.figtree(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ],

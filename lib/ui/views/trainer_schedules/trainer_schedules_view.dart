@@ -186,8 +186,14 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                   endTime: DateFormat('h:mm a').format(slot.endAt),
                   isDark: isDark,
                   isBook: false,
-                  onTap: () => _showAppointmentOptions(
-                      context, viewModel, slot.id.toString(), isDark),
+                  id: slot.id.toString(),
+                  onReschedule: () => viewModel.openEditScheduleForm(slot.id),
+                  onCancel: () => _showCancelConfirmation(
+                    context,
+                    viewModel,
+                    slot.id.toString(),
+                    isDark,
+                  ),
                 ),
               );
             }).toList(),
@@ -744,7 +750,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
           children: [
             ListTile(
               leading: Icon(
-                Icons.event_repeat,
+                Icons.edit_calendar,
                 color: isDark ? Colors.white70 : Colors.grey[700],
               ),
               title: Text(
@@ -755,7 +761,7 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                viewModel.showEditForm(appointmentId);
+                viewModel.openEditScheduleForm(int.parse(appointmentId));
               },
             ),
             ListTile(
@@ -843,8 +849,15 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
       TrainerSchedulesViewModel();
 
   @override
-  void onViewModelReady(TrainerSchedulesViewModel viewModel) {
-    viewModel.initialize();
+  void onViewModelReady(TrainerSchedulesViewModel viewModel,
+      [BuildContext? context]) {
+    if (context != null) {
+      final arguments =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      viewModel.initialize(arguments: arguments);
+    } else {
+      viewModel.initialize();
+    }
     super.onViewModelReady(viewModel);
   }
 

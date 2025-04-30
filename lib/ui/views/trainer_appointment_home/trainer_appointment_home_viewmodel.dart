@@ -23,10 +23,12 @@ class Appointment {
 enum AppointmentFilter { all, today, upcoming, completed }
 
 class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
+  final _appointmentService = locator<AppointmentService>();
+
   AppointmentFilter _currentFilter = AppointmentFilter.all;
   AppointmentFilter get currentFilter => _currentFilter;
 
-  bool _isLoading = false; // Set initial loading to false
+  bool _isLoading = false;
   bool get isLoading => _isLoading;
 
   List<Appointment> _upcomingAppointments = [];
@@ -38,8 +40,27 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
   List<Appointment> _availableSchedules = [];
   List<Appointment> get availableSchedules => _availableSchedules;
 
+  // Reschedule form state
+  bool _showRescheduleForm = false;
+  bool get showRescheduleForm => _showRescheduleForm;
+
+  String? _selectedAppointmentId;
+  String? get selectedAppointmentId => _selectedAppointmentId;
+
+  @override
+  void dispose() {
+    _appointmentService.removeListener(_onAppointmentsChanged);
+    super.dispose();
+  }
+
   // Called when view is initialized
   void initialize() {
+    _appointmentService.addListener(_onAppointmentsChanged);
+    fetchAppointments();
+  }
+
+  // New callback method to react when AppointmentService notifies
+  void _onAppointmentsChanged() {
     fetchAppointments();
   }
 
@@ -98,15 +119,13 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
     setIsLoading(true);
 
     try {
-      final appointmentService = locator<AppointmentService>();
       final fetchedAppointments =
-          await appointmentService.fetchAllAppointments();
+          await _appointmentService.fetchAllAppointments();
 
       _upcomingAppointments = [];
       _completedAppointments = [];
       _availableSchedules = [];
 
-      final now = DateTime.now();
       for (var appointment in fetchedAppointments) {
         if (appointment.status.toLowerCase() == 'completed') {
           _completedAppointments.add(Appointment(
@@ -143,6 +162,7 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
       _upcomingAppointments = [];
       _completedAppointments = [];
       _availableSchedules = [];
+      notifyListeners();
     } finally {
       setIsLoading(false);
     }
@@ -162,8 +182,52 @@ class TrainerAppointmentHomeViewModel extends AppBaseViewModel {
     navigationService.navigateTo(Routes.trainerSchedulesView);
   }
 
-  void postponeAppointment(appointmentId) {
-    // Postpone appointment logic here
+  // Show reschedule form for appointment
+  void rescheduleAppointment(String appointmentId) {
+    _selectedAppointmentId = appointmentId;
+    _showRescheduleForm = true;
+    notifyListeners();
+  }
+
+  // Hide reschedule form
+  void hideRescheduleForm() {
+    _showRescheduleForm = false;
+    _selectedAppointmentId = null;
+    notifyListeners();
+    fetchAppointments(); // Refresh to show any changes
+  }
+
+  // Cancel/postpone appointment
+  Future<void> postponeAppointment(String appointmentId) async {
+    try {
+      setIsLoading(true);
+
+      // Only allow cancellation of available appointments
+      final appointments = [..._availableSchedules, ..._upcomingAppointments];
+      final appointment = appointments.firstWhere(
+        (apt) => apt.id == appointmentId,
+        orElse: () => throw Exception('Appointment not found'),
+      );
+
+      await _appointmentService.deleteSchedule(appointmentId);
+
+      snackbarService.showCustomSnackBar(
+        message: 'Schedule cancelled successfully',
+        duration: const Duration(seconds: 3),
+        variant: SnackbarType.success,
+      );
+
+      // Fetch appointments again to refresh the UI
+      await fetchAppointments();
+    } catch (e) {
+      snackbarService.showCustomSnackBar(
+        message: 'Failed to cancel schedule: $e',
+        duration: const Duration(seconds: 3),
+        variant: SnackbarType.error,
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   void setFilter(AppointmentFilter filter) {
