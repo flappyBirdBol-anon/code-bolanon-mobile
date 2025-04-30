@@ -2,7 +2,6 @@ import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/registration_model.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart' show AppColors;
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 
@@ -1365,7 +1364,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 4),
 
         // Write Review ExpansionTile (Only for registered learners)
         if (viewModel.canWriteReview)
@@ -1442,30 +1441,39 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                             ),
                           ],
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            5,
-                            (index) => Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 4),
-                              child: InkWell(
-                                onTap: () => viewModel.setRating(index + 1.0),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  child: Icon(
-                                    index < viewModel.userRating
-                                        ? Icons.star_rounded
-                                        : Icons.star_outline_rounded,
-                                    color: index < viewModel.userRating
-                                        ? Colors.amber
-                                        : Colors.grey[400],
-                                    size: 32,
+                        child: StatefulBuilder(
+                          builder: (context, setState) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                5,
+                                (index) => Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 4),
+                                  child: InkWell(
+                                    onTap: () =>
+                                        viewModel.handleRatingSelection(
+                                      index,
+                                      () => setState(() {}),
+                                    ),
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      child: Icon(
+                                        index < viewModel.userRating
+                                            ? Icons.star_rounded
+                                            : Icons.star_outline_rounded,
+                                        color: index < viewModel.userRating
+                                            ? Colors.amber
+                                            : Colors.grey[400],
+                                        size: 32,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -1632,7 +1640,6 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
               ],
             ),
           ),
-
         // Existing reviews
         if (viewModel.reviews.isEmpty)
           Center(
@@ -1666,8 +1673,17 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             ),
           )
         else
-          ...viewModel.reviews.map(
-              (review) => _buildEnhancedReviewItem(review, viewModel, context)),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero, // Remove default padding
+            itemCount: viewModel.reviews.length,
+            itemBuilder: (context, index) {
+              final review = viewModel.reviews[index];
+              return _buildEnhancedReviewItem(review, viewModel, context,
+                  index: index);
+            },
+          ),
       ],
     );
   }
@@ -1723,12 +1739,12 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
   }
 
   Widget _buildEnhancedReviewItem(RegistrationModel review,
-      CourseDetailsViewModel viewModel, BuildContext context) {
+      CourseDetailsViewModel viewModel, BuildContext context,
+      {int index = 0}) {
     final isCurrentUserReview = viewModel.isReviewByCurrentUser(review);
-    print('Is current user review? $isCurrentUserReview');
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: viewModel.getReviewItemMargin(index),
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -1791,172 +1807,8 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                       IconButton(
                         icon: const Icon(Icons.edit, size: 20),
                         color: AppColors.primary,
-                        onPressed: () {
-                          // Pre-fill the review data outside of build
-                          SchedulerBinding.instance.addPostFrameCallback((_) {
-                            viewModel.setRating(review.rating?.toDouble() ?? 0);
-                            viewModel.reviewController.text =
-                                review.feedback ?? '';
-
-                            showDialog(
-                              context: context,
-                              builder: (dialogContext) => Dialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Container(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Edit Your Review',
-                                        style: GoogleFonts.figtree(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      Text(
-                                        'Rate this course',
-                                        style: GoogleFonts.figtree(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.grey[800],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color:
-                                                  Colors.grey.withOpacity(0.1),
-                                              spreadRadius: 1,
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: List.generate(
-                                            5,
-                                            (index) => Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 4),
-                                              child: InkWell(
-                                                onTap: () => viewModel
-                                                    .setRating(index + 1.0),
-                                                child: Icon(
-                                                  index < viewModel.userRating
-                                                      ? Icons.star_rounded
-                                                      : Icons
-                                                          .star_outline_rounded,
-                                                  color: index <
-                                                          viewModel.userRating
-                                                      ? Colors.amber
-                                                      : Colors.grey[400],
-                                                  size: 32,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      TextField(
-                                        controller: viewModel.reviewController,
-                                        maxLines: 4,
-                                        style: GoogleFonts.figtree(
-                                          fontSize: 15,
-                                          color: Colors.grey[800],
-                                        ),
-                                        decoration: InputDecoration(
-                                          hintText:
-                                              'Share your updated thoughts...',
-                                          hintStyle: GoogleFonts.figtree(
-                                            color: Colors.grey[400],
-                                          ),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            borderSide: BorderSide(
-                                                color: Colors.grey[300]!),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            borderSide: const BorderSide(
-                                              color: AppColors.primary,
-                                              width: 1.5,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(dialogContext),
-                                            child: Text(
-                                              'Cancel',
-                                              style: GoogleFonts.figtree(
-                                                color: Colors.grey[600],
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          ElevatedButton.icon(
-                                            onPressed: () {
-                                              viewModel.updateReview(review);
-                                              Navigator.pop(dialogContext);
-                                            },
-                                            icon: const Icon(
-                                              Icons.save_outlined,
-                                              size: 18,
-                                            ),
-                                            label: const Text('Save Changes'),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  AppColors.primary,
-                                              foregroundColor: Colors.white,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 20,
-                                                vertical: 12,
-                                              ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          });
-                        },
+                        onPressed: () =>
+                            viewModel.showEditReviewDialog(context, review),
                       ),
                     Container(
                       padding: const EdgeInsets.symmetric(
