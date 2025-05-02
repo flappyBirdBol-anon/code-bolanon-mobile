@@ -1,3 +1,5 @@
+import 'package:code_bolanon/app/app.locator.dart';
+import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/wishlist_model.dart';
 import 'package:code_bolanon/services/course_service.dart';
@@ -6,11 +8,14 @@ import 'package:code_bolanon/services/wishlist_service.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
+import 'package:stacked_services/stacked_services.dart';
 
 class LearnerWishlistsViewModel extends BaseViewModel {
   final CourseService _courseService;
   final WishlistService _wishlistService;
-  final ImageService _imageService;
+  final ImageService imageService;
+  final NavigationService _navigationService = locator<NavigationService>();
+  final SnackbarService _snackbarService = locator<SnackbarService>();
 
   List<CourseModel> _wishlistedCourses = [];
   List<CourseModel> get wishlistedCourses => _wishlistedCourses;
@@ -51,7 +56,7 @@ class LearnerWishlistsViewModel extends BaseViewModel {
     required ImageService imageService,
   })  : _courseService = courseService,
         _wishlistService = wishlistService,
-        _imageService = imageService;
+        imageService = imageService;
 
   Future<void> init() async {
     await refreshCourses();
@@ -62,6 +67,18 @@ class LearnerWishlistsViewModel extends BaseViewModel {
     try {
       final wishlists = await _wishlistService.getUserWishlist();
       _wishlistedCourses = await _wishlistService.getWishlistCourses(wishlists);
+
+      // Prefetch images for better performance
+      if (_wishlistedCourses.isNotEmpty) {
+        for (var course in _wishlistedCourses) {
+          if (course.thumbnail.isNotEmpty &&
+              !course.thumbnail.startsWith('assets/')) {
+            final imageUrl =
+                imageService.getCourseThumbnailFromPath(course.thumbnail);
+            imageService.prefetchImage(imageUrl, courseId: course.id);
+          }
+        }
+      }
     } catch (e) {
       debugPrint('Error refreshing wishlists: $e');
       _wishlistedCourses = _sampleData;
@@ -71,16 +88,39 @@ class LearnerWishlistsViewModel extends BaseViewModel {
     }
   }
 
+  // Navigate to course details
+  void navigateToCourseDetails(CourseModel course) {
+    _navigationService.navigateToCourseDetailsView(
+      course: course,
+    );
+  }
+
+  // Navigate back to courses
+  void navigateToMyCourses() {
+    _navigationService.back();
+  }
+
+  // Navigate to explore courses
+  void navigateToExploreCourses() {
+    _navigationService.navigateToAvailableCoursesView();
+  }
+
   Future<void> toggleWishlist(CourseModel course) async {
     try {
       final result = await _wishlistService.toggleWishlist(course.id);
       if (result['success']) {
         await refreshCourses();
-        // You can use the message here if needed
-        debugPrint(result['message']);
+        _snackbarService.showSnackbar(
+          message: result['message'],
+          duration: const Duration(seconds: 2),
+        );
       }
     } catch (e) {
       debugPrint('Error toggling wishlist: $e');
+      _snackbarService.showSnackbar(
+        message: 'Failed to update wishlist: $e',
+        duration: const Duration(seconds: 2),
+      );
       setError(e);
     }
   }
@@ -101,6 +141,15 @@ class LearnerWishlistsViewModel extends BaseViewModel {
     }
   }
 
+  // Extract course tags
+  List<String> getCourseTags(CourseModel course) {
+    if (course.stacks.isNotEmpty) {
+      return course.stacks;
+    }
+    return const [];
+  }
+
+  // Method to display course image similar to course details view
   Widget getCourseImageWidget({
     required CourseModel course,
     double? width,
@@ -126,15 +175,15 @@ class LearnerWishlistsViewModel extends BaseViewModel {
       // Handle remote images
       if (course.thumbnail.isNotEmpty) {
         final imageUrl =
-            _imageService.getCourseThumbnailFromPath(course.thumbnail);
-        return _imageService.loadImage(
+            imageService.getCourseThumbnailFromPath(course.thumbnail);
+        return imageService.loadImage(
           imageUrl: imageUrl,
           courseId: course.id,
           width: width,
           height: height,
           fit: fit,
-          placeholder: placeholder,
-          errorWidget: errorWidget,
+          placeholder: placeholder ?? _buildDefaultPlaceholder(width, height),
+          errorWidget: errorWidget ?? _buildDefaultErrorWidget(width, height),
         );
       }
 
@@ -145,6 +194,15 @@ class LearnerWishlistsViewModel extends BaseViewModel {
     }
   }
 
+  Widget _buildDefaultPlaceholder(double? width, double? height) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.grey[200],
+      child: const Center(child: CircularProgressIndicator()),
+    );
+  }
+
   Widget _buildDefaultErrorWidget(double? width, double? height) {
     return Container(
       width: width,
@@ -152,5 +210,16 @@ class LearnerWishlistsViewModel extends BaseViewModel {
       color: Colors.grey[300],
       child: Icon(Icons.image_not_supported, color: Colors.grey[600]),
     );
+  }
+
+  // Get actual lesson count
+  int getActualLessonCount(CourseModel course) {
+    // First try to get from lessons_count
+    if (course.lessonCount != null) {
+      return course.lessonCount!;
+    }
+
+    // Fall back to default lessons field
+    return course.lessons;
   }
 }
