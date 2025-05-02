@@ -6,8 +6,10 @@ import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
 import 'package:code_bolanon/services/completed_lesson_service.dart';
+import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/file_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
+import 'package:code_bolanon/services/registration_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart'; // For SnackbarType
 import 'package:excel/excel.dart'; // Import excel
@@ -34,6 +36,8 @@ class LessonDetailsViewModel extends AppBaseViewModel {
   final _fileService = locator<FileService>();
   final _userService = locator<UserService>();
   final _completedLessonService = locator<CompletedLessonService>();
+  final _registrationService =
+      locator<RegistrationService>(); // Add RegistrationService
 
   FileService get fileService => _fileService;
 
@@ -729,59 +733,106 @@ class LessonDetailsViewModel extends AppBaseViewModel {
   }
 
   Future<void> toggleLessonCompletion() async {
-    if (!isLearner) return;
-
-    // Set loading state
-    setBusy(true);
+    if (!_hasValidLesson || !isLearner) return;
 
     try {
-      // Toggle through the service
+      setBusy(true);
+
+      print("Toggling completion for lesson ${lesson.id} (${lesson.label})");
+      print("Current completion status: $_isLessonCompleted");
+
+      // Toggle the lesson completion using the CompletedLessonService
       final success =
           await _completedLessonService.toggleLessonCompletion(lesson.id);
 
       if (success) {
-        // Update UI state after successful API call
+        // Update the local state - opposite of current state
         _isLessonCompleted = !_isLessonCompleted;
+        print("New completion status: $_isLessonCompleted");
 
-        // Refresh the completed lessons list to ensure consistent state
-        await _completedLessonService.fetchCompletedLessons();
+        // Update the current lesson
+        _lesson = _lesson!.copyWith(isCompleted: _isLessonCompleted);
 
-        _snackbarService.showCustomSnackBar(
-          variant: SnackbarType.success,
-          message: _isLessonCompleted
-              ? 'Lesson marked as completed! 🎉'
-              : 'Lesson marked as incomplete',
-          duration: const Duration(seconds: 2),
-        );
+        // Refresh all lessons for this course to ensure UI consistency
+        if (_lesson?.courseId != null) {
+          // First do a full reset to ensure accurate data
+          print("Performing full reset of completion data after toggle...");
+          await _completedLessonService.resetAndRefreshAllCompletionData();
+
+          // Then fix any potential inversions
+          print("Running fix for potential inverted statuses...");
+          await _lessonsService
+              .fixInvertedCompletionStatus(_lesson!.courseId.toString());
+
+          // Force check this lesson's status again to be sure
+          print("Double-checking this lesson's status after fixes...");
+          final verifiedStatus = await _completedLessonService
+              .forceCheckLessonCompletion(lesson.id);
+          print("Verified status for lesson ${lesson.id}: $verifiedStatus");
+
+          // Update if different from what we expect
+          if (verifiedStatus != _isLessonCompleted) {
+            print(
+                "WARNING: Verified status differs from expected! Updating to verified value.");
+            _isLessonCompleted = verifiedStatus;
+            _lesson = _lesson!.copyWith(isCompleted: verifiedStatus);
+          }
+
+          // Update registration progress in the background
+          _updateCourseProgress();
+        }
+
+        // Snackbar is now shown in the service, no need to show it here
       } else {
-        throw Exception(
-            "You must be registered for this course to track lesson progress");
+        // Only show error here if the service didn't show it
+        print("Failed to toggle lesson completion status");
       }
     } catch (e) {
-      print("Failed to update completion status: $e");
-
-      String errorMessage = "Failed to update lesson status";
-
-      // Provide specific error message for registration issues
-      if (e.toString().contains('registered')) {
-        errorMessage = "You must be enrolled in this course to track progress";
+      print('Error toggling lesson completion: $e');
+      // Only show error snackbar if it wasn't shown in the service
+      if (e.toString().contains('connection') ||
+          e.toString().contains('timeout')) {
+        _snackbarService.showCustomSnackBar(
+          message: 'Network error: Please check your connection',
+          variant: SnackbarType.error,
+          duration: const Duration(seconds: 3),
+        );
       }
-
-      _snackbarService.showCustomSnackBar(
-        variant: SnackbarType.error,
-        message: errorMessage,
-        duration: const Duration(seconds: 3),
-        mainButtonTitle: 'ENROLL',
-        onMainButtonTapped: () {
-          // Navigate to available courses where user can enroll
-          _navigationService.navigateToAvailableCoursesView();
-        },
-      );
     } finally {
       setBusy(false);
-      notifyListeners();
+      notifyListeners(); // Make sure UI updates
     }
   }
+
+  // Method to update course progress when a lesson is completed/incompleted
+  Future<void> _updateCourseProgress() async {
+    try {
+      if (_lesson == null) return;
+
+      print("Updating course progress after lesson completion change");
+
+      // Use CompletedLessonService's synchronization method to update course progress
+      await _completedLessonService.synchronizeWithCourseProgress(_lesson!.id);
+      print("Course progress data synchronized");
+
+      // Get the course service to update ratings as well
+      final courseService = locator<CourseService>();
+
+      // Refresh course data to update ratings and other metrics
+      print("Refreshing course data for courseId: ${_lesson!.courseId}");
+      await courseService.getCourseById(_lesson!.courseId.toString());
+      print("Course data refreshed to reflect new ratings");
+
+      // Set flag to indicate courses should be refreshed when returning
+      _shouldRefreshCoursesOnBack = true;
+      print("Flag set to refresh courses when returning to courses view");
+    } catch (e) {
+      print("Error updating course progress: $e");
+    }
+  }
+
+  // Add a flag to track if courses should be refreshed when navigating back
+  bool _shouldRefreshCoursesOnBack = false;
 
   // --- Navigation ---
 
@@ -790,6 +841,15 @@ class LessonDetailsViewModel extends AppBaseViewModel {
       toggleFullScreen(); // Exit fullscreen first
       return false; // Prevent default back navigation (handled by toggleFullScreen)
     }
+
+    // Check if we should refresh courses on back navigation
+    if (_shouldRefreshCoursesOnBack) {
+      print(
+          "Back navigation with refresh courses flag - returning refresh result");
+      _navigationService.back(result: {'refreshCourses': true});
+      return false; // We've handled navigation ourselves
+    }
+
     return true; // Allow default back navigation
   }
 

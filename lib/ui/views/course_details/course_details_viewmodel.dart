@@ -4,6 +4,7 @@ import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
 import 'package:code_bolanon/models/registration_model.dart';
 import 'package:code_bolanon/models/user_model.dart';
+import 'package:code_bolanon/services/completed_lesson_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
@@ -223,6 +224,16 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     try {
       if (course != null) {
         _lessons = await _lessonsService.getLessons(courseId: course!.id);
+
+        // Always run the fix to ensure correct lesson completion states
+        print("Running completion status fix for course ${course!.id}...");
+        await _lessonsService.fixInvertedCompletionStatus(course!.id);
+
+        // Reload lessons after fix
+        _lessons = await _lessonsService.getLessons(
+            courseId: course!.id, forceRefresh: true);
+
+        print("Completed fixing lesson statuses for course ${course!.id}");
       }
       notifyListeners();
     } catch (e) {
@@ -238,8 +249,38 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   // Refresh lessons
   Future<void> refreshLessons() async {
     setBusy(true);
-    await _loadLessons();
-    setBusy(false);
+    try {
+      await _loadLessons();
+
+      // Get course ID
+      final courseId = course?.id;
+      if (courseId != null) {
+        print("Refreshing course data for course ID: $courseId");
+
+        // Fix any lesson completion status issues
+        final completedLessonService = locator<CompletedLessonService>();
+
+        // Force registration service to reload and update progress data
+        await _registrationService.loadRegisteredCourses();
+
+        // Reload course to get updated progress
+        try {
+          _course = await courseService.getCourseById(courseId);
+          print("Course data refreshed with updated progress");
+
+          // This sends a notification to any reactive listeners
+          // that depend on course data being refreshed
+          notifyListeners();
+        } catch (e) {
+          print("Error refreshing course data: $e");
+        }
+      }
+    } catch (e) {
+      print("Error refreshing lessons: $e");
+    } finally {
+      setBusy(false);
+      notifyListeners();
+    }
   }
 
   bool _manualOverrideEnabled = false;
@@ -362,7 +403,37 @@ class CourseDetailsViewModel extends ReactiveViewModel {
       return;
     }
 
-    _navigationService.navigateToLessonDetailsView(lesson: lesson);
+    // Navigate to lesson details and wait for a result when returning
+    _navigationService
+        .navigateToLessonDetailsView(lesson: lesson)
+        .then((result) {
+      // If there's a result indicating we should refresh courses
+      if (result is Map &&
+          result.containsKey('refreshCourses') &&
+          result['refreshCourses'] == true) {
+        print(
+            'Received refresh signal from lesson details - refreshing course data');
+
+        // Set flag to refresh My Courses view when navigating back
+        _shouldRefreshOnBack = true;
+
+        // Refresh course data including lessons and progress
+        refreshLessons();
+      }
+    });
+  }
+
+  // Flag to indicate if My Courses view should be refreshed when navigating back
+  bool _shouldRefreshOnBack = false;
+
+  // Handle back navigation and pass refresh signal to parent if needed
+  void handleBackPress() {
+    if (_shouldRefreshOnBack) {
+      print("Returning to My Courses with refresh flag");
+      _navigationService.back(result: {'refreshCourses': true});
+    } else {
+      _navigationService.back();
+    }
   }
 
   void toggleShowAllLessons() {

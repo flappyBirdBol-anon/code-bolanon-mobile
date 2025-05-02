@@ -159,7 +159,24 @@ class RegistrationService with ReactiveServiceMixin {
       print('Fetching user registrations...');
       final response = await _apiService.get('/registrations');
       print('Registration Response Status: ${response.statusCode}');
-      print('Registration Raw Data: ${response.data}');
+
+      // More detailed logging of the structure
+      print('Response has data key: ${response.data.containsKey('data')}');
+      if (response.data.containsKey('data')) {
+        final dataType = response.data['data'] != null
+            ? response.data['data'].runtimeType.toString()
+            : 'null';
+        print('Data field type: $dataType');
+
+        if (response.data['data'] is List) {
+          print('Data is a List with ${response.data['data'].length} items');
+          if (response.data['data'].isNotEmpty) {
+            print('First item type: ${response.data['data'][0].runtimeType}');
+            print(
+                'First item sample keys: ${response.data['data'][0].keys.take(5).join(', ')}');
+          }
+        }
+      }
 
       if (response.statusCode == 200) {
         if (response.data == null) {
@@ -175,34 +192,41 @@ class RegistrationService with ReactiveServiceMixin {
         final List<dynamic> registrationsJson = response.data['data'] ?? [];
         print('Number of registrations found: ${registrationsJson.length}');
 
-        _registrations = registrationsJson
-            .map((json) {
-              try {
-                print('Processing registration entry: $json');
-                print('User ID from root: ${json['user_id']}');
-                print('User data if nested: ${json['user']}');
-                final registration = RegistrationModel.fromJson(json);
-                print('Processed registration userId: ${registration.userId}');
-                return registration;
-              } catch (e, stackTrace) {
-                print('Error parsing registration JSON: $json');
-                print('Parse error: $e');
-                print('StackTrace: $stackTrace');
-                return null;
-              }
-            })
-            .where((reg) => reg != null)
-            .cast<RegistrationModel>()
-            .toList();
-
-        print('Successfully processed ${_registrations.length} registrations');
-        // Log each registration's userId
-        for (var reg in _registrations) {
-          print('Registration ID: ${reg.id}, UserID: ${reg.userId}');
+        if (registrationsJson.isEmpty) {
+          print('No registrations found in data');
+          return [];
         }
 
-        notifyListeners();
-        return _registrations;
+        try {
+          _registrations = [];
+          for (var json in registrationsJson) {
+            try {
+              print('Processing registration entry: ${json['id']}');
+              final registration = RegistrationModel.fromJson(json);
+              print('Successfully parsed registration ${registration.id}');
+              _registrations.add(registration);
+            } catch (e, stackTrace) {
+              print('Error parsing individual registration: $e');
+              print('StackTrace: $stackTrace');
+            }
+          }
+
+          print(
+              'Successfully processed ${_registrations.length} registrations');
+
+          // Check if registrations have course data
+          int registrationsWithCourseData =
+              _registrations.where((reg) => reg.course != null).length;
+          print(
+              'Registrations with course data: $registrationsWithCourseData/${_registrations.length}');
+
+          notifyListeners();
+          return _registrations;
+        } catch (e, stackTrace) {
+          print('Error processing registrations list: $e');
+          print('StackTrace: $stackTrace');
+          return [];
+        }
       }
       print('Unexpected response status: ${response.statusCode}');
       return [];
@@ -217,16 +241,36 @@ class RegistrationService with ReactiveServiceMixin {
       List<RegistrationModel> registrations) async {
     try {
       List<CourseModel> courses = [];
-      List<Future<CourseModel>> futures = [];
 
-      // Create futures for parallel execution
+      // First, check if registrations have nested course data
       for (var registration in registrations) {
-        futures.add(_fetchRegisteredCourse(registration));
+        if (registration.course != null) {
+          // Create a course model with the registration data included
+          final courseWithRegistration = registration.course!.copyWith(
+            registration: registration,
+          );
+          courses.add(courseWithRegistration);
+        }
+      }
+
+      // If we already have all courses from nested data, return them
+      if (courses.length == registrations.length) {
+        return courses;
+      }
+
+      // Otherwise, fetch missing courses individually (fall back to old approach)
+      List<Future<CourseModel>> futures = [];
+      for (var registration in registrations) {
+        if (registration.course == null) {
+          futures.add(_fetchRegisteredCourse(registration));
+        }
       }
 
       // Wait for all futures to complete
-      final results = await Future.wait(futures);
-      courses.addAll(results);
+      if (futures.isNotEmpty) {
+        final results = await Future.wait(futures);
+        courses.addAll(results);
+      }
 
       return courses;
     } catch (e) {

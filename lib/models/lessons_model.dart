@@ -30,6 +30,23 @@ class Lesson {
   });
 
   factory Lesson.fromJson(Map<String, dynamic> json) {
+    // Debug print of the raw json for the is_completed field
+    print(
+        "Lesson JSON: id=${json['id']}, is_completed=${json['is_completed']} (${json['is_completed']?.runtimeType})");
+
+    // Properly parse isCompleted with explicit logic
+    bool parsedIsCompleted = false;
+    if (json.containsKey('is_completed') && json['is_completed'] != null) {
+      if (json['is_completed'] is bool) {
+        parsedIsCompleted = json['is_completed'];
+      } else if (json['is_completed'] is int) {
+        parsedIsCompleted = json['is_completed'] == 1;
+      } else if (json['is_completed'] is String) {
+        parsedIsCompleted = json['is_completed'].toLowerCase() == 'true' ||
+            json['is_completed'] == '1';
+      }
+    }
+
     return Lesson(
       id: json['id'],
       courseId: json['course_id'] is int
@@ -41,9 +58,13 @@ class Lesson {
       fileName: json['file'],
       fileType: json['file_type'],
       fileUrl: json['file_url'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-      isCompleted: json['is_completed'] ?? false,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : null,
+      isCompleted: parsedIsCompleted,
     );
   }
 

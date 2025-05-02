@@ -60,7 +60,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                     Icons.arrow_back,
                     color: Color.fromARGB(255, 105, 92, 92),
                   ),
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => viewModel.handleBackPress(),
                 ),
                 actions: [
                   // Show edit icon only if the user is the creator of the course

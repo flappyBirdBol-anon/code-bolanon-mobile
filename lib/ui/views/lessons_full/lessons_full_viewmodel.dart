@@ -3,6 +3,7 @@ import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/models/course_model.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
+import 'package:code_bolanon/services/completed_lesson_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
@@ -18,6 +19,7 @@ class LessonsFullViewModel extends BaseViewModel {
   final _imageService = locator<ImageService>();
   final _navigationService = locator<NavigationService>();
   final _dialogService = locator<DialogService>();
+  final _completedLessonService = locator<CompletedLessonService>();
 
   int _courseId = 0;
   CourseModel? _course;
@@ -28,6 +30,34 @@ class LessonsFullViewModel extends BaseViewModel {
   String get courseDescription =>
       _course?.description ?? 'No description available';
   String get courseRating => (_course?.rating ?? 0.0).toString();
+  String get totalDuration => calculateTotalDuration();
+
+  String calculateTotalDuration() {
+    if (_lessons.isEmpty) return '0:00';
+
+    try {
+      int minutes = 0;
+      int seconds = 0;
+
+      for (var lesson in _lessons) {
+        // Parse duration in format "MM:SS"
+        final parts = lesson.duration.split(':');
+        if (parts.length == 2) {
+          minutes += int.tryParse(parts[0]) ?? 0;
+          seconds += int.tryParse(parts[1]) ?? 0;
+        }
+      }
+
+      // Convert excess seconds to minutes
+      minutes += seconds ~/ 60;
+      seconds = seconds % 60;
+
+      return '$minutes:${seconds.toString().padLeft(2, '0')}';
+    } catch (e) {
+      print('Error calculating total duration: $e');
+      return '0:00';
+    }
+  }
 
   Future<void> initialize(int courseId) async {
     _courseId = courseId;
@@ -58,9 +88,32 @@ class LessonsFullViewModel extends BaseViewModel {
 
   Future<void> _loadLessons() async {
     try {
-      _lessons = await _lessonsService.getLessons();
+      print("Loading lessons for course $_courseId");
+
+      // First load lessons from the service
+      _lessons =
+          await _lessonsService.getLessons(courseId: _courseId.toString());
+
+      // Debug: Check completion status
+      print("Loaded ${_lessons.length} lessons. Checking completion status:");
+
+      // Always fix the lesson completion status to be safe
+      print("Running completion status fix to ensure correct lesson states...");
+      await _lessonsService.fixInvertedCompletionStatus(_courseId.toString());
+
+      // Reload lessons after fix
+      _lessons = await _lessonsService.getLessons(
+          courseId: _courseId.toString(), forceRefresh: true);
+
+      print("Completed fixing lesson statuses. Final lesson states:");
+      for (var lesson in _lessons) {
+        print(
+            "Lesson ${lesson.id} (${lesson.label}): isCompleted = ${lesson.isCompleted}");
+      }
+
       notifyListeners();
     } catch (e) {
+      print("Error loading lessons: $e");
       // Handle error
       await _dialogService.showDialog(
         title: 'Error Loading Lessons',
@@ -72,9 +125,25 @@ class LessonsFullViewModel extends BaseViewModel {
   // Refresh lessons
   Future<void> refreshLessons() async {
     setBusy(true);
-    await _lessonsService.getLessons(forceRefresh: true);
-    await _loadLessons();
-    setBusy(false);
+    try {
+      // First refresh the completion status
+      await _lessonsService
+          .refreshLessonCompletionStatuses(_courseId.toString());
+
+      // Then reload the lessons
+      _lessons = await _lessonsService.getLessons(
+          courseId: _courseId.toString(), forceRefresh: true);
+
+      print("Lessons refreshed. Current status:");
+      for (var lesson in _lessons) {
+        print(
+            "Lesson ${lesson.id} (${lesson.label}): isCompleted = ${lesson.isCompleted}");
+      }
+    } catch (e) {
+      print("Error refreshing lessons: $e");
+    } finally {
+      setBusy(false);
+    }
   }
 
   // Get course image widget
@@ -153,6 +222,8 @@ class LessonsFullViewModel extends BaseViewModel {
   }
 
   void navigateToLessonDetails(Lesson lesson) {
+    print(
+        "Navigating to lesson details for lesson ${lesson.id}, isCompleted = ${lesson.isCompleted}");
     _navigationService.navigateTo(
       Routes.lessonDetailsView,
       arguments: lesson,
@@ -247,30 +318,6 @@ class LessonsFullViewModel extends BaseViewModel {
         title: 'Share Failed',
         description: 'Could not share the lesson: $e',
       );
-    }
-  }
-
-  // Get total duration of all lessons
-  String get totalDuration {
-    if (_lessons.isEmpty) return '0 min';
-
-    int totalMinutes = 0;
-    for (var lesson in _lessons) {
-      // Extract minutes from duration string (e.g., "12 min" -> 12)
-      final durationStr = lesson.duration;
-      final regex = RegExp(r'(\d+)');
-      final match = regex.firstMatch(durationStr);
-      if (match != null) {
-        totalMinutes += int.tryParse(match.group(1) ?? '0') ?? 0;
-      }
-    }
-
-    if (totalMinutes < 60) {
-      return '$totalMinutes min';
-    } else {
-      final hours = totalMinutes ~/ 60;
-      final minutes = totalMinutes % 60;
-      return '$hours h ${minutes > 0 ? '$minutes min' : ''}';
     }
   }
 }

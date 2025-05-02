@@ -19,88 +19,102 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
     LearnerCoursesViewModel viewModel,
     Widget? child,
   ) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: CustomAppBar(
-        title: 'My Courses',
-        showSearchButton: true,
-        showNotificationButton: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite_rounded),
-            onPressed: viewModel.navigateToWishlist,
+    // Listen for navigation results from Course Details page
+    Future.microtask(() {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args != null) {
+        viewModel.handleNavigationResult(args);
+      }
+    });
+
+    return WillPopScope(
+      onWillPop: () async {
+        // Allow default back navigation
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: CustomAppBar(
+          title: 'My Courses',
+          showSearchButton: true,
+          showNotificationButton: false,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.favorite_rounded),
+              onPressed: viewModel.navigateToWishlist,
+            ),
+          ],
+          onSearchTap: (query) => viewModel.onSearchChanged(query),
+        ),
+        body: SafeArea(
+          child: Builder(
+            builder: (context) {
+              // Add detailed debug prints
+              debugPrint('View State - isBusy: ${viewModel.isBusy}');
+              debugPrint('View State - hasError: ${viewModel.hasError}');
+              debugPrint('View State - courses: ${viewModel.courses}');
+
+              if (viewModel.isBusy) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (viewModel.hasError) {
+                return Center(
+                  child: Text(
+                    'Error loading courses: ${viewModel.modelError}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                );
+              }
+
+              if (viewModel.courses.isEmpty) {
+                debugPrint(
+                    'Courses list is empty. Check if data is being loaded properly.');
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'No courses found. Try enrolling in a course!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () => viewModel.initialise(),
+                        child: const Text('Refresh'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: ListView.builder(
+                  itemCount: viewModel.courses.length,
+                  itemBuilder: (context, index) {
+                    final course = viewModel.courses[index];
+                    debugPrint('Building course at index $index: $course');
+
+                    return CourseListProgress(
+                      title: course.title,
+                      description: course.description,
+                      thumbnail: course.thumbnail,
+                      thumbnailUrl: course.thumbnail,
+                      progress: viewModel.computeProgress(course),
+                      rating: course.rating,
+                      reviews: course.reviews,
+                      onTap: () => viewModel.navigateToCourseDetails(course),
+                      imageService: viewModel.imageService,
+                      tags: viewModel.getCourseTags(course),
+                    );
+                  },
+                ),
+              );
+            },
           ),
-        ],
-        onSearchTap: (query) => viewModel.onSearchChanged(query),
-      ),
-      body: SafeArea(
-        child: Builder(
-          builder: (context) {
-            // Add detailed debug prints
-            debugPrint('View State - isBusy: ${viewModel.isBusy}');
-            debugPrint('View State - hasError: ${viewModel.hasError}');
-            debugPrint('View State - courses: ${viewModel.courses}');
-
-            if (viewModel.isBusy) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (viewModel.hasError) {
-              return Center(
-                child: Text(
-                  'Error loading courses: ${viewModel.modelError}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              );
-            }
-
-            if (viewModel.courses.isEmpty) {
-              debugPrint(
-                  'Courses list is empty. Check if data is being loaded properly.');
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'No courses found. Try enrolling in a course!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: () => viewModel.initialise(),
-                      child: const Text('Refresh'),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: ListView.builder(
-                itemCount: viewModel.courses.length,
-                itemBuilder: (context, index) {
-                  final course = viewModel.courses[index];
-                  debugPrint('Building course at index $index: $course');
-
-                  return CourseListProgress(
-                    title: course.title,
-                    description: course.description,
-                    thumbnail: course.thumbnail,
-                    thumbnailUrl: course.thumbnail,
-                    progress: viewModel.computeProgress(course),
-                    rating: course.rating,
-                    reviews: course.reviews,
-                    onTap: () => viewModel.navigateToCourseDetails(course),
-                    imageService: viewModel.imageService,
-                    tags: viewModel.getCourseTags(course),
-                  );
-                },
-              ),
-            );
-          },
         ),
       ),
     );
@@ -112,4 +126,12 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
         courseService: locator<CourseService>(),
         imageService: locator<ImageService>(),
       );
+
+  @override
+  void onViewModelReady(LearnerCoursesViewModel viewModel) {
+    super.onViewModelReady(viewModel);
+    // Always refresh the courses when this view becomes active
+    // This ensures we have the latest progress and ratings
+    viewModel.fetchCourses();
+  }
 }

@@ -4,6 +4,7 @@ import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/ui_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
+
 import 'lessons_full_viewmodel.dart';
 
 class LessonsFullView extends StackedView<LessonsFullViewModel> {
@@ -39,7 +40,7 @@ class LessonsFullView extends StackedView<LessonsFullViewModel> {
             ),
           ),
           _buildLessonsList(viewModel),
-          SliverToBoxAdapter(
+          const SliverToBoxAdapter(
             child: verticalSpaceLarge,
           ),
         ],
@@ -62,7 +63,7 @@ class LessonsFullView extends StackedView<LessonsFullViewModel> {
       stretch: true,
       backgroundColor: AppColors.primary,
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(
+        title: const Text(
           'Course Lessons',
           style: TextStyle(
             color: Colors.white,
@@ -193,7 +194,7 @@ class LessonsFullView extends StackedView<LessonsFullViewModel> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
+        const Text(
           'All Lessons',
           style: TextStyle(
             fontSize: 18,
@@ -214,7 +215,7 @@ class LessonsFullView extends StackedView<LessonsFullViewModel> {
 
   Widget _buildLessonsList(LessonsFullViewModel viewModel) {
     if (viewModel.isBusy) {
-      return SliverFillRemaining(
+      return const SliverFillRemaining(
         child: Center(
           child: CircularProgressIndicator(),
         ),
@@ -243,11 +244,11 @@ class LessonsFullView extends StackedView<LessonsFullViewModel> {
               verticalSpaceSmall,
               ElevatedButton(
                 onPressed: viewModel.navigateToAddLesson,
-                child: const Text('Add Your First Lesson'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                 ),
+                child: const Text('Add Your First Lesson'),
               ),
             ],
           ),
@@ -305,14 +306,30 @@ class LessonsFullView extends StackedView<LessonsFullViewModel> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            lesson.label,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          Row(
+                            children: [
+                              if (lesson.isCompleted)
+                                const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: Colors.green,
+                                  size: 18,
+                                ),
+                              if (lesson.isCompleted) horizontalSpaceTiny,
+                              Expanded(
+                                child: Text(
+                                  lesson.label,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: lesson.isCompleted
+                                        ? Colors.green.shade800
+                                        : Colors.black,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                           verticalSpaceSmall,
                           Row(
@@ -331,13 +348,13 @@ class LessonsFullView extends StackedView<LessonsFullViewModel> {
                                 ),
                               ),
                               horizontalSpaceMedium,
-                              Icon(
+                              const Icon(
                                 Icons.play_circle_outline,
                                 size: 16,
                                 color: AppColors.primary,
                               ),
                               horizontalSpaceTiny,
-                              Text(
+                              const Text(
                                 'Play',
                                 style: TextStyle(
                                   color: AppColors.primary,
@@ -385,11 +402,10 @@ class LessonsFullView extends StackedView<LessonsFullViewModel> {
                     ),
                   ],
                 ),
-                if (lesson.description != null &&
-                    lesson.description!.isNotEmpty) ...[
+                if (lesson.description.isNotEmpty) ...[
                   verticalSpaceSmall,
                   Text(
-                    lesson.description!,
+                    lesson.description,
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 14,
