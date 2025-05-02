@@ -145,9 +145,21 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     return sum / reviewsWithRatings.length;
   }
 
+  // Keep the class field
+  final _completedLessonService = locator<CompletedLessonService>();
+
   @override
   List<ReactiveServiceMixin> get reactiveServices =>
       [_lessonsService, _wishlistService];
+
+  // Listen for completion service changes in initialize
+  void _setupCompletionServiceListener() {
+    // Add a simple listener to update UI when completion service changes
+    _completedLessonService.addListener(() {
+      print("CompletedLessonService changed, updating UI");
+      notifyListeners();
+    });
+  }
 
   // Filter lessons for this course
   List<Lesson> get courseLessons =>
@@ -174,6 +186,9 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   Future<void> initialize(CourseModel? course) async {
     _course = course;
     setBusy(true);
+
+    // Set up completion service listener
+    _setupCompletionServiceListener();
 
     if (_course != null && isLearner) {
       // Load registrations first
@@ -214,8 +229,15 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     // Load lessons
     await _loadLessons();
 
+    // Calculate initial completion stats after lessons are loaded
+    if (_isRegistered && _lessons.isNotEmpty) {
+      print("Initial completion stats: ${computeCompletionStats()}");
+    }
+
     _isLoading = false;
     setBusy(false);
+
+    // Ensure UI is refreshed with completion data
     notifyListeners();
   }
 
@@ -225,18 +247,44 @@ class CourseDetailsViewModel extends ReactiveViewModel {
       if (course != null) {
         _lessons = await _lessonsService.getLessons(courseId: course!.id);
 
+        // First, ensure completion data is fully refreshed
+        print("Refreshing completion data for course ${course!.id}...");
+        await _completedLessonService.resetAndRefreshAllCompletionData();
+
         // Always run the fix to ensure correct lesson completion states
         print("Running completion status fix for course ${course!.id}...");
         await _lessonsService.fixInvertedCompletionStatus(course!.id);
 
-        // Reload lessons after fix
+        // Reload lessons after fix with forced refresh to get updated completion status
         _lessons = await _lessonsService.getLessons(
             courseId: course!.id, forceRefresh: true);
 
-        print("Completed fixing lesson statuses for course ${course!.id}");
+        // Manually verify completion status for each lesson
+        if (_isRegistered) {
+          print(
+              "Verifying lesson completion status for ${_lessons.length} lessons...");
+
+          for (int i = 0; i < _lessons.length; i++) {
+            final lesson = _lessons[i];
+
+            // Force check the completion status for this lesson
+            final isCompleted = await _completedLessonService
+                .forceCheckLessonCompletion(lesson.id);
+
+            // Update the lesson if its completion status is different
+            if (lesson.isCompleted != isCompleted) {
+              print(
+                  "Updating lesson ${lesson.id} completion status to $isCompleted");
+              _lessons[i] = lesson.copyWith(isCompleted: isCompleted);
+            }
+          }
+        }
+
+        print("Completed loading lessons with verified completion status");
       }
       notifyListeners();
     } catch (e) {
+      print("Error loading lessons: $e");
       // Handle error
       await _dialogService.showDialog(
         title: 'Error Loading Lessons',
@@ -1179,5 +1227,69 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     final newRating = index + 1.0;
     setRating(newRating);
     setState();
+  }
+
+  // Toggle a lesson's completion status
+  Future<void> toggleLessonCompletion(int lessonId) async {
+    try {
+      setBusy(true);
+
+      // Toggle the lesson completion status using the class field
+      final success =
+          await _completedLessonService.toggleLessonCompletion(lessonId);
+
+      if (success) {
+        // Instead of reloading all lessons, we'll update just the specific lesson
+        // This allows for a more efficient UI update without a full refresh
+        final lessonIndex =
+            _lessons.indexWhere((lesson) => lesson.id == lessonId);
+        if (lessonIndex != -1) {
+          // Toggle the completion status in our local list
+          final updatedLesson = _lessons[lessonIndex]
+              .copyWith(isCompleted: !_lessons[lessonIndex].isCompleted);
+
+          // Update the list with the modified lesson
+          _lessons[lessonIndex] = updatedLesson;
+
+          // Calculate updated completion stats for the progress display
+          final stats = computeCompletionStats();
+          print("Updated completion stats: $stats");
+
+          // Notify listeners about the change
+          notifyListeners();
+
+          // Set the flag to refresh the parent view when navigating back
+          _shouldRefreshOnBack = true;
+        }
+      }
+    } catch (e) {
+      snackbarService.showCustomSnackBar(
+        message: 'Failed to update lesson status: $e',
+        variant: SnackbarType.error,
+        duration: const Duration(seconds: 2),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Calculate completion statistics for the course
+  Map<String, dynamic> computeCompletionStats() {
+    if (_lessons.isEmpty) {
+      return {
+        'completedCount': 0,
+        'totalCount': 0,
+        'completionPercentage': 0.0,
+      };
+    }
+
+    int completedCount = _lessons.where((lesson) => lesson.isCompleted).length;
+    double percentage = (completedCount / _lessons.length) * 100;
+
+    return {
+      'completedCount': completedCount,
+      'totalCount': _lessons.length,
+      'completionPercentage': percentage,
+    };
   }
 }

@@ -881,6 +881,106 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           ),
         ),
 
+        // Course Progress Card - Only show for registered users
+        if (viewModel.isRegistered && viewModel.lessons.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(bottom: 24),
+            child: Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Your Progress',
+                          style: GoogleFonts.figtree(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '${viewModel.computeCompletionStats()['completedCount']}/${viewModel.computeCompletionStats()['totalCount']} Completed',
+                          style: GoogleFonts.figtree(
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Stack(
+                      children: [
+                        // Background progress bar
+                        Container(
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        // Actual progress
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Calculate width based on completion percentage
+                            final completionPercentage =
+                                viewModel.computeCompletionStats()[
+                                    'completionPercentage'];
+                            final progressWidth = constraints.maxWidth *
+                                (completionPercentage / 100);
+
+                            return Container(
+                              height: 8,
+                              width: progressWidth.isNaN ? 0 : progressWidth,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.green.shade400,
+                                    Colors.green.shade600,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.green.withOpacity(0.3),
+                                    blurRadius: 3,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      viewModel.computeCompletionStats()[
+                                  'completionPercentage'] >
+                              0
+                          ? '${viewModel.computeCompletionStats()['completionPercentage'].toStringAsFixed(1)}% complete'
+                          : 'Start your first lesson!',
+                      style: GoogleFonts.figtree(
+                        color: viewModel.computeCompletionStats()[
+                                    'completionPercentage'] >
+                                0
+                            ? Colors.green[700]
+                            : Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
         // Header with Add Button
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1064,7 +1164,36 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
 
     return ExpansionTile(
       backgroundColor: Colors.white,
-      leading: _buildBeautifiedFileIcon(index, viewModel),
+      leading: Stack(
+        children: [
+          _buildBeautifiedFileIcon(index, viewModel),
+          // Completion checkmark indicator
+          if (!isLocked && lesson.isCompleted)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(1),
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
       title: Text(
         lesson.label.isNotEmpty
             ? "${lesson.label[0].toUpperCase()}${lesson.label.substring(1)}"
@@ -1091,6 +1220,14 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                 style: GoogleFonts.figtree(
                   color: AppColors.primary,
                   fontWeight: FontWeight.bold,
+                ),
+              ),
+            if (!isLocked && lesson.isCompleted)
+              TextSpan(
+                text: ' • Completed',
+                style: GoogleFonts.figtree(
+                  color: Colors.green,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
           ],
@@ -1142,12 +1279,50 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   ],
                 )
               else
-                Text(
-                  lesson.description,
-                  style: GoogleFonts.figtree(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lesson.description,
+                      style: GoogleFonts.figtree(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Add completion toggle button for registered users
+                    if (viewModel.isRegistered)
+                      ElevatedButton.icon(
+                        onPressed: () =>
+                            viewModel.toggleLessonCompletion(lesson.id),
+                        icon: Icon(
+                          lesson.isCompleted
+                              ? Icons.check_circle
+                              : Icons.check_circle_outline,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        label: Text(
+                          lesson.isCompleted
+                              ? 'Mark as Incomplete'
+                              : 'Mark as Completed',
+                          style: GoogleFonts.figtree(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: lesson.isCompleted
+                              ? Colors.grey[600]
+                              : Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
             ],
           ),
