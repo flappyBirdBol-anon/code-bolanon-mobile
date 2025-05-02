@@ -3,6 +3,7 @@ import 'package:code_bolanon/services/analytics_service.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:code_bolanon/services/auth_service.dart';
+import 'package:code_bolanon/services/completed_lesson_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/file_service.dart';
 import 'package:code_bolanon/services/forgot_password_service.dart';
@@ -50,6 +51,8 @@ import 'test_helpers.mocks.dart';
     MockSpec<SelectedStackService>(onMissingStub: OnMissingStub.returnDefault),
 
     MockSpec<TransactionsService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<CompletedLessonService>(
+        onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
   ],
 )
@@ -73,6 +76,7 @@ void registerServices() {
   getAndRegisterSelectedStackService();
 
   getAndRegisterTransactionsService();
+  getAndRegisterCompletedLessonService();
 // @stacked-mock-register
 }
 
@@ -232,6 +236,13 @@ MockTransactionsService getAndRegisterTransactionsService() {
   _removeRegistrationIfExists<TransactionsService>();
   final service = MockTransactionsService();
   locator.registerSingleton<TransactionsService>(service);
+  return service;
+}
+
+MockCompletedLessonService getAndRegisterCompletedLessonService() {
+  _removeRegistrationIfExists<CompletedLessonService>();
+  final service = MockCompletedLessonService();
+  locator.registerSingleton<CompletedLessonService>(service);
   return service;
 }
 

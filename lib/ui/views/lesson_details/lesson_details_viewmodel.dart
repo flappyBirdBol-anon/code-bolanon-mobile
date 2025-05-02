@@ -1,22 +1,17 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/lessons_model.dart';
+import 'package:code_bolanon/services/completed_lesson_service.dart';
 import 'package:code_bolanon/services/file_service.dart';
 import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/user_service.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart'; // For SnackbarType
 import 'package:excel/excel.dart'; // Import excel
 import 'package:flutter/foundation.dart'; // Import compute
-import 'package:flutter/material.dart';
-
-import 'package:syncfusion_flutter_xlsio/xlsio.dart'
-    as xlsio; // Import Syncfusion Excel library
-import 'package:syncfusion_flutter_datagrid/datagrid.dart'; // Import SfDataGrid types
-import '../../common/widgets/excel_data_source.dart'; // Import the new DataSource
-
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart'; // Import just_audio
 import 'package:media_kit/media_kit.dart'; // Import media_kit
@@ -26,6 +21,10 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart'; // Import path_provider
 import 'package:share_plus/share_plus.dart';
 import 'package:stacked_services/stacked_services.dart';
+import 'package:syncfusion_flutter_xlsio/xlsio.dart'
+    as xlsio; // Import Syncfusion Excel library
+
+import '../../common/widgets/excel_data_source.dart'; // Import the new DataSource
 
 class LessonDetailsViewModel extends AppBaseViewModel {
   final _lessonsService = locator<LessonsService>();
@@ -34,6 +33,7 @@ class LessonDetailsViewModel extends AppBaseViewModel {
   final _snackbarService = locator<SnackbarService>(); // Add SnackbarService
   final _fileService = locator<FileService>();
   final _userService = locator<UserService>();
+  final _completedLessonService = locator<CompletedLessonService>();
 
   FileService get fileService => _fileService;
 
@@ -43,7 +43,7 @@ class LessonDetailsViewModel extends AppBaseViewModel {
   Lesson get lesson => _lesson ?? _createEmptyLesson();
   bool _hasValidLesson = false;
   bool get hasValidLesson => _hasValidLesson;
-  bool _isLessonCompleted = false; // TODO: Persist this state
+  bool _isLessonCompleted = false;
   bool get isLessonCompleted => _isLessonCompleted;
   bool get isLearner => _userService.currentUser?.role == 'learner';
   bool get showCompletionToggle => isLearner;
@@ -112,6 +112,7 @@ class LessonDetailsViewModel extends AppBaseViewModel {
     );
   }
 
+  @override
   Future<void> initialize(Lesson? initialLesson) async {
     setBusy(true); // Overall ViewModel busy state
     _contentLoading = true; // Content specific loading state
@@ -156,9 +157,17 @@ class LessonDetailsViewModel extends AppBaseViewModel {
         _contentLoading = false; // No content to load
       }
 
-      // 5. Initialize other states
-      // TODO: Fetch actual completion status from a service
-      _isLessonCompleted = false;
+      // 5. Check if lesson is completed (for learners only)
+      if (_hasValidLesson && _userService.currentUser != null && isLearner) {
+        try {
+          _isLessonCompleted =
+              await _completedLessonService.isLessonCompleted(lesson.id);
+          print("Lesson completion status loaded: $_isLessonCompleted");
+        } catch (e) {
+          print("Error checking lesson completion status: $e");
+          // Don't fail initialization for this
+        }
+      }
     } catch (e, s) {
       print('Error initializing lesson details: $e\n$s');
       _contentLoading = false;
@@ -719,25 +728,59 @@ class LessonDetailsViewModel extends AppBaseViewModel {
     }
   }
 
-  void toggleLessonCompletion() {
-    // TODO: Add service call to persist this state
+  Future<void> toggleLessonCompletion() async {
     if (!isLearner) return;
-    _isLessonCompleted = !_isLessonCompleted;
-    notifyListeners();
-    _snackbarService.showSnackbar(
-        message: _isLessonCompleted
-            ? 'Lesson marked complete'
-            : 'Lesson marked incomplete');
-    // Example:
-    // try {
-    //   await _userService.updateLessonCompletion(lesson.id, _isLessonCompleted);
-    // } catch (e) {
-    //   print("Failed to update completion status: $e");
-    //   // Revert state and show error
-    //   _isLessonCompleted = !_isLessonCompleted;
-    //   notifyListeners();
-    //   _snackbarService.showSnackbar(message: "Error updating status: $e");
-    // }
+
+    // Set loading state
+    setBusy(true);
+
+    try {
+      // Toggle through the service
+      final success =
+          await _completedLessonService.toggleLessonCompletion(lesson.id);
+
+      if (success) {
+        // Update UI state after successful API call
+        _isLessonCompleted = !_isLessonCompleted;
+
+        // Refresh the completed lessons list to ensure consistent state
+        await _completedLessonService.fetchCompletedLessons();
+
+        _snackbarService.showCustomSnackBar(
+          variant: SnackbarType.success,
+          message: _isLessonCompleted
+              ? 'Lesson marked as completed! 🎉'
+              : 'Lesson marked as incomplete',
+          duration: const Duration(seconds: 2),
+        );
+      } else {
+        throw Exception(
+            "You must be registered for this course to track lesson progress");
+      }
+    } catch (e) {
+      print("Failed to update completion status: $e");
+
+      String errorMessage = "Failed to update lesson status";
+
+      // Provide specific error message for registration issues
+      if (e.toString().contains('registered')) {
+        errorMessage = "You must be enrolled in this course to track progress";
+      }
+
+      _snackbarService.showCustomSnackBar(
+        variant: SnackbarType.error,
+        message: errorMessage,
+        duration: const Duration(seconds: 3),
+        mainButtonTitle: 'ENROLL',
+        onMainButtonTapped: () {
+          // Navigate to available courses where user can enroll
+          _navigationService.navigateToAvailableCoursesView();
+        },
+      );
+    } finally {
+      setBusy(false);
+      notifyListeners();
+    }
   }
 
   // --- Navigation ---

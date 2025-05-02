@@ -2,6 +2,7 @@ import 'package:code_bolanon/services/analytics_service.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:code_bolanon/services/auth_service.dart';
+import 'package:code_bolanon/services/completed_lesson_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/dialog_helper_service.dart';
 import 'package:code_bolanon/services/file_service.dart';
@@ -119,6 +120,7 @@ import 'package:stacked_services/stacked_services.dart';
     LazySingleton(classType: AppointmentService),
     LazySingleton(classType: SelectedStackService),
     LazySingleton(classType: TransactionsService),
+    LazySingleton(classType: CompletedLessonService),
 // @stacked-service
   ],
   bottomsheets: [

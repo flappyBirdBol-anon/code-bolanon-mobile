@@ -6,7 +6,6 @@
 
 // ignore_for_file: public_member_api_docs, implementation_imports, depend_on_referenced_packages
 
-import 'package:code_bolanon/services/notification_service.dart';
 import 'package:stacked_services/src/bottom_sheet/bottom_sheet_service.dart';
 import 'package:stacked_services/src/dialog/dialog_service.dart';
 import 'package:stacked_services/src/navigation/navigation_service.dart';
@@ -17,6 +16,7 @@ import '../services/analytics_service.dart';
 import '../services/api_service.dart';
 import '../services/appointment_service.dart';
 import '../services/auth_service.dart';
+import '../services/completed_lesson_service.dart';
 import '../services/course_service.dart';
 import '../services/dialog_helper_service.dart';
 import '../services/file_service.dart';
@@ -69,5 +69,5 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => AppointmentService());
   locator.registerLazySingleton(() => SelectedStackService());
   locator.registerLazySingleton(() => TransactionsService());
-  locator.registerLazySingleton(() => NotificationService());
+  locator.registerLazySingleton(() => CompletedLessonService());
 }
