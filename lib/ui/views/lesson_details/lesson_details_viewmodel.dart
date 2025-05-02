@@ -811,8 +811,11 @@ class LessonDetailsViewModel extends AppBaseViewModel {
 
       print("Updating course progress after lesson completion change");
 
-      // Use CompletedLessonService's synchronization method to update course progress
-      await _completedLessonService.synchronizeWithCourseProgress(_lesson!.id);
+      // Use the new public method to synchronize lesson completion with course progress
+      await _completedLessonService.refreshAllCompletionData();
+      await _completedLessonService.syncLessonCompletionWithCourseProgress(
+          _lesson!.id, _isLessonCompleted);
+
       print("Course progress data synchronized");
 
       // Get the course service to update ratings as well

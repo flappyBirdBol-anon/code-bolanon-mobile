@@ -182,110 +182,123 @@ class CourseDetailsViewModel extends ReactiveViewModel {
 //for toggle lessons
   bool _showAllLessons = false;
   bool get showAllLessons => _showAllLessons;
+
+  // Add a debug flag to control logging
+  static const bool _enableDebugLogs = false;
+
+  // Centralized logging method
+  void _log(String message) {
+    if (_enableDebugLogs) {
+      debugPrint('CourseDetailsViewModel: $message');
+    }
+  }
+
   // Initialize with a course
   Future<void> initialize(CourseModel? course) async {
     _course = course;
     setBusy(true);
 
-    // Set up completion service listener
-    _setupCompletionServiceListener();
+    try {
+      _log('Initializing course details view');
 
-    if (_course != null && isLearner) {
-      // Load registrations first
-      await _registrationService.loadRegisteredCourses();
-      _isRegistered = _registrationService.isRegistered(_course!.id);
+      // Batch operation: Load course data and registrations in parallel
+      if (_course != null) {
+        final futures = <Future>[];
 
-      // Only check wishlist if not registered
-      if (!_isRegistered) {
-        await _wishlistService.getUserWishlist();
-        _isInWishlist = _wishlistService.isInWishlist(_course!.id);
-      }
-    }
+        // Set up completion service listener
+        _setupCompletionServiceListener();
 
-    // Prefetch the course image to ensure it's cached
-    if (_course != null) {
-      final imageUrl =
-          _imageService.getCourseThumbnailFromPath(_course!.thumbnail);
-      await _imageService.prefetchImage(imageUrl, courseId: _course!.id);
+        // Only load registrations if user is a learner
+        if (isLearner) {
+          _log('Loading registration data');
+          futures.add(_registrationService.loadRegisteredCourses().then((_) {
+            _isRegistered = _registrationService.isRegistered(_course!.id);
 
-      // If course ID is available, get a fresh copy from the server
-      if (_course!.id.isNotEmpty) {
-        try {
-          _course = await courseService.getCourseById(_course!.id);
-        } catch (e) {
-          print('Error refreshing course data: $e');
-          // Continue with existing course data if refresh fails
+            // Only check wishlist if not registered (optimization)
+            if (!_isRegistered) {
+              _log('Loading wishlist data');
+              return _wishlistService.getUserWishlist().then((_) {
+                _isInWishlist = _wishlistService.isInWishlist(_course!.id);
+              });
+            }
+            return null;
+          }));
         }
+
+        // Prefetch course image
+        final imageUrl =
+            _imageService.getCourseThumbnailFromPath(_course!.thumbnail);
+        futures
+            .add(_imageService.prefetchImage(imageUrl, courseId: _course!.id));
+
+        // Get fresh course data if ID is available
+        if (_course!.id.isNotEmpty) {
+          futures
+              .add(courseService.getCourseById(_course!.id).then((freshCourse) {
+            _course = freshCourse;
+
+            // Extract reviews
+            if (_course!.registrations.isNotEmpty) {
+              _reviews =
+                  _course!.registrations.where((reg) => reg.hasReview).toList();
+              _sortReviews();
+            }
+          }).catchError((e) {
+            _log('Error refreshing course: $e');
+            // Continue with existing data if refresh fails
+          }));
+        }
+
+        // Wait for all parallel operations to complete
+        await Future.wait(futures);
+
+        // Load lessons last (depends on registration data)
+        await _loadLessonsEfficiently();
       }
-
-      // Load reviews from registrations
-      if (_course!.registrations.isNotEmpty) {
-        _reviews =
-            _course!.registrations.where((reg) => reg.hasReview).toList();
-        _sortReviews();
-      }
+    } catch (e) {
+      _log('Error during initialization: $e');
+    } finally {
+      _isLoading = false;
+      setBusy(false);
+      notifyListeners();
     }
-
-    // Load lessons
-    await _loadLessons();
-
-    // Calculate initial completion stats after lessons are loaded
-    if (_isRegistered && _lessons.isNotEmpty) {
-      print("Initial completion stats: ${computeCompletionStats()}");
-    }
-
-    _isLoading = false;
-    setBusy(false);
-
-    // Ensure UI is refreshed with completion data
-    notifyListeners();
   }
 
-  // Load lessons from the service
-  Future<void> _loadLessons() async {
+  // Optimized lesson loading with fewer redundant calls
+  Future<void> _loadLessonsEfficiently() async {
+    if (course == null) return;
+
+    _log('Loading lessons efficiently');
+
     try {
-      if (course != null) {
-        _lessons = await _lessonsService.getLessons(courseId: course!.id);
+      // Load lessons once
+      _lessons = await _lessonsService.getLessons(courseId: course!.id);
 
-        // First, ensure completion data is fully refreshed
-        print("Refreshing completion data for course ${course!.id}...");
-        await _completedLessonService.resetAndRefreshAllCompletionData();
+      // Only verify completion status if the user is registered
+      if (_isRegistered) {
+        _log('Verifying completion status for registered user');
 
-        // Always run the fix to ensure correct lesson completion states
-        print("Running completion status fix for course ${course!.id}...");
-        await _lessonsService.fixInvertedCompletionStatus(course!.id);
+        // Check if we need to fix completion status (only on first load)
+        // This prevents redundant calls during normal navigation
+        if (!_hasVerifiedCompletionStatus) {
+          await _completedLessonService.refreshAllCompletionData();
 
-        // Reload lessons after fix with forced refresh to get updated completion status
-        _lessons = await _lessonsService.getLessons(
-            courseId: course!.id, forceRefresh: true);
-
-        // Manually verify completion status for each lesson
-        if (_isRegistered) {
-          print(
-              "Verifying lesson completion status for ${_lessons.length} lessons...");
-
+          // Update lessons with verified completion status
           for (int i = 0; i < _lessons.length; i++) {
             final lesson = _lessons[i];
+            final isCompleted =
+                await _completedLessonService.isLessonCompleted(lesson.id);
 
-            // Force check the completion status for this lesson
-            final isCompleted = await _completedLessonService
-                .forceCheckLessonCompletion(lesson.id);
-
-            // Update the lesson if its completion status is different
             if (lesson.isCompleted != isCompleted) {
-              print(
-                  "Updating lesson ${lesson.id} completion status to $isCompleted");
               _lessons[i] = lesson.copyWith(isCompleted: isCompleted);
             }
           }
-        }
 
-        print("Completed loading lessons with verified completion status");
+          _hasVerifiedCompletionStatus = true;
+        }
       }
-      notifyListeners();
     } catch (e) {
-      print("Error loading lessons: $e");
-      // Handle error
+      _log('Error loading lessons: $e');
       await _dialogService.showDialog(
         title: 'Error Loading Lessons',
         description: 'Could not load lessons. Please try again later.',
@@ -294,11 +307,49 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     }
   }
 
+  // Track if we've already verified completion status to avoid redundant checks
+  bool _hasVerifiedCompletionStatus = false;
+
+  // Toggle a lesson's completion status
+  Future<void> toggleLessonCompletion(int lessonId) async {
+    try {
+      setBusy(true);
+
+      final success =
+          await _completedLessonService.toggleLessonCompletion(lessonId);
+
+      if (success) {
+        // Update just the specific lesson (efficient update)
+        final lessonIndex =
+            _lessons.indexWhere((lesson) => lesson.id == lessonId);
+        if (lessonIndex != -1) {
+          // Update the lesson in the list
+          _lessons[lessonIndex] = _lessons[lessonIndex]
+              .copyWith(isCompleted: !_lessons[lessonIndex].isCompleted);
+
+          // Set flag to refresh parent view when navigating back
+          _shouldRefreshOnBack = true;
+
+          // Update UI
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      snackbarService.showCustomSnackBar(
+        message: 'Failed to update lesson status',
+        variant: SnackbarType.error,
+        duration: const Duration(seconds: 2),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   // Refresh lessons
   Future<void> refreshLessons() async {
     setBusy(true);
     try {
-      await _loadLessons();
+      await _loadLessonsEfficiently();
 
       // Get course ID
       final courseId = course?.id;
@@ -1227,50 +1278,6 @@ class CourseDetailsViewModel extends ReactiveViewModel {
     final newRating = index + 1.0;
     setRating(newRating);
     setState();
-  }
-
-  // Toggle a lesson's completion status
-  Future<void> toggleLessonCompletion(int lessonId) async {
-    try {
-      setBusy(true);
-
-      // Toggle the lesson completion status using the class field
-      final success =
-          await _completedLessonService.toggleLessonCompletion(lessonId);
-
-      if (success) {
-        // Instead of reloading all lessons, we'll update just the specific lesson
-        // This allows for a more efficient UI update without a full refresh
-        final lessonIndex =
-            _lessons.indexWhere((lesson) => lesson.id == lessonId);
-        if (lessonIndex != -1) {
-          // Toggle the completion status in our local list
-          final updatedLesson = _lessons[lessonIndex]
-              .copyWith(isCompleted: !_lessons[lessonIndex].isCompleted);
-
-          // Update the list with the modified lesson
-          _lessons[lessonIndex] = updatedLesson;
-
-          // Calculate updated completion stats for the progress display
-          final stats = computeCompletionStats();
-          print("Updated completion stats: $stats");
-
-          // Notify listeners about the change
-          notifyListeners();
-
-          // Set the flag to refresh the parent view when navigating back
-          _shouldRefreshOnBack = true;
-        }
-      }
-    } catch (e) {
-      snackbarService.showCustomSnackBar(
-        message: 'Failed to update lesson status: $e',
-        variant: SnackbarType.error,
-        duration: const Duration(seconds: 2),
-      );
-    } finally {
-      setBusy(false);
-    }
   }
 
   // Calculate completion statistics for the course

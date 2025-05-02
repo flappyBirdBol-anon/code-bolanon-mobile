@@ -803,6 +803,9 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
 
   Widget _buildLessonsTab(
       CourseDetailsViewModel viewModel, BuildContext context) {
+    // Pre-calculate stats once for this build cycle instead of multiple times in the UI
+    final completionStats = viewModel.computeCompletionStats();
+
     return ListView(
       scrollDirection: Axis.vertical,
       padding: const EdgeInsets.all(16),
@@ -886,6 +889,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           Container(
             margin: const EdgeInsets.only(bottom: 24),
             child: Card(
+              key: Key('progress-card-${completionStats['completedCount']}'),
               elevation: 2,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
@@ -905,7 +909,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                           ),
                         ),
                         Text(
-                          '${viewModel.computeCompletionStats()['completedCount']}/${viewModel.computeCompletionStats()['totalCount']} Completed',
+                          '${completionStats['completedCount']}/${completionStats['totalCount']} Completed',
                           style: GoogleFonts.figtree(
                             color: Colors.grey[700],
                             fontWeight: FontWeight.w500,
@@ -924,35 +928,39 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
-                        // Actual progress
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            // Calculate width based on completion percentage
-                            final completionPercentage =
-                                viewModel.computeCompletionStats()[
-                                    'completionPercentage'];
-                            final progressWidth = constraints.maxWidth *
-                                (completionPercentage / 100);
-
-                            return Container(
-                              height: 8,
-                              width: progressWidth.isNaN ? 0 : progressWidth,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.green.shade400,
-                                    Colors.green.shade600,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.green.withOpacity(0.3),
-                                    blurRadius: 3,
-                                    offset: const Offset(0, 1),
+                        // Actual progress with animation
+                        TweenAnimationBuilder<double>(
+                          duration: const Duration(milliseconds: 700),
+                          curve: Curves.easeOutCubic,
+                          tween: Tween<double>(
+                              begin: 0,
+                              end: (completionStats['completionPercentage']
+                                      as double) /
+                                  100),
+                          builder: (context, value, child) {
+                            return LayoutBuilder(
+                              builder: (context, constraints) {
+                                return Container(
+                                  height: 8,
+                                  width: constraints.maxWidth * value,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.green.shade400,
+                                        Colors.green.shade600,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.green.withOpacity(0.3),
+                                        blurRadius: 3,
+                                        offset: const Offset(0, 1),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                );
+                              },
                             );
                           },
                         ),
@@ -960,15 +968,11 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      viewModel.computeCompletionStats()[
-                                  'completionPercentage'] >
-                              0
-                          ? '${viewModel.computeCompletionStats()['completionPercentage'].toStringAsFixed(1)}% complete'
+                      completionStats['completionPercentage'] > 0
+                          ? '${(completionStats['completionPercentage'] as double).toStringAsFixed(1)}% complete'
                           : 'Start your first lesson!',
                       style: GoogleFonts.figtree(
-                        color: viewModel.computeCompletionStats()[
-                                    'completionPercentage'] >
-                                0
+                        color: completionStats['completionPercentage'] > 0
                             ? Colors.green[700]
                             : Colors.grey[600],
                         fontWeight: FontWeight.w500,
@@ -1162,7 +1166,12 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
     final isLocked = viewModel.isLearner && !viewModel.isRegistered;
     final isTrainer = course?.author == viewModel.userName;
 
+    // Use a key based on both the lesson id and completion status
+    // This ensures the widget properly rebuilds when completion changes
+    final itemKey = Key('lesson-${lesson.id}-${lesson.isCompleted}');
+
     return ExpansionTile(
+      key: itemKey,
       backgroundColor: Colors.white,
       leading: Stack(
         children: [
@@ -1293,6 +1302,8 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                     // Add completion toggle button for registered users
                     if (viewModel.isRegistered)
                       ElevatedButton.icon(
+                        key: Key(
+                            'toggle-button-${lesson.id}-${lesson.isCompleted}'),
                         onPressed: () =>
                             viewModel.toggleLessonCompletion(lesson.id),
                         icon: Icon(

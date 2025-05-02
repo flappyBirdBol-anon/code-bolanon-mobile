@@ -5,6 +5,7 @@ import 'package:code_bolanon/models/lessons_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
 import 'package:code_bolanon/services/completed_lesson_service.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as path;
 import 'package:stacked/stacked.dart';
@@ -20,6 +21,12 @@ class LessonsService with ReactiveServiceMixin {
   // Cache expiration duration (5 minutes)
   final Duration _cacheExpiration = const Duration(minutes: 5);
 
+  // Track which courses have already had fix applied to prevent redundant operations
+  final Set<String> _fixedCourseIds = {};
+
+  // Debug flag to control logging
+  static const bool _enableDebugLogs = false;
+
   // Fix: Use ReactiveValue with List<Lesson>? type for lessons list
   final ReactiveValue<List<Lesson>?> _lessons =
       ReactiveValue<List<Lesson>?>([]);
@@ -33,6 +40,12 @@ class LessonsService with ReactiveServiceMixin {
       : apiService = apiService ?? locator<ApiService>() {
     // Fix: Move listenToReactiveValues to constructor and listen to both reactive values
     listenToReactiveValues([_lessons, _currentLesson]);
+  }
+
+  void _log(String message) {
+    if (_enableDebugLogs) {
+      debugPrint('LessonsService: $message');
+    }
   }
 
   Future<List<Lesson>> getLessons({
@@ -421,17 +434,12 @@ class LessonsService with ReactiveServiceMixin {
 
   // Update lesson completion status in the cache
   void updateLessonCompletionStatus(int lessonId, bool isCompleted) {
-    print(
-        "LessonService: Updating lesson $lessonId completion to $isCompleted");
+    _log("Updating lesson $lessonId completion to $isCompleted");
 
     if (_cachedLessons != null) {
       final index =
           _cachedLessons!.indexWhere((lesson) => lesson.id == lessonId);
       if (index != -1) {
-        final oldStatus = _cachedLessons![index].isCompleted;
-        print(
-            "LessonService: Found lesson $lessonId at index $index, current status=$oldStatus, new status=$isCompleted");
-
         // Create a copy of the lesson with updated completion status
         final updatedLesson =
             _cachedLessons![index].copyWith(isCompleted: isCompleted);
@@ -442,19 +450,12 @@ class LessonsService with ReactiveServiceMixin {
         // If this is the current lesson, update that too
         if (_currentLesson.value?.id == lessonId) {
           _currentLesson.value = updatedLesson;
-          print("LessonService: Updated current lesson");
         }
 
         // Notify listeners of the change
         _lessons.value = List.from(_cachedLessons!);
         notifyListeners();
-        print(
-            "LessonService: Completed updating lesson $lessonId, notified listeners");
-      } else {
-        print("LessonService: WARNING - Lesson $lessonId not found in cache");
       }
-    } else {
-      print("LessonService: WARNING - Cached lessons is null");
     }
   }
 
@@ -462,7 +463,7 @@ class LessonsService with ReactiveServiceMixin {
   Future<void> refreshLessonCompletionStatuses(String courseId) async {
     if (_cachedLessons == null || _cachedLessons!.isEmpty) return;
 
-    print(
+    _log(
         "Refreshing completion status for ${_cachedLessons!.length} lessons in course $courseId");
 
     // Get the CompletedLessonService instance from the locator
@@ -479,20 +480,20 @@ class LessonsService with ReactiveServiceMixin {
       if (lesson.courseId.toString() != courseId) continue;
 
       try {
-        // Check completion status directly from the API for this specific lesson
+        // Check completion status from the API using standard method
         final isCompleted =
-            await completedLessonService.forceCheckLessonCompletion(lesson.id);
-        print(
+            await completedLessonService.isLessonCompleted(lesson.id);
+        _log(
             "VERIFIED: Lesson ${lesson.id} (${lesson.label}): completed = $isCompleted");
 
         // Update lesson completion status if different from current
         if (lesson.isCompleted != isCompleted) {
-          print(
+          _log(
               "Updating lesson ${lesson.id} from ${lesson.isCompleted} to $isCompleted");
           _cachedLessons![i] = lesson.copyWith(isCompleted: isCompleted);
         }
       } catch (e) {
-        print("Error checking completion status for lesson ${lesson.id}: $e");
+        _log("Error checking completion status for lesson ${lesson.id}: $e");
       }
     }
 
@@ -501,65 +502,71 @@ class LessonsService with ReactiveServiceMixin {
     notifyListeners();
   }
 
-  // This method fixes a specific bug where completion status is inverted
-  // (all lessons except the completed one show as completed)
+  // Optimized method to fix any inverted completion statuses
+  // This is now more efficient and avoids redundant operations
   Future<void> fixInvertedCompletionStatus(String courseId) async {
     if (_cachedLessons == null || _cachedLessons!.isEmpty) return;
 
-    print("Checking for inverted completion status bug in course $courseId");
-
-    // Get the CompletedLessonService
-    final completedLessonService = locator<CompletedLessonService>();
-
-    // First, reset all data from scratch using our more reliable method
-    print(
-        "Performing full reset of completion data to fix potential inversion issue...");
-    await completedLessonService.resetAndRefreshAllCompletionData();
-
-    // Get the lessons for this course
-    final courseLessons = _cachedLessons!
-        .where((lesson) => lesson.courseId.toString() == courseId)
-        .toList();
-
-    if (courseLessons.isEmpty) {
-      print("No lessons found for course $courseId");
+    // Skip if we've already fixed this course in this session
+    if (_fixedCourseIds.contains(courseId)) {
+      _log("Skipping fix for course $courseId - already processed");
       return;
     }
 
-    // Check each lesson against the fresh data
-    print("Verifying completion status for each lesson after reset...");
-    int updatedCount = 0;
+    _log("Checking completion status for course $courseId");
 
-    for (int i = 0; i < _cachedLessons!.length; i++) {
-      final lesson = _cachedLessons![i];
+    try {
+      // Get the CompletedLessonService
+      final completedLessonService = locator<CompletedLessonService>();
 
-      // Only process lessons for this course
-      if (lesson.courseId.toString() != courseId) continue;
+      // Get only the lessons for this course
+      final courseLessons = _cachedLessons!
+          .where((lesson) => lesson.courseId.toString() == courseId)
+          .toList();
 
-      try {
-        // Check completion status directly from our reset cache, using force method
-        final isCompleted =
-            await completedLessonService.forceCheckLessonCompletion(lesson.id);
-
-        // Update lesson if needed
-        if (lesson.isCompleted != isCompleted) {
-          print(
-              "Fixing lesson ${lesson.id} (${lesson.label}): ${lesson.isCompleted} → $isCompleted");
-          _cachedLessons![i] = lesson.copyWith(isCompleted: isCompleted);
-          updatedCount++;
-        } else {
-          print(
-              "Lesson ${lesson.id} (${lesson.label}): Completion status verified as $isCompleted");
-        }
-      } catch (e) {
-        print("Error checking completion for lesson ${lesson.id}: $e");
+      if (courseLessons.isEmpty) {
+        _log("No lessons found for course $courseId");
+        return;
       }
+
+      // Refresh completion data once for all lessons
+      await completedLessonService.refreshAllCompletionData();
+
+      // Update each lesson's completion status
+      int updatedCount = 0;
+      for (int i = 0; i < _cachedLessons!.length; i++) {
+        final lesson = _cachedLessons![i];
+
+        // Only process lessons for this course
+        if (lesson.courseId.toString() != courseId) continue;
+
+        try {
+          // Check completion status from completion service
+          final isCompleted =
+              await completedLessonService.isLessonCompleted(lesson.id);
+
+          // Update lesson if needed
+          if (lesson.isCompleted != isCompleted) {
+            _log("Fixing completion status for lesson ${lesson.id}");
+            _cachedLessons![i] = lesson.copyWith(isCompleted: isCompleted);
+            updatedCount++;
+          }
+        } catch (e) {
+          _log("Error checking completion for lesson ${lesson.id}: $e");
+        }
+      }
+
+      if (updatedCount > 0) {
+        // Update the reactive value and notify listeners
+        _lessons.value = List.from(_cachedLessons!);
+        notifyListeners();
+        _log("Fixed $updatedCount lesson(s) in course $courseId");
+      }
+
+      // Mark this course as fixed
+      _fixedCourseIds.add(courseId);
+    } catch (e) {
+      _log("Error fixing inverted status: $e");
     }
-
-    // Update the reactive value
-    _lessons.value = List.from(_cachedLessons!);
-    notifyListeners();
-
-    print("Fixed inverted statuses for $updatedCount lessons");
   }
 }
