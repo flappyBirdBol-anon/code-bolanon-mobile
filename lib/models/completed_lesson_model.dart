@@ -10,14 +10,17 @@ class CompletedLessonModel {
     required this.id,
     required this.lessonId,
     required this.registrationId,
-    this.isCompleted = false,
+    this.isCompleted = true,
     this.createdAt,
     this.updatedAt,
   });
 
   factory CompletedLessonModel.fromJson(Map<String, dynamic> json) {
-    // Handle isCompleted field which might be an int (1/0) or boolean
-    bool parsedIsCompleted = false;
+    // The presence of a record in the completed_lessons table means it's completed
+    // We'll default to true, but still parse the field if present
+    bool parsedIsCompleted = true;
+
+    // Handle isCompleted field if present (but usually not needed)
     if (json.containsKey('is_completed')) {
       if (json['is_completed'] is bool) {
         parsedIsCompleted = json['is_completed'];

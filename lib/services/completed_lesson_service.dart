@@ -24,7 +24,7 @@ class CompletedLessonService with ListenableServiceMixin {
   final Map<int, String> _lessonToRegistrationCache = {};
 
   // Debug flag to enable verbose logging - set to false in production
-  final bool _enableDebugLogs = false;
+  final bool _enableDebugLogs = true;
 
   CompletedLessonService() {
     listenToReactiveValues([_completedLessons]);
@@ -37,18 +37,22 @@ class CompletedLessonService with ListenableServiceMixin {
   }
 
   Future<void> fetchCompletedLessons(
-      {String? lessonId, String? registrationId}) async {
+      {String? lessonId, String? registrationId, String? courseId}) async {
     try {
       _log(
-          "Fetching completed lessons - lessonId: $lessonId, registrationId: $registrationId");
+          "Fetching completed lessons - lessonId: $lessonId, registrationId: $registrationId, courseId: $courseId");
 
       final queryParams = <String, dynamic>{};
       if (lessonId != null) queryParams['lesson_id'] = lessonId;
       if (registrationId != null)
         queryParams['registration_id'] = registrationId;
+      if (courseId != null) queryParams['course_id'] = courseId;
 
+      _log(
+          "Sending API request to /completed_lessons with params: $queryParams");
       final response = await _apiService.get('/completed_lessons',
           queryParameters: queryParams);
+      _log("API Response status: ${response.statusCode}");
 
       if (response.data == null) {
         _log("Response data is null, clearing completed lessons");
@@ -57,27 +61,62 @@ class CompletedLessonService with ListenableServiceMixin {
         return;
       }
 
+      _log("Raw response data type: ${response.data.runtimeType}");
       final data = response.data;
       List<CompletedLessonModel> parsedLessons = [];
 
       if (data is List) {
         _log("Response is a List with ${data.length} items");
-        parsedLessons =
-            data.map((item) => CompletedLessonModel.fromJson(item)).toList();
+        parsedLessons = data.map((item) {
+          _log("Processing list item: $item");
+          return CompletedLessonModel.fromJson(item);
+        }).toList();
       } else if (data is Map &&
           data.containsKey('data') &&
           data['data'] is List) {
         _log(
             "Response is a Map with 'data' key containing ${data['data'].length} items");
-        parsedLessons = (data['data'] as List)
-            .map((item) => CompletedLessonModel.fromJson(item))
-            .toList();
+        parsedLessons = (data['data'] as List).map((item) {
+          _log("Processing data item: $item");
+          return CompletedLessonModel.fromJson(item);
+        }).toList();
       } else {
         _log("Response format not recognized: ${data.runtimeType}");
-        parsedLessons = [];
+        // Try to extract any lessons from the data
+        if (data is Map) {
+          _log("Attempting to parse as single lesson record");
+          try {
+            final mapData = Map<String, dynamic>.from(data);
+            parsedLessons = [CompletedLessonModel.fromJson(mapData)];
+            _log("Successfully parsed as single record");
+          } catch (e) {
+            _log("Failed to parse as single record: $e");
+            parsedLessons = [];
+          }
+        } else {
+          parsedLessons = [];
+        }
       }
 
+      // CRITICAL FIX: Filter by registration ID if specified
+      if (registrationId != null) {
+        _log("Filtering lessons by registration ID: $registrationId");
+        final originalCount = parsedLessons.length;
+        parsedLessons = parsedLessons
+            .where((lesson) => lesson.registrationId == registrationId)
+            .toList();
+        _log(
+            "After filtering: ${parsedLessons.length} of $originalCount lessons match registration ID");
+      }
+
+      _log("Successfully parsed ${parsedLessons.length} completed lessons");
       _completedLessons.value = parsedLessons;
+
+      // Log all parsed lessons for debugging
+      if (parsedLessons.isNotEmpty) {
+        _log(
+            "Parsed lesson IDs: ${parsedLessons.map((l) => l.lessonId).join(', ')}");
+      }
 
       // Update the cache with the fetched data
       _log("Updating cache with ${parsedLessons.length} completed lessons");
@@ -99,9 +138,9 @@ class CompletedLessonService with ListenableServiceMixin {
         // When populating cache from general fetch, be very explicit about which lessons are completed
         for (var lesson in parsedLessons) {
           String cacheKey = "${lesson.lessonId}_${lesson.registrationId}";
-          _lessonCompletionCache[cacheKey] = lesson.isCompleted;
-          _log(
-              "Cached lesson ${lesson.lessonId} as completed=${lesson.isCompleted}");
+          _lessonCompletionCache[cacheKey] =
+              true; // Always true if record exists
+          _log("Cached lesson ${lesson.lessonId} as completed");
         }
       }
 
@@ -168,8 +207,11 @@ class CompletedLessonService with ListenableServiceMixin {
   // Optimized isLessonCompleted with better caching
   Future<bool> isLessonCompleted(int lessonId) async {
     try {
+      _log("Checking if lesson $lessonId is completed");
+
       final registrationId = await getRegistrationIdForLesson(lessonId);
       if (registrationId == null) {
+        _log("No registration found for lesson $lessonId");
         return false;
       }
 
@@ -178,17 +220,36 @@ class CompletedLessonService with ListenableServiceMixin {
 
       // Check cache first for performance
       if (_lessonCompletionCache.containsKey(cacheKey)) {
-        return _lessonCompletionCache[cacheKey] ?? false;
+        final isCompleted = _lessonCompletionCache[cacheKey] ?? false;
+        _log("Cache hit for lesson $lessonId: completed=$isCompleted");
+        return isCompleted;
       }
 
-      // Not in cache, fetch from API for this specific lesson
+      // Before making an API call, check if there's a record in our completedLessons list
+      final matchingCompletions = _completedLessons.value
+          .where((completion) =>
+              completion.lessonId.toString() == lessonId.toString())
+          .toList();
+
+      if (matchingCompletions.isNotEmpty) {
+        _log(
+            "Found ${matchingCompletions.length} completion records in local list for lesson $lessonId");
+        _lessonCompletionCache[cacheKey] = true;
+        return true;
+      }
+
+      // Not in cache or local list, fetch from API for this specific lesson
+      _log("No cache or local data, fetching from API for lesson $lessonId");
       final response =
           await _apiService.get('/completed_lessons', queryParameters: {
         'lesson_id': lessonId.toString(),
         'registration_id': registrationId,
       });
 
+      _log("API response for lesson $lessonId: status=${response.statusCode}");
+
       if (response.data == null) {
+        _log("No data returned for lesson $lessonId");
         _lessonCompletionCache[cacheKey] = false;
         return false;
       }
@@ -198,10 +259,13 @@ class CompletedLessonService with ListenableServiceMixin {
 
       if (data is List) {
         completedLessons = data;
+        _log("Received data as List with ${completedLessons.length} items");
       } else if (data is Map &&
           data.containsKey('data') &&
           data['data'] is List) {
         completedLessons = data['data'] as List;
+        _log(
+            "Received data as Map with ${completedLessons.length} items in 'data' key");
       }
 
       // Filter to only include records matching this specific lesson ID
@@ -211,11 +275,15 @@ class CompletedLessonService with ListenableServiceMixin {
             record['lesson_id'].toString() == lessonId.toString();
       }).toList();
 
+      _log(
+          "After filtering, found ${matchingLessons.length} records for lesson $lessonId");
+
       // A lesson is completed ONLY if there's at least one record for THIS lesson
       final isCompleted = matchingLessons.isNotEmpty;
 
       // Update cache with result
       _lessonCompletionCache[cacheKey] = isCompleted;
+      _log("Setting cache for lesson $lessonId: completed=$isCompleted");
 
       return isCompleted;
     } catch (e) {
@@ -506,16 +574,113 @@ class CompletedLessonService with ListenableServiceMixin {
   }
 
   // Reset and refresh all completion data
-  Future<void> resetAndRefreshAllCompletionData() async {
+  Future<void> resetAndRefreshAllCompletionData({String? courseId}) async {
     try {
-      _log("Resetting and refreshing all completion data");
+      _log(
+          "Resetting and refreshing all completion data${courseId != null ? " for course ID: $courseId" : ""}");
+
       // Clear the cache completely
       _lessonCompletionCache.clear();
       _lessonToRegistrationCache.clear();
 
-      // Then refresh from the API
-      await refreshAllCompletionData();
+      // Don't notify here - wait until the end
+      // Clear but don't notify
+      _completedLessons.value = [];
 
+      // Then refresh from the API
+      _log("Refreshing all completion data from API");
+
+      // Get all user registrations
+      final registrations = await _registrationService.getUserRegistrations();
+
+      // Filter registrations by course ID if provided
+      final targetRegistrations = courseId != null
+          ? registrations
+              .where((reg) => reg.courseId.toString() == courseId)
+              .toList()
+          : registrations;
+
+      _log(
+          "Found ${targetRegistrations.length} relevant registrations${courseId != null ? " for course ID: $courseId" : ""}");
+
+      // For each registration, fetch completed lessons
+      for (var registration in targetRegistrations) {
+        _log(
+            "Fetching completed lessons for registration ID: ${registration.id}, course ID: ${registration.courseId}");
+
+        // Include courseId in query if specified
+        final queryParams = <String, dynamic>{
+          'registration_id': registration.id
+        };
+        if (courseId != null) {
+          queryParams['course_id'] = courseId;
+        }
+
+        final response = await _apiService.get('/completed_lessons',
+            queryParameters: queryParams);
+
+        _log(
+            "API response status for registration ${registration.id}: ${response.statusCode}");
+
+        if (response.data != null) {
+          List<dynamic> completions = [];
+
+          if (response.data is List) {
+            completions = response.data;
+            _log(
+                "Received completion data as List with ${completions.length} items");
+          } else if (response.data is Map &&
+              response.data.containsKey('data') &&
+              response.data['data'] is List) {
+            completions = response.data['data'] as List;
+            _log(
+                "Received completion data as Map with ${completions.length} items in 'data' key");
+          }
+
+          _log(
+              "Processing ${completions.length} completion records for registration ${registration.id}");
+
+          // Build the cache and completedLessons list with the fetched data
+          for (var record in completions) {
+            if (record != null && record['lesson_id'] != null) {
+              final lessonId = int.parse(record['lesson_id'].toString());
+              final cacheKey = _getCacheKey(lessonId, registration.id);
+              _lessonCompletionCache[cacheKey] = true;
+
+              // Also cache the lesson to registration mapping
+              _lessonToRegistrationCache[lessonId] = registration.id;
+
+              // Add to the completed lessons list
+              _completedLessons.value.add(CompletedLessonModel(
+                id: record['id'] ?? 0,
+                lessonId: lessonId,
+                registrationId: registration.id,
+                isCompleted: true,
+                createdAt: record['created_at'],
+                updatedAt: record['updated_at'],
+              ));
+              _log(
+                  "Added completed lesson ID $lessonId to completedLessons list");
+            }
+          }
+        } else {
+          _log(
+              "No completion data returned for registration ${registration.id}");
+        }
+      }
+
+      _log(
+          "Completed refreshing all data. Found ${_completedLessons.value.length} completed lessons.");
+
+      // Print a summary of the completed lessons
+      if (_completedLessons.value.isNotEmpty) {
+        final completedLessonIds = _completedLessons.value
+            .map((cl) => cl.lessonId.toString())
+            .toList();
+        _log("Completed lesson IDs: $completedLessonIds");
+      }
+
+      // Only notify once at the end
       notifyListeners();
     } catch (e) {
       _log("Error resetting and refreshing completion data: $e");
