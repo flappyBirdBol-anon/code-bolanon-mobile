@@ -717,11 +717,11 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.star,
-                                  color: Colors.amber, size: 14),
+                              const Icon(Icons.person,
+                                  color: Colors.white, size: 14),
                               const SizedBox(width: 4),
                               Text(
-                                course.rating.toStringAsFixed(1),
+                                course.enrolledStudents.toString(),
                                 style: GoogleFonts.figtree(
                                   color: Colors.white,
                                   fontSize: 12,
@@ -828,7 +828,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
               style: headingStyle.copyWith(fontSize: 24),
             ),
             TextButton(
-              onPressed: () => viewModel.viewAllCourses(),
+              onPressed: () => viewModel.viewRegisteredCourses(),
               child: Text(
                 "View All",
                 style: GoogleFonts.figtree(

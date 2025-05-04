@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'dart:isolate';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:code_bolanon/app/app.locator.dart';
@@ -61,7 +59,7 @@ class ImageService {
   bool _isInitialized = false;
 
   ImageService({
-    this.baseUrl = 'http://codebolanon.commesr.io/api',
+    this.baseUrl = 'https://codebolanon.commesr.io/api',
     ApiService? apiService,
     Dio? dioo,
     this.enableCache = true,

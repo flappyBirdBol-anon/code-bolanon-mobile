@@ -4,7 +4,6 @@ import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/models/course_model.dart' as api_model;
 import 'package:code_bolanon/models/tech_stack_model.dart';
-import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
@@ -131,10 +130,42 @@ class LearnerHomeViewModel extends AppBaseViewModel {
         }
       }
 
-      // Convert to our local CourseModel for the other sections that still use the old model
-      _topRatedCourses = _convertToCourseModels(apiCourses.take(5).toList());
-      _recommendedCourses =
-          _convertToCourseModels(apiCourses.skip(1).take(4).toList());
+      // IMPORTANT: Check if apiCourses is empty to avoid "No element" errors
+      if (apiCourses.isEmpty) {
+        _popularCourses.clear();
+        _topRatedCourses.clear();
+        _recommendedCourses.clear();
+      } else {
+        // Popular courses: Sort by learners enrolled (highest to lowest), take top 5
+        final popularCoursesSorted = List<api_model.CourseModel>.from(
+            apiCourses)
+          ..sort((a, b) => (b.studentsEnrolled).compareTo(a.studentsEnrolled));
+        final popularCoursesTop5 = popularCoursesSorted.take(5).toList();
+        _popularCourses.clear();
+        _popularCourses.addAll(_convertToCourseModels(popularCoursesTop5));
+
+        // Top rated courses: Sort by ratings (highest to lowest), take top 5
+        final topRatedSorted = List<api_model.CourseModel>.from(apiCourses)
+          ..sort((a, b) => b.rating.compareTo(a.rating));
+        final topRatedTop5 = topRatedSorted.take(5).toList();
+        _topRatedCourses = _convertToCourseModels(topRatedTop5);
+
+        // Recommended courses: Filter by matching user's tech stacks
+        final userStacks = userTopics.map((stack) => stack.tags).toList();
+        final recommendedCoursesList = apiCourses.where((course) {
+          // If course has stacks that match any of the user's stacks, include it
+          return course.stacks.any((stack) => userStacks.contains(stack));
+        }).toList();
+
+        // If no matching courses or user has no tech stacks, fallback to some popular courses
+        if (recommendedCoursesList.isEmpty) {
+          _recommendedCourses = _convertToCourseModels(
+              popularCoursesTop5.skip(1).take(4).toList());
+        } else {
+          _recommendedCourses =
+              _convertToCourseModels(recommendedCoursesList.take(4).toList());
+        }
+      }
 
       // Load real appointments from the service
       await _loadRealAppointments();
@@ -178,77 +209,33 @@ class LearnerHomeViewModel extends AppBaseViewModel {
 
       // Get appointments from the service
       final appointments = await _appointmentService.getUserAppointments();
+      debugPrint('Loaded ${appointments.length} appointments');
 
       if (appointments.isNotEmpty) {
-        // Filter to only show upcoming appointments
+        // Filter to only show upcoming appointments - less restrictive filtering
         final now = DateTime.now();
         final upcomingAppointments = appointments
-            .where((appointment) => appointment.startAt.isAfter(now))
+            .where((appointment) =>
+                // Include appointments happening today or in the future
+                appointment.startAt
+                    .isAfter(now.subtract(const Duration(hours: 1))) &&
+                // Don't show completed appointments
+                appointment.status.toLowerCase() != 'completed' &&
+                appointment.status.toLowerCase() != 'cancelled')
             .toList();
+
+        debugPrint(
+            'Found ${upcomingAppointments.length} upcoming appointments');
 
         // Sort by date (closest first)
         upcomingAppointments.sort((a, b) => a.startAt.compareTo(b.startAt));
 
         _upcomingSessions.addAll(upcomingAppointments);
-      } else {
-        // If no real appointments, add a few mock ones for UI demonstration
-        _createMockAppointments();
       }
     } catch (e) {
       debugPrint('Error loading appointments: $e');
-      _createMockAppointments();
     }
   }
-
-  void _createMockAppointments() {
-    // Clear any existing appointments
-    _upcomingSessions.clear();
-
-    // Add fake appointments with user-related data
-    _upcomingSessions.add(
-      AppointmentModel(
-        id: 1,
-        startAt: DateTime.now().add(const Duration(days: 1)),
-        endAt: DateTime.now().add(const Duration(days: 1, hours: 1)),
-        price: 50.0,
-        contextDetails: 'Flutter Application Development',
-        status: 'confirmed',
-        trainerId: 1,
-        trainer: UserModel(
-          id: 1,
-          firstName: "John",
-          lastName: "Doe",
-          email: "john.doe@example.com",
-          profileImage: "",
-          role: "trainer",
-        ),
-      ),
-    );
-
-    _upcomingSessions.add(
-      AppointmentModel(
-        id: 2,
-        startAt: DateTime.now().add(const Duration(days: 3)),
-        endAt: DateTime.now().add(const Duration(days: 3, hours: 1)),
-        price: 75.0,
-        contextDetails: 'Mobile App Architecture Review',
-        status: 'confirmed',
-        trainerId: 2,
-        trainer: UserModel(
-          id: 2,
-          firstName: "Jane",
-          lastName: "Smith",
-          email: "jane.smith@example.com",
-          profileImage: "",
-          role: "trainer",
-        ),
-      ),
-    );
-
-    notifyListeners();
-  }
-
-  // Other methods remain the same...
 
   // Use the LearnerCoursesViewModel's computeProgress method for real progress
   double computeProgress(api_model.CourseModel course) {
@@ -294,11 +281,103 @@ class LearnerHomeViewModel extends AppBaseViewModel {
     debugPrint('Opening session: $sessionId');
   }
 
-  void openCourse(String courseId) {
-    // Just print for now as we can't access the correct navigation method
-    debugPrint('Opening course: $courseId');
-    // Navigate to courses view instead
-    navigationService.navigateTo(Routes.availableCoursesView);
+  // New method that accepts a course directly
+  void openCourseObject(api_model.CourseModel course) {
+    debugPrint('Opening course directly: ${course.id}, ${course.title}');
+    navigationService.navigateToCourseDetailsView(course: course);
+  }
+
+  // Find a course by either ID or title
+  api_model.CourseModel findCourseByIdOrTitle(String idOrTitle) {
+    debugPrint('Searching for course: $idOrTitle');
+
+    // Check if any courses are loaded
+    if (_registeredCourses.isEmpty &&
+        _popularCourses.isEmpty &&
+        _recommendedCourses.isEmpty &&
+        _topRatedCourses.isEmpty) {
+      debugPrint('No courses loaded yet, returning default course');
+      return api_model.CourseModel(
+        id: idOrTitle, // Use as ID by default
+        title: 'Loading...',
+        price: 0,
+        description: '',
+        thumbnail: '',
+      );
+    }
+
+    // First try to find in registered courses by ID
+    for (var course in _registeredCourses) {
+      if (course.id == idOrTitle) {
+        debugPrint('Found course by ID in registered courses');
+        return course;
+      }
+    }
+
+    // Then try to find in registered courses by title
+    for (var course in _registeredCourses) {
+      if (course.title.toLowerCase() == idOrTitle.toLowerCase()) {
+        debugPrint('Found course by title in registered courses');
+        return course;
+      }
+    }
+
+    // Check in other course lists (convert local models to API models)
+    var allLocalCourses = [
+      ..._popularCourses,
+      ..._recommendedCourses,
+      ..._topRatedCourses
+    ];
+
+    for (var localCourse in allLocalCourses) {
+      if (localCourse.id == idOrTitle ||
+          localCourse.title.toLowerCase() == idOrTitle.toLowerCase()) {
+        // Found a match in local courses, create a basic API model
+        debugPrint('Found matching local course, creating API model');
+        return api_model.CourseModel(
+          id: localCourse.id,
+          title: localCourse.title,
+          price: localCourse.price.toDouble(),
+          description: localCourse.description,
+          thumbnail: localCourse.imageUrl,
+          stacks: localCourse.tags,
+          studentsEnrolled: localCourse.enrolledStudents,
+          rating: localCourse.rating,
+          reviews: localCourse.reviews,
+          author: localCourse.instructorName,
+          lessons: localCourse.totalLessons,
+        );
+      }
+    }
+
+    // If all else fails, create a course object with the ID/title
+    debugPrint('Creating new course with id/title: $idOrTitle');
+    return api_model.CourseModel(
+      id: idOrTitle,
+      title: idOrTitle,
+      price: 0,
+      description: '',
+      thumbnail: '',
+    );
+  }
+
+  void openCourse(String idOrTitle) {
+    try {
+      final course = findCourseByIdOrTitle(idOrTitle);
+      debugPrint('Opening course: ${course.id}, ${course.title}');
+      navigationService.navigateToCourseDetailsView(course: course);
+    } catch (e) {
+      debugPrint('Error in openCourse: $e');
+      // Create a basic course with the identifier
+      final defaultCourse = api_model.CourseModel(
+        id: idOrTitle,
+        title: idOrTitle,
+        price: 0,
+        description: '',
+        thumbnail: '',
+      );
+      navigationService.navigateToCourseDetailsView(course: defaultCourse);
+    }
   }
 
   void openProfile() {
@@ -314,9 +393,14 @@ class LearnerHomeViewModel extends AppBaseViewModel {
     navigationService.navigateTo(Routes.availableCoursesView);
   }
 
+  void viewRegisteredCourses() {
+    // Navigate to available courses view
+    navigationService.navigateTo(Routes.learnerCoursesView);
+  }
+
   // Navigation methods for appointments
   void navigateToLearnerBookedAppointments() {
-    navigationService.navigateTo(Routes.learnerAppointmentHomeView);
+    navigationService.navigateTo(Routes.learnerBookAppointmentView);
   }
 
   @override
@@ -334,7 +418,21 @@ class LearnerHomeViewModel extends AppBaseViewModel {
     Widget? placeholder,
     Widget? errorWidget,
   }) {
-    // Fallback implementation if course image widget can't be directly obtained
+    // Debug the image path
+    debugPrint('Loading course image: ${course.thumbnail}');
+
+    // Handle empty thumbnails
+    if (course.thumbnail.isEmpty) {
+      return Container(
+        width: width,
+        height: height,
+        color: Colors.grey[300],
+        child: errorWidget ??
+            Icon(Icons.image_not_supported, color: Colors.grey[600]),
+      );
+    }
+
+    // Handle asset images
     if (course.thumbnail.startsWith('assets/')) {
       return Image.asset(
         course.thumbnail,
@@ -342,14 +440,17 @@ class LearnerHomeViewModel extends AppBaseViewModel {
         height: height,
         fit: fit,
         errorBuilder: (context, error, stackTrace) {
+          debugPrint('Error loading asset image: $error');
           return errorWidget ??
               Icon(Icons.image_not_supported, color: Colors.grey[600]);
         },
       );
     }
 
-    // Use the ImageService directly instead
+    // Handle network or other images using ImageService
     final imageUrl = imageService.getCourseThumbnailFromPath(course.thumbnail);
+    debugPrint('Processed image URL: $imageUrl');
+
     return imageService.loadImage(
       imageUrl: imageUrl,
       courseId: course.id,
@@ -364,7 +465,12 @@ class LearnerHomeViewModel extends AppBaseViewModel {
             child: const Center(child: CircularProgressIndicator()),
           ),
       errorWidget: errorWidget ??
-          Icon(Icons.image_not_supported, color: Colors.grey[600]),
+          Container(
+            width: width,
+            height: height,
+            color: Colors.grey[300],
+            child: Icon(Icons.image_not_supported, color: Colors.grey[600]),
+          ),
     );
   }
 }

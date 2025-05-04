@@ -523,7 +523,9 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             ),
           ),
           const SizedBox(height: 16),
-          if (course?.learningExpectations.first == '')
+          if (course?.learningExpectations.isEmpty == true ||
+              (course?.learningExpectations.isNotEmpty == true &&
+                  course?.learningExpectations.first == ''))
             _buildEmptyLearningExpectations()
           else
             Wrap(
@@ -636,7 +638,9 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
           ),
           const SizedBox(height: 16),
 
-          if (course?.requirements.first == '')
+          if (course?.requirements.isEmpty == true ||
+              (course?.requirements.isNotEmpty == true &&
+                  course?.requirements.first == ''))
             _buildEmptyRequirements()
           else
             ...course!.requirements

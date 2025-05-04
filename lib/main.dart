@@ -1,21 +1,21 @@
+import 'package:animated_svg/animated_svg.dart';
 import 'package:code_bolanon/app/app.bottomsheets.dart';
 import 'package:code_bolanon/app/app.dialogs.dart';
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
+import 'package:code_bolanon/app/app.snackbar.dart';
 import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/app_strings.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:code_bolanon/utils/app_initializer.dart';
-import 'package:code_bolanon/app/app.snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:media_kit/media_kit.dart' show MediaKit;
 import 'package:stacked_services/stacked_services.dart';
-import 'package:animated_svg/animated_svg.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 // Singleton app initializer
 final _initializer = AppInitializer();
@@ -96,7 +96,7 @@ Future<String> _determineInitialRoute() async {
 
     // If user is logged in, go directly to main view
     if (isLoggedIn) {
-      final route = Routes.mainBodyView;
+      const route = Routes.mainBodyView;
       _cachedInitialRoute = route;
       return route;
     }
