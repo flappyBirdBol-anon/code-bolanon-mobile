@@ -24,7 +24,7 @@ class LearnerScheduleView extends StackedView<LearnerScheduleViewModel> {
       appBar: CustomAppBar(
         title: 'Your Schedule',
         showSearchButton: false,
-        showNotificationButton: true,
+        showNotificationButton: false,
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       ),
       backgroundColor: AppColors.background,

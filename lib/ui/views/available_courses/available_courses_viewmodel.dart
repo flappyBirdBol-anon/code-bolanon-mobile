@@ -30,6 +30,11 @@ class AvailableCoursesViewModel extends CourseBaseViewModel {
     return isRegistered;
   }
 
+  // Navigate to wishlist
+  void navigateToWishlist() {
+    navigationService.navigateToLearnerWishlistsView();
+  }
+
   @override
   List<String> get availableFilters => [
         'All',

@@ -76,13 +76,6 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                     ),
                   IconButton(
                     icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: Color.fromARGB(255, 105, 92, 92),
-                    ),
-                    onPressed: () {},
-                  ),
-                  IconButton(
-                    icon: const Icon(
                       Icons.share_outlined,
                       color: Color.fromARGB(255, 105, 92, 92),
                     ),

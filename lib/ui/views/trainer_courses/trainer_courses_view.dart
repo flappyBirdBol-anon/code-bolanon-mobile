@@ -5,11 +5,10 @@ import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/widgets/courses_list_item.dart';
 import 'package:code_bolanon/ui/common/widgets/custom_app_bar.dart';
 import 'package:code_bolanon/ui/common/widgets/empty_state_widget.dart';
-
 import 'package:flutter/material.dart';
-import 'package:stacked/stacked.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:stacked/stacked.dart';
 
 import 'trainer_courses_viewmodel.dart';
 
@@ -38,7 +37,7 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
       appBar: CustomAppBar(
         title: 'Courses',
         showSearchButton: true,
-        showNotificationButton: true,
+        showNotificationButton: false,
         onSearchTap: (query) => viewModel.onSearchChanged(query),
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       ),
@@ -457,7 +456,7 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
               spreadRadius: 0,
             ),
           ],
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [AppColors.primary, AppColors.secondary],
@@ -469,9 +468,9 @@ class TrainerCoursesView extends StackedView<TrainerCoursesViewModel> {
           child: InkWell(
             onTap: () => viewModel.navigateToAddCourse(context),
             borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: const Icon(Icons.add, color: Colors.white, size: 28),
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Icon(Icons.add, color: Colors.white, size: 28),
             ),
           ),
         ),

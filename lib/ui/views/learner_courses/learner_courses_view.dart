@@ -44,12 +44,6 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
           title: 'My Courses',
           showSearchButton: true,
           showNotificationButton: false,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.favorite_rounded),
-              onPressed: viewModel.navigateToWishlist,
-            ),
-          ],
           onSearchTap: (query) => viewModel.onSearchChanged(query),
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         ),

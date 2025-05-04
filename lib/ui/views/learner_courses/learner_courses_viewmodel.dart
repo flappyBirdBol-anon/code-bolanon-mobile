@@ -365,11 +365,6 @@ class LearnerCoursesViewModel extends CourseBaseViewModel
     navigationService.navigateToAvailableCoursesView();
   }
 
-  // Navigate to wishlist
-  void navigateToWishlist() {
-    navigationService.navigateToLearnerWishlistsView();
-  }
-
   // Method to handle completion data changes
   void _onCompletionDataChanged() {
     print('CompletedLessonService notified change - refreshing progress');

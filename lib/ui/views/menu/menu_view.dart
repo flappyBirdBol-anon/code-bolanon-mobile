@@ -23,7 +23,7 @@ class MenuView extends StackedView<MenuViewModel> {
       backgroundColor: isDark ? const Color(0xFF0F172A) : AppColors.background,
       appBar: const CustomAppBar(
         title: 'Menu',
-        showNotificationButton: true,
+        showNotificationButton: false,
       ),
       body: SingleChildScrollView(
         child: Column(

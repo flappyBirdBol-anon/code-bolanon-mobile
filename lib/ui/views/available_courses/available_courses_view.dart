@@ -35,6 +35,12 @@ class AvailableCoursesView extends StackedView<AvailableCoursesViewModel> {
         title: 'Available Courses',
         showSearchButton: true,
         showNotificationButton: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite_rounded),
+            onPressed: viewModel.navigateToWishlist,
+          ),
+        ],
         onSearchTap: (query) {
           viewModel.onSearchChanged(query);
         },
@@ -122,7 +128,7 @@ class AvailableCoursesView extends StackedView<AvailableCoursesViewModel> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Available Courses',
+                      'Enroll Now',
                       style: GoogleFonts.figtree(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
