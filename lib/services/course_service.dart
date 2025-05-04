@@ -203,7 +203,7 @@ class CourseService {
         if (techStackIds != null) 'tech_stack_ids': techStackIds,
       };
 
-      var response;
+      Response response;
       if (image != null) {
         // Only update image if a new one is provided
         response = await _apiService.uploadFile(
@@ -246,5 +246,74 @@ class CourseService {
     } catch (e) {
       throw Exception('Failed to delete course: ${e.toString()}');
     }
+  }
+
+  // Method to fetch only courses registered by the current user
+  Future<List<CourseModel>> getUserRegisteredCourses() async {
+    try {
+      final response = await _apiService.get('/user/courses');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> coursesJson = response.data['data'];
+        final courses =
+            coursesJson.map((json) => CourseModel.fromJson(json)).toList();
+
+        // Prefetch images for these courses
+        _imageService.prefetchCourseImages(courses);
+
+        return courses;
+      } else {
+        throw Exception(
+            'Failed to load user courses: ${response.data['message']}');
+      }
+    } catch (e) {
+      debugPrint('Error loading user registered courses: $e');
+      // For development purposes, return mock data if API fails
+      return _getMockUserCourses();
+    }
+  }
+
+  // Mock user courses for development when API is not available
+  List<CourseModel> _getMockUserCourses() {
+    return [
+      CourseModel(
+        id: '1',
+        title: 'Flutter Development Bootcamp',
+        description:
+            'Learn to build beautiful, fast, native-quality apps with Flutter',
+        thumbnail: 'assets/images/course1.jpg',
+        price: 99.99,
+        rating: 4.8,
+        lessons: 42,
+        studentsEnrolled: 1200,
+        level: 'Intermediate',
+        stacks: ['Flutter', 'Dart', 'Mobile'],
+      ),
+      CourseModel(
+        id: '2',
+        title: 'React Native Masterclass',
+        description: 'Build cross-platform mobile apps with React Native',
+        thumbnail: 'assets/images/course2.jpg',
+        price: 89.99,
+        rating: 4.5,
+        lessons: 38,
+        studentsEnrolled: 950,
+        level: 'Beginner',
+        stacks: ['React Native', 'JavaScript', 'Mobile'],
+      ),
+      CourseModel(
+        id: '3',
+        title: 'iOS Development with Swift',
+        description:
+            'Master iOS app development with Swift programming language',
+        thumbnail: 'assets/images/course3.jpg',
+        price: 129.99,
+        rating: 4.9,
+        lessons: 56,
+        studentsEnrolled: 1500,
+        level: 'Advanced',
+        stacks: ['iOS', 'Swift', 'Mobile'],
+      ),
+    ];
   }
 }

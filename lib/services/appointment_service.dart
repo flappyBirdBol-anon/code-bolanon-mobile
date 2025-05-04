@@ -245,6 +245,47 @@ class AppointmentService extends BaseViewModel {
     }
   }
 
+  Future<void> getAppointmentByDate() {
+    // Implementation for fetching appointments by date
+    throw UnimplementedError();
+  }
+
+  // Method to get appointments for the current logged-in user
+  Future<List<AppointmentModel>> getUserAppointments() async {
+    try {
+      final response = await _apiService.get('/user/appointments');
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Failed to fetch user appointments: ${response.statusCode}');
+      }
+
+      if (response.data == null || response.data['data'] == null) {
+        return [];
+      }
+
+      final appointmentsList = (response.data['data'] as List)
+          .map(
+              (item) => AppointmentModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      // Sort appointments by start date (upcoming first)
+      appointmentsList.sort((a, b) => a.startAt.compareTo(b.startAt));
+
+      // Filter for only upcoming or active appointments
+      final now = DateTime.now();
+      return appointmentsList
+          .where((appointment) =>
+              appointment.startAt.isAfter(now) ||
+              (appointment.startAt.isBefore(now) &&
+                  appointment.endAt.isAfter(now)))
+          .toList();
+    } catch (e) {
+      print('Error fetching user appointments: $e');
+      return [];
+    }
+  }
+
   Future<void> _showAppointmentReceiptDialog(AppointmentModel appointment,
       Transaction transaction, String context) async {
     final payment = PaymentParam(

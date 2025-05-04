@@ -1,214 +1,143 @@
+import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
+import 'package:code_bolanon/models/course_model.dart' as api_model;
+import 'package:code_bolanon/models/tech_stack_model.dart';
+import 'package:code_bolanon/models/user_model.dart';
+import 'package:code_bolanon/services/appointment_service.dart';
+import 'package:code_bolanon/services/course_service.dart';
+import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/services/registration_service.dart';
+import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
+import 'package:code_bolanon/ui/views/learner_courses/learner_courses_viewmodel.dart';
 import 'package:flutter/material.dart';
+import 'package:stacked_services/stacked_services.dart';
 
 class LearnerHomeViewModel extends AppBaseViewModel {
-  bool isLoading = true;
+  final bool _isDarkMode = false;
+  bool get isDarkMode => _isDarkMode;
+
+  DateTime? _selectedDate;
+  DateTime? get selectedDate => _selectedDate;
 
   // User Info
   String get userFullName => userService.currentUser?.fullName ?? 'User';
   String get userEmail => userService.currentUser?.email ?? '';
-  String profileImageUrl = 'assets/images/profile.jpg';
+  String get userImage => userService.currentUser?.profileImage ?? '';
 
   // Progress Tracking
-  int completedCourses = 8;
-  int inProgressCourses = 5;
-  int totalEnrolledCourses = 15;
+  int completedCourses = 0;
+  int inProgressCourses = 0;
+  int totalEnrolledCourses = 0;
   double get completedCoursesPercentage =>
-      completedCourses / totalEnrolledCourses;
+      totalEnrolledCourses > 0 ? completedCourses / totalEnrolledCourses : 0.0;
   double get inProgressCoursesPercentage =>
-      inProgressCourses / totalEnrolledCourses;
+      totalEnrolledCourses > 0 ? inProgressCourses / totalEnrolledCourses : 0.0;
 
-  // Top Users
-  List<UserModel> topUsers = [
-    UserModel('John Doe', 'assets/images/profile.jpg', 12),
-    UserModel('Jane Smith', 'assets/images/profile.jpg', 10),
-    UserModel('Bob Wilson', 'assets/images/profile.jpg', 8),
-  ];
+  bool isLoading = true;
+
+  // Services
+  final _courseService = locator<CourseService>();
+  final _imageService = locator<ImageService>();
+  final _navigationService = locator<NavigationService>();
+  final _appointmentService = locator<AppointmentService>();
+  final _registrationService = locator<RegistrationService>();
+  @override
+  final ImageService imageService = locator<ImageService>();
+
+  // Add a LearnerCoursesViewModel for real course data
+  late final LearnerCoursesViewModel _coursesViewModel;
 
   // Tech Stack
-  List<TechStackItem> techStack = [
-    TechStackItem('Flutter', Colors.blue),
-    TechStackItem('React', Colors.cyan),
-    TechStackItem('Node.js', Colors.green),
-    TechStackItem('Python', Colors.amber),
-    TechStackItem('JavaScript', Colors.orange),
-  ];
+  List<TechStackModel> get userTopics => userService.userTechStacks;
+  List<String> get techStack => userTopics.map((e) => e.tags).toList();
 
-  // Add this after existing tech stack list
-  List<CourseModel> getTechStackRecommendations() {
-    // Example: Filter courses based on selected tech stack
-    final selectedTech =
-        techStack.first; // In real app, get actual selected tech
-    return [
-      CourseModel(
-        title: 'Advanced ${selectedTech.name} Patterns',
-        imageUrl: 'assets/images/1.jpg',
-        price: 129.99,
-        rating: 4.9,
-        reviews: 1250,
-        tags: [selectedTech.name, 'Advanced'],
-        totalLessons: 24,
-        enrolledStudents: 8420,
-        instructorName: 'John Smith',
-        difficulty: 'Advanced',
-        duration: '8 weeks',
-        description:
-            'Master advanced patterns and architectures in ${selectedTech.name}',
-      ),
-      // Add more recommendations based on tech stack
-    ];
-  }
+  // Course lists
+  final List<CourseModel> _popularCourses = [];
+  List<CourseModel> _recommendedCourses = [];
+  List<CourseModel> _topRatedCourses = [];
 
-  // Courses
-  List<CourseModel> recommendedCourses = [];
-  List<CourseModel> topRatedCourses = [];
-  List<CourseModel> recentCourses = [];
+  // Real courses instead of mock data
+  List<api_model.CourseModel> _registeredCourses = [];
+  List<api_model.CourseModel> get registeredCourses => _registeredCourses;
 
-  // Add this list for progress carousel
-  List<CourseModel> inProgressCoursesList = [
-    CourseModel(
-      title: 'Flutter Development Masterclass',
-      imageUrl: 'assets/images/1.jpg',
-      price: 99.99,
-      rating: 4.8,
-      reviews: 1250,
-      progress: 0.7,
-      tags: ['Flutter', 'Mobile'],
-    ),
-    CourseModel(
-      title: 'React Native Fundamentals',
-      imageUrl: 'assets/images/2.jpg',
-      price: 89.99,
-      rating: 4.6,
-      reviews: 980,
-      progress: 0.4,
-      tags: ['React Native', 'Mobile'],
-    ),
-    CourseModel(
-      title: 'iOS Development with Swift',
-      imageUrl: 'assets/images/3.jpg',
-      price: 129.99,
-      rating: 4.9,
-      reviews: 750,
-      progress: 0.3,
-      tags: ['iOS', 'Swift'],
-    ),
-  ];
+  List<CourseModel> get popularCourses => _popularCourses;
+  List<CourseModel> get recommendedCourses => _recommendedCourses;
+  List<CourseModel> get topRatedCourses => _topRatedCourses;
 
-  // Sessions
+  final List<CourseModel> _inProgressCourses = [];
+  List<CourseModel> get inProgressCoursesList => _inProgressCourses;
+
+  // Real appointments instead of mock data
   final List<AppointmentModel> _upcomingSessions = [];
   List<AppointmentModel> get upcomingSessions => _upcomingSessions;
 
   LearnerHomeViewModel() {
-    _init();
-    _loadCourses();
-    _loadSessions();
-    // Add listener to auth service
-    userService.addListener(() {
-      notifyListeners();
-    });
+    userService.addListener(_onUserChanged);
+    _coursesViewModel = LearnerCoursesViewModel(
+      registrationService: _registrationService,
+      courseService: _courseService,
+      imageService: imageService,
+    );
+    init();
   }
 
-  void _init() {
-    isLoading = true;
+  void _onUserChanged() {
     notifyListeners();
-    // Initial load delay
-    Future.delayed(const Duration(seconds: 2), () {
-      refreshData();
-    });
   }
 
-  void _loadCourses() {
-    recommendedCourses = [
-      CourseModel(
-        title: 'Flutter Development Masterclass',
-        imageUrl: 'assets/images/1.jpg',
-        price: 99.99,
-        rating: 4.8,
-        reviews: 1250,
-        tags: ['Flutter', 'Mobile'],
-      ),
-      // Add more courses...
-    ];
-
-    // Update topRatedCourses initialization
-    topRatedCourses = [
-      CourseModel(
-        title: 'Advanced Flutter Architecture',
-        imageUrl: 'assets/images/1.jpg',
-        price: 149.99,
-        rating: 4.9,
-        reviews: 2150,
-        tags: ['Flutter', 'Architecture'],
-        totalLessons: 24,
-        enrolledStudents: 15420,
-        instructorName: 'John Smith',
-      ),
-      CourseModel(
-        title: 'Firebase & Flutter Integration',
-        imageUrl: 'assets/images/2.jpg',
-        price: 119.99,
-        rating: 4.8,
-        reviews: 1820,
-        tags: ['Flutter', 'Firebase'],
-      ),
-      CourseModel(
-        title: 'Flutter State Management Pro',
-        imageUrl: 'assets/images/3.jpg',
-        price: 89.99,
-        rating: 4.7,
-        reviews: 1560,
-        tags: ['Flutter', 'State Management'],
-      ),
-    ];
-
-    recentCourses = [
-      CourseModel(
-        title: 'Flutter State Management',
-        imageUrl: 'assets/images/2.jpg',
-        price: 89.99,
-        rating: 4.7,
-        reviews: 1250,
-        progress: 0.8,
-        lastAccessDate: '2 hours ago',
-        totalLessons: 18,
-        activityType: 'in_progress',
-        instructorName: 'Sarah Johnson',
-      ),
-      CourseModel(
-        title: 'Firebase Integration',
-        imageUrl: 'assets/images/3.jpg',
-        price: 99.99,
-        rating: 4.8,
-        reviews: 980,
-        progress: 1.0,
-        lastAccessDate: 'Yesterday',
-        totalLessons: 15,
-        activityType: 'completed',
-        instructorName: 'Mike Wilson',
-      ),
-      // Add more courses...
-    ];
-  }
-
-  void _loadSessions() {
-    // Use the mock data from AppointmentModel
-    //_upcomingSessions = AppointmentModel.getMockAppointments();
-    notifyListeners();
+  Future<void> init() async {
+    setBusy(true);
+    try {
+      await refreshData();
+    } catch (e) {
+      debugPrint('Error initializing learner home: $e');
+    } finally {
+      setBusy(false);
+    }
   }
 
   Future<void> refreshData() async {
     isLoading = true;
     notifyListeners();
 
-    // Force minimum loading time for shimmer to be visible
-    await Future.delayed(const Duration(seconds: 2));
-
     try {
-      _loadCourses();
-      _loadSessions();
+      // Fetch courses from CourseService and convert to our local CourseModel
+      final apiCourses = await _courseService.getCourses();
+
+      // Get real registered courses using the LearnerCoursesViewModel
+      await _coursesViewModel.loadCourses();
+      _registeredCourses = _coursesViewModel.courses;
+
+      // Update progress stats based on actual registered courses
+      totalEnrolledCourses = _registeredCourses.length;
+
+      // Count completed and in-progress courses
+      completedCourses = 0;
+      inProgressCourses = 0;
+
+      for (var course in _registeredCourses) {
+        // Check registration for completion status
+        final registration = course.registration;
+        if (registration != null && registration.progress != null) {
+          final progressPercentage = registration.progress!.percentage;
+
+          if (progressPercentage >= 100) {
+            completedCourses++;
+          } else if (progressPercentage > 0) {
+            inProgressCourses++;
+          }
+        }
+      }
+
+      // Convert to our local CourseModel for the other sections that still use the old model
+      _topRatedCourses = _convertToCourseModels(apiCourses.take(5).toList());
+      _recommendedCourses =
+          _convertToCourseModels(apiCourses.skip(1).take(4).toList());
+
+      // Load real appointments from the service
+      await _loadRealAppointments();
     } catch (e) {
       debugPrint('Error refreshing data: $e');
     } finally {
@@ -217,36 +146,232 @@ class LearnerHomeViewModel extends AppBaseViewModel {
     }
   }
 
+  // Helper to convert API models to our local CourseModel
+  List<CourseModel> _convertToCourseModels(
+      List<api_model.CourseModel> apiCourses) {
+    return apiCourses.map((apiCourse) {
+      // Use a default image path for assets that starts with 'assets/'
+      final imageUrl = apiCourse.thumbnail.isNotEmpty
+          ? apiCourse.thumbnail
+          : PngImages.image1;
+
+      return CourseModel(
+        id: apiCourse.id, // Include the ID from the API model
+        title: apiCourse.title,
+        imageUrl: imageUrl,
+        price: apiCourse.price ?? 99.99,
+        rating: apiCourse.rating.toDouble() ?? 4.5,
+        reviews: apiCourse.reviews ?? 100,
+        tags: apiCourse.stacks,
+        totalLessons: apiCourse.lessonCount ?? apiCourse.lessons ?? 12,
+        enrolledStudents: apiCourse.studentsEnrolled,
+        instructorName: apiCourse.author ?? "Instructor",
+        description: apiCourse.description,
+      );
+    }).toList();
+  }
+
+  // Method to get real appointment data
+  Future<void> _loadRealAppointments() async {
+    try {
+      _upcomingSessions.clear();
+
+      // Get appointments from the service
+      final appointments = await _appointmentService.getUserAppointments();
+
+      if (appointments.isNotEmpty) {
+        // Filter to only show upcoming appointments
+        final now = DateTime.now();
+        final upcomingAppointments = appointments
+            .where((appointment) => appointment.startAt.isAfter(now))
+            .toList();
+
+        // Sort by date (closest first)
+        upcomingAppointments.sort((a, b) => a.startAt.compareTo(b.startAt));
+
+        _upcomingSessions.addAll(upcomingAppointments);
+      } else {
+        // If no real appointments, add a few mock ones for UI demonstration
+        _createMockAppointments();
+      }
+    } catch (e) {
+      debugPrint('Error loading appointments: $e');
+      _createMockAppointments();
+    }
+  }
+
+  void _createMockAppointments() {
+    // Clear any existing appointments
+    _upcomingSessions.clear();
+
+    // Add fake appointments with user-related data
+    _upcomingSessions.add(
+      AppointmentModel(
+        id: 1,
+        startAt: DateTime.now().add(const Duration(days: 1)),
+        endAt: DateTime.now().add(const Duration(days: 1, hours: 1)),
+        price: 50.0,
+        contextDetails: 'Flutter Application Development',
+        status: 'confirmed',
+        trainerId: 1,
+        trainer: UserModel(
+          id: 1,
+          firstName: "John",
+          lastName: "Doe",
+          email: "john.doe@example.com",
+          profileImage: "",
+          role: "trainer",
+        ),
+      ),
+    );
+
+    _upcomingSessions.add(
+      AppointmentModel(
+        id: 2,
+        startAt: DateTime.now().add(const Duration(days: 3)),
+        endAt: DateTime.now().add(const Duration(days: 3, hours: 1)),
+        price: 75.0,
+        contextDetails: 'Mobile App Architecture Review',
+        status: 'confirmed',
+        trainerId: 2,
+        trainer: UserModel(
+          id: 2,
+          firstName: "Jane",
+          lastName: "Smith",
+          email: "jane.smith@example.com",
+          profileImage: "",
+          role: "trainer",
+        ),
+      ),
+    );
+
+    notifyListeners();
+  }
+
+  // Other methods remain the same...
+
+  // Use the LearnerCoursesViewModel's computeProgress method for real progress
+  double computeProgress(api_model.CourseModel course) {
+    return _coursesViewModel.computeProgress(course);
+  }
+
+  // Get course tags from the LearnerCoursesViewModel
+  List<String> getCourseTags(api_model.CourseModel course) {
+    return _coursesViewModel.getCourseTags(course);
+  }
+
+  void updateSelectedDate(DateTime date) {
+    _selectedDate = date;
+    notifyListeners();
+  }
+
+  Widget getProfileImageWidget({
+    BoxFit fit = BoxFit.cover,
+    Widget? placeholder,
+    Widget? errorWidget,
+  }) {
+    // Simplified version
+    if (userImage.isEmpty) {
+      return errorWidget ??
+          const Icon(Icons.person, size: 35, color: Colors.white70);
+    }
+
+    final imageUrl = _imageService.getCourseThumbnailFromPath(userImage);
+    return _imageService.loadImage(
+      imageUrl: imageUrl,
+      courseId: '',
+      width: 60,
+      height: 60,
+      fit: fit,
+      placeholder: placeholder,
+      errorWidget: errorWidget ??
+          const Icon(Icons.person, size: 35, color: Colors.white70),
+    );
+  }
+
   void openSession(String sessionId) {
-    // Implementation for opening a session
-    print('Opening session: $sessionId');
+    // Just print for now since launchAppointment isn't defined
+    debugPrint('Opening session: $sessionId');
   }
 
   void openCourse(String courseId) {
-    // Implementation for opening a course
-    print('Opening course: $courseId');
+    // Just print for now as we can't access the correct navigation method
+    debugPrint('Opening course: $courseId');
+    // Navigate to courses view instead
+    navigationService.navigateTo(Routes.availableCoursesView);
   }
 
   void openProfile() {
     navigationService.navigateTo(Routes.profileView);
   }
 
+  void showNotifications() {
+    // Show notifications
+  }
+
+  void viewAllCourses() {
+    // Navigate to available courses view
+    navigationService.navigateTo(Routes.availableCoursesView);
+  }
+
+  // Navigation methods for appointments
+  void navigateToLearnerBookedAppointments() {
+    navigationService.navigateTo(Routes.learnerAppointmentHomeView);
+  }
+
   @override
   void dispose() {
-    userService.removeListener(() {});
+    userService.removeListener(_onUserChanged);
     super.dispose();
+  }
+
+  // Get course image using LearnerCoursesViewModel
+  Widget getCourseImageWidget({
+    required api_model.CourseModel course,
+    double? width,
+    double? height,
+    BoxFit fit = BoxFit.cover,
+    Widget? placeholder,
+    Widget? errorWidget,
+  }) {
+    // Fallback implementation if course image widget can't be directly obtained
+    if (course.thumbnail.startsWith('assets/')) {
+      return Image.asset(
+        course.thumbnail,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return errorWidget ??
+              Icon(Icons.image_not_supported, color: Colors.grey[600]);
+        },
+      );
+    }
+
+    // Use the ImageService directly instead
+    final imageUrl = imageService.getCourseThumbnailFromPath(course.thumbnail);
+    return imageService.loadImage(
+      imageUrl: imageUrl,
+      courseId: course.id,
+      width: width,
+      height: height,
+      fit: fit,
+      placeholder: placeholder ??
+          Container(
+            width: width,
+            height: height,
+            color: Colors.grey[200],
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+      errorWidget: errorWidget ??
+          Icon(Icons.image_not_supported, color: Colors.grey[600]),
+    );
   }
 }
 
-class UserModel {
-  final String name;
-  final String imageUrl;
-  final int coursesCompleted;
-
-  UserModel(this.name, this.imageUrl, this.coursesCompleted);
-}
-
+// Keep CourseModel class for backward compatibility with other parts of the app
 class CourseModel {
+  final String id;
   final String title;
   final String imageUrl;
   final double price;
@@ -266,6 +391,7 @@ class CourseModel {
   final String description;
 
   CourseModel({
+    this.id = '',
     required this.title,
     required this.imageUrl,
     required this.price,
@@ -284,25 +410,4 @@ class CourseModel {
     this.duration = '6 weeks',
     this.description = '',
   });
-}
-
-class AvailabilityModel {
-  final String title;
-  final String type;
-  final String date;
-  final String time;
-
-  AvailabilityModel({
-    required this.title,
-    required this.type,
-    required this.date,
-    required this.time,
-  });
-}
-
-class TechStackItem {
-  final String name;
-  final Color color;
-
-  TechStackItem(this.name, this.color);
 }

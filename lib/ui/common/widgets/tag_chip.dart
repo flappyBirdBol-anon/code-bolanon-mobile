@@ -7,6 +7,7 @@ class TagChip extends StatelessWidget {
   final bool isSelected;
   final Color? backgroundColor;
   final Color? labelColor;
+  final bool isSmall;
 
   const TagChip({
     Key? key,
@@ -15,6 +16,7 @@ class TagChip extends StatelessWidget {
     this.isSelected = false,
     this.backgroundColor,
     this.labelColor,
+    this.isSmall = false,
   }) : super(key: key);
 
   // Get color based on tech stack tag
@@ -75,7 +77,8 @@ class TagChip extends StatelessWidget {
             bottomLeft: Radius.circular(3),
             bottomRight: Radius.circular(3)),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          padding: EdgeInsets.symmetric(
+              horizontal: isSmall ? 3 : 4, vertical: isSmall ? 2 : 4),
           decoration: BoxDecoration(
             color: backgroundColor ?? bgColor,
             borderRadius: const BorderRadius.only(
@@ -92,7 +95,7 @@ class TagChip extends StatelessWidget {
             '<$tag/>',
             style: GoogleFonts.firaCode(
               color: labelColor ?? textColor,
-              fontSize: 8,
+              fontSize: isSmall ? 7 : 8,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               letterSpacing: -0.3,
             ),

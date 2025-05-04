@@ -17,6 +17,7 @@ class CoursesListItem extends StatelessWidget {
   final VoidCallback? onEditTap;
   final VoidCallback? onToggleTap;
   final bool isRegistered;
+  final bool isCarouselItem;
 
   const CoursesListItem({
     super.key,
@@ -30,14 +31,15 @@ class CoursesListItem extends StatelessWidget {
     this.onEditTap,
     this.onToggleTap,
     this.isRegistered = false,
+    this.isCarouselItem = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(
-        minHeight: 320,
-        maxHeight: 400,
+      constraints: BoxConstraints(
+        minHeight: 280,
+        maxHeight: isCarouselItem ? 300 : 400,
       ),
       child: Card(
         color: AppColors.cardBackground,
@@ -61,17 +63,11 @@ class CoursesListItem extends StatelessWidget {
                   Color.fromARGB(53, 13, 72, 161),
                   Color.fromARGB(44, 13, 72, 161),
                   Color.fromARGB(12, 255, 255, 255),
-
-                  // Colors.white,
-                  // Colors.white12,
-                  // Colors.grey,
-                  // Color.fromARGB(167, 158, 158, 158),
                 ])),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
-                  // height: 160, // Fixed height for image container
                   child: Stack(
                     children: [
                       AspectRatio(
@@ -97,9 +93,9 @@ class CoursesListItem extends StatelessWidget {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.all(4),
+                    padding: EdgeInsets.all(isCarouselItem ? 3 : 4),
                     child: Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: EdgeInsets.all(isCarouselItem ? 3 : 4),
                       decoration: BoxDecoration(
                         border:
                             Border.all(color: Colors.grey[300]!, width: 0.5),
@@ -110,23 +106,24 @@ class CoursesListItem extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
                                 child: Text(
                                   course.title,
-                                  maxLines: 2,
+                                  maxLines: isCarouselItem ? 1 : 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.figtree(
-                                    fontSize: 14,
+                                    fontSize: isCarouselItem ? 13 : 14,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 4),
                               if (course.price == 0.00)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
+                                      horizontal: 4, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: Colors.green[100],
                                     borderRadius: BorderRadius.circular(4),
@@ -136,14 +133,14 @@ class CoursesListItem extends StatelessWidget {
                                     children: [
                                       Icon(
                                         Icons.card_giftcard,
-                                        size: 14,
+                                        size: 11,
                                         color: Colors.green[700],
                                       ),
                                       const SizedBox(width: 2),
                                       Text(
                                         'FREE',
                                         style: GoogleFonts.figtree(
-                                          fontSize: 12,
+                                          fontSize: 9,
                                           fontWeight: FontWeight.w700,
                                           color: Colors.green[700],
                                         ),
@@ -155,35 +152,47 @@ class CoursesListItem extends StatelessWidget {
                                 Text(
                                   '\$${course.price.toStringAsFixed(2)}',
                                   style: GoogleFonts.figtree(
-                                    fontSize: 14,
+                                    fontSize: isCarouselItem ? 11 : 14,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.green[700],
                                   ),
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 2),
                           _buildCourseDetails(context),
-                          const SizedBox(height: 5),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.person,
-                                size: 16,
-                                color: Colors.blue[700],
+                          const SizedBox(height: 2),
+                          if (isCarouselItem)
+                            Text(
+                              course.author != null && course.author!.isNotEmpty
+                                  ? "By ${course.author}"
+                                  : "By Instructor",
+                              style: GoogleFonts.figtree(
+                                fontSize: 10,
+                                color: Colors.grey[700],
                               ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  course.author ?? "Author",
-                                  style: GoogleFonts.figtree(fontSize: 12),
-                                  overflow: TextOverflow.ellipsis,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          else
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.person,
+                                  size: 14,
+                                  color: Colors.blue[700],
                                 ),
-                              ),
-                            ],
-                          ),
-                          //  const Spacer(),
-                          if (course.description.isNotEmpty) ...[
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    course.author ?? "Author",
+                                    style: GoogleFonts.figtree(fontSize: 12),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          if (course.description.isNotEmpty &&
+                              !isCarouselItem) ...[
                             const SizedBox(height: 4),
                             Flexible(
                               child: Text(
@@ -198,8 +207,6 @@ class CoursesListItem extends StatelessWidget {
                               ),
                             ),
                           ],
-
-                          // _buildCourseDetails(context),
                         ],
                       ),
                     ),
@@ -215,49 +222,61 @@ class CoursesListItem extends StatelessWidget {
 
   Widget _buildTagList() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            Colors.black.withOpacity(0.8),
+            Colors.black.withOpacity(0.9),
+            Colors.black.withOpacity(0.6),
             Colors.black.withOpacity(0.0),
           ],
+          stops: const [0.0, 0.5, 1.0],
         ),
       ),
-      child: Wrap(
-        spacing: 4,
-        runSpacing: 4,
-        children: tags!
-            .take(2) // Limit to 2 tags to prevent overflow
-            .map((tag) => TagChip(
-                  tag: tag,
-                  onTap: () {},
-                ))
-            .toList(),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: tags!
+              .take(3)
+              .map((tag) => Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: TagChip(
+                      tag: tag,
+                      onTap: () {},
+                      isSmall: isCarouselItem,
+                    ),
+                  ))
+              .toList(),
+        ),
       ),
     );
   }
 
   Widget _buildCourseDetails(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: EdgeInsets.all(isCarouselItem ? 2 : 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           _buildDetailItem(
             icon: Icons.book,
             iconColor: Colors.blue[700]!.withOpacity(0.8),
             backgroundColor: Colors.blue[50]!,
-            label: '${course.lessonCount} lessons',
+            label:
+                '${course.lessonCount ?? course.lessons} ${isCarouselItem ? 'lessons' : 'lessons'}',
+            isCompact: isCarouselItem,
           ),
+          const SizedBox(width: 8),
           _buildDetailItem(
             icon: Icons.star,
             iconColor: Colors.amber[700]!.withOpacity(0.8),
             backgroundColor: Colors.amber[50]!.withOpacity(0.8),
             label: course.rating.toStringAsFixed(1),
             showRating: true,
+            isCompact: isCarouselItem,
           ),
         ],
       ),
@@ -270,9 +289,11 @@ class CoursesListItem extends StatelessWidget {
     required Color backgroundColor,
     required String label,
     bool showRating = false,
+    bool isCompact = false,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(
+          horizontal: isCompact ? 4 : 8, vertical: isCompact ? 1 : 4),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(8),
@@ -291,24 +312,16 @@ class CoursesListItem extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: iconColor),
-          const SizedBox(width: 4),
+          Icon(icon, size: isCompact ? 10 : 14, color: iconColor),
+          SizedBox(width: isCompact ? 2 : 4),
           Text(
             label,
             style: GoogleFonts.figtree(
-              fontSize: 12,
+              fontSize: isCompact ? 9 : 12,
               fontWeight: FontWeight.w600,
               color: iconColor,
             ),
           ),
-          // if (showRating) ...[
-          //   const SizedBox(width: 2),
-          //   Icon(
-          //     Icons.star,
-          //     size: 10,
-          //     color: iconColor,
-          //   ),
-          // ],
         ],
       ),
     );
@@ -376,15 +389,6 @@ class CoursesListItem extends StatelessWidget {
                 size: 25,
                 color: AppColors.primary,
               ),
-              // SizedBox(width: 4),
-              // Text(
-              //   'Edit',
-              //   style: GoogleFonts.figtree(
-              //     color: Colors.red,
-              //     fontSize: 12,
-              //     fontWeight: FontWeight.bold,
-              //   ),
-              // ),
             ],
           ),
         ),
