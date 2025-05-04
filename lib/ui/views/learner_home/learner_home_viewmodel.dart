@@ -4,6 +4,7 @@ import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/models/course_model.dart' as api_model;
 import 'package:code_bolanon/models/tech_stack_model.dart';
+import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
@@ -206,35 +207,111 @@ class LearnerHomeViewModel extends AppBaseViewModel {
   Future<void> _loadRealAppointments() async {
     try {
       _upcomingSessions.clear();
+      debugPrint('============= APPOINTMENTS DEBUG START =============');
 
       // Get appointments from the service
       final appointments = await _appointmentService.getUserAppointments();
-      debugPrint('Loaded ${appointments.length} appointments');
+      debugPrint('SERVICE: Loaded ${appointments.length} appointments');
 
       if (appointments.isNotEmpty) {
-        // Filter to only show upcoming appointments - less restrictive filtering
-        final now = DateTime.now();
+        // Only exclude completed and cancelled appointments
         final upcomingAppointments = appointments
             .where((appointment) =>
-                // Include appointments happening today or in the future
-                appointment.startAt
-                    .isAfter(now.subtract(const Duration(hours: 1))) &&
-                // Don't show completed appointments
                 appointment.status.toLowerCase() != 'completed' &&
                 appointment.status.toLowerCase() != 'cancelled')
             .toList();
 
         debugPrint(
-            'Found ${upcomingAppointments.length} upcoming appointments');
+            'Filtered to ${upcomingAppointments.length} valid appointments');
 
         // Sort by date (closest first)
         upcomingAppointments.sort((a, b) => a.startAt.compareTo(b.startAt));
 
         _upcomingSessions.addAll(upcomingAppointments);
+
+        // Force a UI refresh
+        notifyListeners();
+
+        debugPrint('Added ${_upcomingSessions.length} appointments to UI');
+      } else {
+        debugPrint('NO APPOINTMENTS FROM SERVICE - Creating test appointments');
+        // In debug mode, always create test appointments if none were returned
+        if (isDebugMode()) {
+          _createTestAppointments();
+        }
       }
+
+      debugPrint('============= APPOINTMENTS DEBUG END =============');
     } catch (e) {
-      debugPrint('Error loading appointments: $e');
+      debugPrint('ERROR LOADING APPOINTMENTS: $e');
+      // In case of error, create test appointments for UI testing
+      if (isDebugMode()) {
+        _createTestAppointments();
+      }
     }
+  }
+
+  // Helper to detect if we're in debug mode
+  bool isDebugMode() {
+    bool debugMode = false;
+    assert(() {
+      debugMode = true;
+      return true;
+    }());
+    return debugMode;
+  }
+
+  // For testing only - creates fake appointments
+  void _createTestAppointments() {
+    debugPrint('Creating test appointments for debug mode');
+
+    // Clear existing appointments
+    _upcomingSessions.clear();
+
+    // Create a trainer
+    final testTrainer = UserModel(
+      id: 999,
+      firstName: "Test",
+      lastName: "Trainer",
+      email: "test@example.com",
+      profileImage: "", // No image
+      role: "trainer", // Adding required role field
+    );
+
+    // Create two test appointments
+    final now = DateTime.now();
+
+    // Appointment today
+    _upcomingSessions.add(AppointmentModel(
+      id: 1001,
+      trainerId: 999,
+      trainer: testTrainer,
+      learnerId: 1,
+      status: 'booked',
+      startAt: now.add(const Duration(hours: 2)),
+      endAt: now.add(const Duration(hours: 3)),
+      price: 100.0,
+      gmeetLink: 'https://meet.google.com/test',
+      contextDetails: 'Test session', // Adding required contextDetails field
+    ));
+
+    // Appointment tomorrow
+    _upcomingSessions.add(AppointmentModel(
+      id: 1002,
+      trainerId: 999,
+      trainer: testTrainer,
+      learnerId: 1,
+      status: 'booked',
+      startAt: now.add(const Duration(days: 1, hours: 2)),
+      endAt: now.add(const Duration(days: 1, hours: 3)),
+      price: 100.0,
+      gmeetLink: 'https://meet.google.com/test2',
+      contextDetails:
+          'Follow-up session', // Adding required contextDetails field
+    ));
+
+    // Notify listeners to update UI
+    notifyListeners();
   }
 
   // Use the LearnerCoursesViewModel's computeProgress method for real progress
@@ -277,8 +354,24 @@ class LearnerHomeViewModel extends AppBaseViewModel {
   }
 
   void openSession(String sessionId) {
-    // Just print for now since launchAppointment isn't defined
-    debugPrint('Opening session: $sessionId');
+    // Convert to integer ID if possible
+    int? appointmentId;
+    try {
+      appointmentId = int.parse(sessionId);
+    } catch (e) {
+      debugPrint('Error parsing appointment ID: $e');
+    }
+
+    if (appointmentId != null) {
+      debugPrint('Opening appointment details: $appointmentId');
+      navigationService.navigateToAppointmentDetailsView(
+          appointmentId: sessionId);
+    } else {
+      snackbarService.showSnackbar(
+        message: 'Could not open appointment details',
+        duration: const Duration(seconds: 2),
+      );
+    }
   }
 
   // New method that accepts a course directly
@@ -400,7 +493,7 @@ class LearnerHomeViewModel extends AppBaseViewModel {
 
   // Navigation methods for appointments
   void navigateToLearnerBookedAppointments() {
-    navigationService.navigateTo(Routes.learnerBookAppointmentView);
+    navigationService.navigateTo(Routes.learnerScheduleView);
   }
 
   @override

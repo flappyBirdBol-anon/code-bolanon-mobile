@@ -6,6 +6,7 @@ import 'package:code_bolanon/models/payment_param.dart';
 import 'package:code_bolanon/models/transaction_model.dart';
 import 'package:code_bolanon/models/user_model.dart';
 import 'package:code_bolanon/services/api_service.dart';
+import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -253,37 +254,74 @@ class AppointmentService extends BaseViewModel {
   // Method to get appointments for the current logged-in user
   Future<List<AppointmentModel>> getUserAppointments() async {
     try {
-      final response = await _apiService.get('/user/appointments');
+      print('Fetching user appointments...');
+      final response = await _apiService.get('/appointments/user');
 
       if (response.statusCode != 200) {
-        throw Exception(
-            'Failed to fetch user appointments: ${response.statusCode}');
-      }
+        print('Failed to fetch user appointments: ${response.statusCode}');
+        // Try an alternative endpoint as fallback
+        try {
+          print('Trying alternative endpoint...');
+          final altResponse = await _apiService.get('/appointments');
+          if (altResponse.statusCode == 200 && altResponse.data != null) {
+            print('Alternative endpoint successful!');
+            return _processAppointmentsResponse(altResponse);
+          }
+        } catch (altError) {
+          print('Alternative endpoint also failed: $altError');
+        }
 
-      if (response.data == null || response.data['data'] == null) {
         return [];
       }
 
-      final appointmentsList = (response.data['data'] as List)
-          .map(
-              (item) => AppointmentModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-
-      // Sort appointments by start date (upcoming first)
-      appointmentsList.sort((a, b) => a.startAt.compareTo(b.startAt));
-
-      // Filter for only upcoming or active appointments
-      final now = DateTime.now();
-      return appointmentsList
-          .where((appointment) =>
-              appointment.startAt.isAfter(now) ||
-              (appointment.startAt.isBefore(now) &&
-                  appointment.endAt.isAfter(now)))
-          .toList();
+      return _processAppointmentsResponse(response);
     } catch (e) {
       print('Error fetching user appointments: $e');
       return [];
     }
+  }
+
+  // Helper method to process appointment response data
+  List<AppointmentModel> _processAppointmentsResponse(Response response) {
+    if (response.data == null || response.data['data'] == null) {
+      print('No appointment data in response: ${response.data}');
+      return [];
+    }
+
+    final appointmentsList = (response.data['data'] as List)
+        .map((item) => AppointmentModel.fromJson(item as Map<String, dynamic>))
+        .toList();
+
+    print('Processed ${appointmentsList.length} appointments from API');
+
+    // Debug each appointment
+    for (var appointment in appointmentsList) {
+      print('Appointment ID: ${appointment.id}, Status: ${appointment.status}');
+      print('  Start: ${appointment.startAt}, End: ${appointment.endAt}');
+      print('  Trainer: ${appointment.trainer?.fullName ?? "Unknown"}');
+    }
+
+    // Sort appointments by start date (upcoming first)
+    appointmentsList.sort((a, b) => a.startAt.compareTo(b.startAt));
+
+    // Be more inclusive in filtering - include appointments starting today or in the future,
+    // and those that are currently ongoing
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+
+    final filteredAppointments = appointmentsList
+        .where((appointment) =>
+            // Include if starts today or in the future
+            appointment.startAt
+                .isAfter(todayStart.subtract(const Duration(hours: 1))) ||
+            // Or if currently in progress
+            (appointment.startAt.isBefore(now) &&
+                appointment.endAt.isAfter(now)))
+        .toList();
+
+    print('After filtering: ${filteredAppointments.length} valid appointments');
+
+    return filteredAppointments;
   }
 
   Future<void> _showAppointmentReceiptDialog(AppointmentModel appointment,

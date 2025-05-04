@@ -1230,7 +1230,8 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
   Widget _buildEmptyCard(String title, String description, IconData icon,
       bool isDark, Color cardColor) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(16),
@@ -1244,12 +1245,21 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, color: isDark ? Colors.white : Colors.grey[800], size: 40),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 36),
+          ),
           const SizedBox(height: 16),
           Text(
             title,
+            textAlign: TextAlign.center,
             style: GoogleFonts.figtree(
               color: isDark ? Colors.white : Colors.grey[800],
               fontSize: 18,
@@ -1259,6 +1269,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
           const SizedBox(height: 8),
           Text(
             description,
+            textAlign: TextAlign.center,
             style: GoogleFonts.figtree(
               color: isDark ? Colors.white : Colors.grey[600],
               fontSize: 14,
