@@ -1,9 +1,13 @@
+import 'package:code_bolanon/app/app.dialogs.dart';
 import 'package:code_bolanon/app/app.locator.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
+import 'package:code_bolanon/models/payment_param.dart';
+import 'package:code_bolanon/models/transaction_model.dart';
 import 'package:code_bolanon/services/appointment_service.dart';
 import 'package:code_bolanon/ui/common/enums/enums.dart';
 import 'package:intl/intl.dart';
+import 'package:stacked_services/stacked_services.dart';
 
 class LearnerBookAppointmentViewModel extends AppBaseViewModel {
   final _appointmentService = locator<AppointmentService>();
@@ -109,10 +113,63 @@ class LearnerBookAppointmentViewModel extends AppBaseViewModel {
           appointmentId.toString(), contextDetails);
 
       if (result['success']) {
-        _showSuccessMessage(result['message']);
-        await loadAvailableSchedules();
-        // Notify the home view to refresh
-        navigationService.back();
+        print(
+            'Booking success, checking for transaction data in result: ${result.keys}');
+        // Check if transaction data is available in the result
+        if (result.containsKey('transaction')) {
+          print('Found transaction data in result');
+          // Use the DialogService to show the receipt
+          final appointmentModel = await _appointmentService
+              .getAppointment(appointmentId.toString());
+
+          // Create a PaymentParam object for the receipt dialog
+          final payment = PaymentParam(
+            id: appointmentId.toString(),
+            title: 'Appointment with ${appointmentModel.trainer?.fullName}',
+            description: contextDetails,
+            price: appointmentModel.price,
+            startAt: appointmentModel.startAt,
+            endAt: appointmentModel.endAt,
+          );
+
+          // Extract transaction data
+          final transactionData = result['transaction'];
+          print('Transaction data type: ${transactionData.runtimeType}');
+          late Transaction transaction;
+          if (transactionData is Map<String, dynamic>) {
+            print('Parsing transaction from map');
+            transaction = Transaction.fromJson(transactionData);
+          } else {
+            print('Using transaction object directly');
+            transaction = transactionData as Transaction;
+          }
+
+          // Show the receipt dialog
+          await snackbarService.closeSnackbar();
+          print('Showing receipt dialog');
+          await locator<DialogService>().showCustomDialog(
+            variant: DialogType.receipt,
+            title: 'Payment Receipt',
+            description: 'Your payment was successful!',
+            data: {
+              'payment': payment,
+              'transaction': transaction,
+            },
+          );
+          print('Receipt dialog completed');
+
+          // Now show success message and refresh
+          _showSuccessMessage(result['message']);
+          await loadAvailableSchedules();
+          // Notify the home view to refresh
+          navigationService.back();
+        } else {
+          // No transaction data, just show success and navigate back
+          _showSuccessMessage(result['message']);
+          await loadAvailableSchedules();
+          // Notify the home view to refresh
+          navigationService.back();
+        }
       } else {
         _showErrorMessage(result['message']);
       }

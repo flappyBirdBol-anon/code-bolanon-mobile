@@ -185,6 +185,7 @@ class AppointmentService extends BaseViewModel {
 
       // If payment was successful, proceed to book the appointment
       if (paymentResult != null && paymentResult['success'] == true) {
+        print('Payment successful - paymentResult: $paymentResult');
         final Map<String, dynamic> bookingData = {
           'context': context,
         };
@@ -199,13 +200,25 @@ class AppointmentService extends BaseViewModel {
           };
         }
 
-        // Update local appointments and notify
-        await refreshAppointments();
-        return {
+        // Extract transaction data from paymentResult to pass back to the ViewModel
+        final result = {
           'success': true,
           'message': 'Appointment booked successfully',
           'data': response.data
         };
+
+        // Include the transaction data in the result if available
+        if (paymentResult.containsKey('transaction')) {
+          print('Transaction data found in paymentResult, adding to result');
+          result['transaction'] = paymentResult['transaction'];
+        } else {
+          print('No transaction data found in paymentResult: $paymentResult');
+        }
+
+        // Update local appointments and notify
+        await refreshAppointments();
+        print('Returning result with data: ${result.keys}');
+        return result;
       }
 
       return {'success': false, 'message': 'Payment was not completed'};
