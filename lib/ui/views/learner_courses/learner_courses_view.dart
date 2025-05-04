@@ -46,6 +46,27 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
           showNotificationButton: false,
           onSearchTap: (query) => viewModel.onSearchChanged(query),
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          actions: [
+            // Add refresh button to app bar
+            IconButton(
+              icon: Icon(
+                Icons.refresh,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+              onPressed: () {
+                // Show feedback
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Refreshing your courses...'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+                // Trigger refresh
+                viewModel.fetchCourses();
+              },
+              tooltip: 'Refresh courses',
+            ),
+          ],
         ),
         body: SafeArea(
           child: Builder(
@@ -215,101 +236,119 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
 
   Widget _buildCoursesList(
       BuildContext context, LearnerCoursesViewModel viewModel, bool isDark) {
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        // Header Section
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Continue Learning',
-                  style: GoogleFonts.figtree(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Your enrolled courses',
-                  style: GoogleFonts.figtree(
-                    fontSize: 16,
-                    color: isDark ? Colors.grey[400] : Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
+    return RefreshIndicator(
+      color: AppColors.primary,
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      onRefresh: () async {
+        // Show a toast message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Refreshing your courses...'),
+            duration: Duration(seconds: 1),
           ),
-        ),
+        );
 
-        // Course List with animations
-        SliverPadding(
-          padding: const EdgeInsets.all(16),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final course = viewModel.courses[index];
-                // Calculate progress once
-                final progress = viewModel.computeProgress(course);
-                // Get course tags
-                final tags = viewModel.getCourseTags(course);
-
-                // Count lessons from the registration data
-                // First check if registration has progress data with total_lessons
-                int actualLessonCount = 0;
-                if (course.registration?.progress != null) {
-                  actualLessonCount =
-                      course.registration!.progress!.totalLessons;
-                } else if (course.registration?.lessons != null) {
-                  // Fallback to the lessons array length
-                  actualLessonCount = course.registration!.lessons!.length;
-                } else {
-                  // Final fallback to default values
-                  actualLessonCount = course.lessonCount ?? course.lessons;
-                }
-
-                // Only show reviews if they exist and are greater than zero
-                final hasReviews = course.reviews > 0 && course.rating > 0;
-
-                return AnimationConfiguration.staggeredList(
-                  position: index,
-                  duration: const Duration(milliseconds: 375),
-                  child: SlideAnimation(
-                    verticalOffset: 30.0,
-                    child: FadeInAnimation(
-                      child: LearnerCourseCard(
-                        id: course.id,
-                        title: course.title,
-                        description: course.description,
-                        thumbnail: course.thumbnail,
-                        progress: progress,
-                        rating: course.rating,
-                        reviews: hasReviews ? course.reviews : null,
-                        lessonCount: actualLessonCount,
-                        level: course.level,
-                        duration: course.duration,
-                        tags: tags,
-                        onTap: () => viewModel.navigateToCourseDetails(course),
-                        imageService: viewModel.imageService,
-                      ),
+        // Call the fetchCourses method to refresh data
+        await viewModel.fetchCourses();
+      },
+      child: CustomScrollView(
+        physics:
+            const AlwaysScrollableScrollPhysics(), // Enable scrolling even when content fits screen
+        slivers: [
+          // Header Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Continue Learning',
+                    style: GoogleFonts.figtree(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
-                );
-              },
-              childCount: viewModel.courses.length,
+                  const SizedBox(height: 4),
+                  Text(
+                    'Your enrolled courses',
+                    style: GoogleFonts.figtree(
+                      fontSize: 16,
+                      color: isDark ? Colors.grey[400] : Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
 
-        // Footer padding
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 20),
-        ),
-      ],
+          // Course List with animations
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final course = viewModel.courses[index];
+                  // Calculate progress once
+                  final progress = viewModel.computeProgress(course);
+                  // Get course tags
+                  final tags = viewModel.getCourseTags(course);
+
+                  // Count lessons from the registration data
+                  // First check if registration has progress data with total_lessons
+                  int actualLessonCount = 0;
+                  if (course.registration?.progress != null) {
+                    actualLessonCount =
+                        course.registration!.progress!.totalLessons;
+                  } else if (course.registration?.lessons != null) {
+                    // Fallback to the lessons array length
+                    actualLessonCount = course.registration!.lessons!.length;
+                  } else {
+                    // Final fallback to default values
+                    actualLessonCount = course.lessonCount ?? course.lessons;
+                  }
+
+                  // Only show reviews if they exist and are greater than zero
+                  final hasReviews = course.reviews > 0 && course.rating > 0;
+
+                  return AnimationConfiguration.staggeredList(
+                    position: index,
+                    duration: const Duration(milliseconds: 375),
+                    child: SlideAnimation(
+                      verticalOffset: 30.0,
+                      child: FadeInAnimation(
+                        child: LearnerCourseCard(
+                          id: course.id,
+                          title: course.title,
+                          description: course.description,
+                          thumbnail: course.thumbnail,
+                          progress: progress,
+                          rating: course.rating,
+                          reviews: hasReviews ? course.reviews : null,
+                          lessonCount: actualLessonCount,
+                          level: course.level,
+                          duration: course.duration,
+                          tags: tags,
+                          onTap: () =>
+                              viewModel.navigateToCourseDetails(course),
+                          imageService: viewModel.imageService,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                childCount: viewModel.courses.length,
+              ),
+            ),
+          ),
+
+          // Footer padding
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 20),
+          ),
+        ],
+      ),
     );
   }
 

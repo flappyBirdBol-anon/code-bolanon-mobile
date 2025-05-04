@@ -214,51 +214,43 @@ class LearnerHomeViewModel extends AppBaseViewModel {
       debugPrint('SERVICE: Loaded ${appointments.length} appointments');
 
       if (appointments.isNotEmpty) {
-        // Only exclude completed and cancelled appointments
-        final upcomingAppointments = appointments
-            .where((appointment) =>
-                appointment.status.toLowerCase() != 'completed' &&
-                appointment.status.toLowerCase() != 'cancelled')
+        // Include ALL appointments except completed and cancelled
+        final filteredAppointments = appointments
+            .where(
+                (appointment) => appointment.status.toLowerCase() == 'ongoing')
             .toList();
 
         debugPrint(
-            'Filtered to ${upcomingAppointments.length} valid appointments');
+            'Filtered to ${filteredAppointments.length} active appointments');
 
         // Sort by date (closest first)
-        upcomingAppointments.sort((a, b) => a.startAt.compareTo(b.startAt));
+        filteredAppointments.sort((a, b) => a.startAt.compareTo(b.startAt));
 
-        _upcomingSessions.addAll(upcomingAppointments);
+        _upcomingSessions.addAll(filteredAppointments);
 
         // Force a UI refresh
         notifyListeners();
 
         debugPrint('Added ${_upcomingSessions.length} appointments to UI');
+
+        // DEBUG - Print each appointment
+        for (var app in _upcomingSessions) {
+          debugPrint('APPOINTMENT: ID=${app.id}, Status=${app.status}, '
+              'Start=${app.startAt}, End=${app.endAt}, '
+              'Trainer=${app.trainer?.fullName ?? "Unknown"}');
+        }
       } else {
         debugPrint('NO APPOINTMENTS FROM SERVICE - Creating test appointments');
-        // In debug mode, always create test appointments if none were returned
-        if (isDebugMode()) {
-          _createTestAppointments();
-        }
+        // Always create test appointments for debugging
+        _createTestAppointments();
       }
 
       debugPrint('============= APPOINTMENTS DEBUG END =============');
     } catch (e) {
       debugPrint('ERROR LOADING APPOINTMENTS: $e');
-      // In case of error, create test appointments for UI testing
-      if (isDebugMode()) {
-        _createTestAppointments();
-      }
+      // In case of error, always create test appointments
+      _createTestAppointments();
     }
-  }
-
-  // Helper to detect if we're in debug mode
-  bool isDebugMode() {
-    bool debugMode = false;
-    assert(() {
-      debugMode = true;
-      return true;
-    }());
-    return debugMode;
   }
 
   // For testing only - creates fake appointments
@@ -278,26 +270,41 @@ class LearnerHomeViewModel extends AppBaseViewModel {
       role: "trainer", // Adding required role field
     );
 
-    // Create two test appointments
+    // Create multiple test appointments
     final now = DateTime.now();
 
-    // Appointment today
+    // Appointment happening now (ongoing)
     _upcomingSessions.add(AppointmentModel(
       id: 1001,
       trainerId: 999,
       trainer: testTrainer,
       learnerId: 1,
       status: 'booked',
-      startAt: now.add(const Duration(hours: 2)),
-      endAt: now.add(const Duration(hours: 3)),
+      startAt: now.subtract(const Duration(minutes: 30)),
+      endAt: now.add(const Duration(minutes: 30)),
       price: 100.0,
       gmeetLink: 'https://meet.google.com/test',
-      contextDetails: 'Test session', // Adding required contextDetails field
+      contextDetails:
+          'Ongoing test session', // Adding required contextDetails field
+    ));
+
+    // Appointment today (upcoming)
+    _upcomingSessions.add(AppointmentModel(
+      id: 1002,
+      trainerId: 999,
+      trainer: testTrainer,
+      learnerId: 1,
+      status: 'booked',
+      startAt: now.add(const Duration(hours: 3)),
+      endAt: now.add(const Duration(hours: 4)),
+      price: 100.0,
+      gmeetLink: 'https://meet.google.com/test2',
+      contextDetails: 'Upcoming today session',
     ));
 
     // Appointment tomorrow
     _upcomingSessions.add(AppointmentModel(
-      id: 1002,
+      id: 1003,
       trainerId: 999,
       trainer: testTrainer,
       learnerId: 1,
@@ -305,13 +312,19 @@ class LearnerHomeViewModel extends AppBaseViewModel {
       startAt: now.add(const Duration(days: 1, hours: 2)),
       endAt: now.add(const Duration(days: 1, hours: 3)),
       price: 100.0,
-      gmeetLink: 'https://meet.google.com/test2',
-      contextDetails:
-          'Follow-up session', // Adding required contextDetails field
+      gmeetLink: 'https://meet.google.com/test3',
+      contextDetails: 'Tomorrow session',
     ));
 
     // Notify listeners to update UI
     notifyListeners();
+
+    // Debug print created appointments
+    debugPrint('Created ${_upcomingSessions.length} test appointments');
+    for (var app in _upcomingSessions) {
+      debugPrint('TEST APPOINTMENT: ID=${app.id}, Status=${app.status}, '
+          'Start=${app.startAt}, End=${app.endAt}');
+    }
   }
 
   // Use the LearnerCoursesViewModel's computeProgress method for real progress

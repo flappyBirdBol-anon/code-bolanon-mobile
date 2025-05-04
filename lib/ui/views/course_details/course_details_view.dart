@@ -74,6 +74,25 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                           viewModel.navigateToEditCourse(context, course!),
                       tooltip: 'Edit Course',
                     ),
+                  // Add refresh button
+                  IconButton(
+                    icon: const Icon(
+                      Icons.refresh,
+                      color: Color.fromARGB(255, 105, 92, 92),
+                    ),
+                    onPressed: () {
+                      // Show loading indicator
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Refreshing course data...'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                      // Call refresh method
+                      viewModel.refreshLessons();
+                    },
+                    tooltip: 'Refresh',
+                  ),
                   IconButton(
                     icon: const Icon(
                       Icons.share_outlined,

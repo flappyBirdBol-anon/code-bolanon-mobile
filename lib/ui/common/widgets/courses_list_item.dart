@@ -265,8 +265,7 @@ class CoursesListItem extends StatelessWidget {
             icon: Icons.book,
             iconColor: Colors.blue[700]!.withOpacity(0.8),
             backgroundColor: Colors.blue[50]!,
-            label:
-                '${course.lessonCount ?? course.lessons} ${isCarouselItem ? 'lessons' : 'lessons'}',
+            label: '${course.lessonCount ?? course.lessons}',
             isCompact: isCarouselItem,
           ),
           const SizedBox(width: 8),

@@ -380,10 +380,11 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                     isDark: isDark,
                   )
                 : SizedBox(
-                    height: 250,
-                    child: CarouselSlider.builder(
+                    height: 245,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
                       itemCount: viewModel.recommendedCourses.length,
-                      itemBuilder: (context, index, realIndex) {
+                      itemBuilder: (context, index) {
                         final course = viewModel.recommendedCourses[index];
                         final apiCourse = api_model.CourseModel(
                           id: (index + 1).toString(),
@@ -399,31 +400,19 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                           lessonCount: course.totalLessons,
                         );
 
-                        return CoursesListItem(
-                          course: apiCourse,
-                          onTap: () => viewModel.openCourse(course.title),
-                          imageService: viewModel.imageService,
-                          showStatus: false,
-                          showControls: false,
-                          tags: course.tags,
-                          isCarouselItem: true,
+                        return Container(
+                          width: 220,
+                          margin: const EdgeInsets.only(right: 16),
+                          child: CoursesListItem(
+                            course: apiCourse,
+                            onTap: () => viewModel.openCourse(course.title),
+                            imageService: viewModel.imageService,
+                            showStatus: false,
+                            showControls: false,
+                            tags: course.tags,
+                          ),
                         );
                       },
-                      options: CarouselOptions(
-                        height: 350,
-                        viewportFraction: 0.52,
-                        autoPlay: true,
-                        enableInfiniteScroll:
-                            viewModel.recommendedCourses.length > 1,
-                        padEnds: true,
-                        initialPage: 0,
-                        pauseAutoPlayOnTouch: true,
-                        enlargeCenterPage: true,
-                        autoPlayInterval: const Duration(seconds: 6),
-                        autoPlayAnimationDuration:
-                            const Duration(milliseconds: 800),
-                        autoPlayCurve: Curves.fastOutSlowIn,
-                      ),
                     ),
                   ),
       ],
@@ -461,10 +450,11 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                     isDark: isDark,
                   )
                 : SizedBox(
-                    height: 250,
-                    child: CarouselSlider.builder(
+                    height: 245,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
                       itemCount: viewModel.topRatedCourses.length,
-                      itemBuilder: (context, index, realIndex) {
+                      itemBuilder: (context, index) {
                         final course = viewModel.topRatedCourses[index];
                         final apiCourse = api_model.CourseModel(
                           id: (index + 100).toString(),
@@ -480,31 +470,19 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                           lessonCount: course.totalLessons,
                         );
 
-                        return CoursesListItem(
-                          course: apiCourse,
-                          onTap: () => viewModel.openCourse(course.title),
-                          imageService: viewModel.imageService,
-                          showStatus: false,
-                          showControls: false,
-                          tags: course.tags,
-                          isCarouselItem: true,
+                        return Container(
+                          width: 220,
+                          margin: const EdgeInsets.only(right: 16),
+                          child: CoursesListItem(
+                            course: apiCourse,
+                            onTap: () => viewModel.openCourse(course.title),
+                            imageService: viewModel.imageService,
+                            showStatus: false,
+                            showControls: false,
+                            tags: course.tags,
+                          ),
                         );
                       },
-                      options: CarouselOptions(
-                        height: 350,
-                        viewportFraction: 0.52,
-                        autoPlay: true,
-                        enableInfiniteScroll:
-                            viewModel.topRatedCourses.length > 1,
-                        padEnds: true,
-                        initialPage: 0,
-                        pauseAutoPlayOnTouch: true,
-                        enlargeCenterPage: true,
-                        autoPlayInterval: const Duration(seconds: 6),
-                        autoPlayAnimationDuration:
-                            const Duration(milliseconds: 800),
-                        autoPlayCurve: Curves.fastOutSlowIn,
-                      ),
                     ),
                   ),
       ],
@@ -673,16 +651,6 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Instructor info chip with better contrast
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     // Course title with better contrast
                     Text(
                       course.title,
@@ -858,66 +826,68 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                     isDark,
                     cardColor,
                   )
-                : ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: viewModel.registeredCourses.length > 2
-                        ? 2
-                        : viewModel.registeredCourses.length,
-                    itemBuilder: (context, index) {
-                      final course = viewModel.registeredCourses[index];
-
-                      // Calculate progress from the viewModel
-                      final progress = viewModel.computeProgress(course);
-
-                      // Get tags from the viewModel
-                      final tags = viewModel.getCourseTags(course);
-
-                      // Count lessons from the registration data
-                      int actualLessonCount = 0;
-                      if (course.registration?.progress != null) {
-                        actualLessonCount =
-                            course.registration!.progress!.totalLessons;
-                      } else if (course.registration?.lessons != null) {
-                        // Fallback to the lessons array length
-                        actualLessonCount =
-                            course.registration!.lessons!.length;
-                      } else {
-                        // Final fallback to default values
-                        actualLessonCount =
-                            course.lessonCount ?? course.lessons ?? 0;
-                      }
-
-                      // Only show reviews if they exist and are greater than zero
-                      final hasReviews =
-                          course.reviews > 0 && course.rating > 0;
-
-                      return AnimationConfiguration.staggeredList(
-                        position: index,
-                        duration: const Duration(milliseconds: 375),
-                        child: SlideAnimation(
-                          verticalOffset: 30.0,
-                          child: FadeInAnimation(
-                            child: CustomLearnerCourseCard(
-                              title: course.title,
-                              description: course.description,
-                              thumbnail: course.imageUrl,
-                              progress: progress,
-                              rating: course.rating,
-                              reviews: hasReviews ? course.reviews : null,
-                              tags: tags,
-                              onTap: () => viewModel.openCourse(course.id),
-                              imageService: viewModel.imageService,
-                              isDark: isDark,
-                              variant: CardVariant.progress,
-                              lessonCount: actualLessonCount,
-                              level: course.level,
-                              price: course.price,
+                : SizedBox(
+                    height: 280, // Increased height to avoid overflow
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: viewModel.registeredCourses.length,
+                      itemBuilder: (context, index) {
+                        final course = viewModel.registeredCourses[index];
+                        // Calculate progress from the viewModel
+                        final progress = viewModel.computeProgress(course);
+                        // Get tags from the viewModel
+                        final tags = viewModel.getCourseTags(course);
+                        // Count lessons from the registration data
+                        int actualLessonCount = 0;
+                        if (course.registration?.progress != null) {
+                          actualLessonCount =
+                              course.registration!.progress!.totalLessons;
+                        } else if (course.registration?.lessons != null) {
+                          // Fallback to the lessons array length
+                          actualLessonCount =
+                              course.registration!.lessons!.length;
+                        } else {
+                          // Final fallback to default values
+                          actualLessonCount =
+                              course.lessonCount ?? course.lessons ?? 0;
+                        }
+                        // Only show reviews if they exist and are greater than zero
+                        final hasReviews =
+                            course.reviews > 0 && course.rating > 0;
+                        return AnimationConfiguration.staggeredList(
+                          position: index,
+                          duration: const Duration(milliseconds: 375),
+                          child: SlideAnimation(
+                            verticalOffset: 30.0,
+                            child: FadeInAnimation(
+                              child: Container(
+                                width: 220, // Fixed width to match other cards
+                                margin: const EdgeInsets.only(right: 16),
+                                child: CustomLearnerCourseCard(
+                                  title: course.title,
+                                  description: course.description.length > 15
+                                      ? "${course.description.substring(0, 15)}..."
+                                      : course
+                                          .description, // Shorter truncation to prevent overflow
+                                  thumbnail: course.imageUrl,
+                                  progress: progress,
+                                  rating: course.rating,
+                                  reviews: hasReviews ? course.reviews : null,
+                                  tags: tags,
+                                  onTap: () => viewModel.openCourse(course.id),
+                                  imageService: viewModel.imageService,
+                                  isDark: isDark,
+                                  variant: CardVariant.progress,
+                                  lessonCount: actualLessonCount,
+                                  level: course.level,
+                                  price: course.price,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
       ],
     );
@@ -927,6 +897,23 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
       LearnerHomeViewModel viewModel, ThemeData theme, TextStyle headingStyle) {
     final isDark = theme.brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+
+    // Debug print to check appointments
+    debugPrint(
+        "DEBUGGING APPOINTMENTS: Total in viewModel: ${viewModel.upcomingSessions.length}");
+    for (var app in viewModel.upcomingSessions) {
+      debugPrint(
+          "Appointment ID: ${app.id}, Status: ${app.status}, Start: ${app.startAt}, End: ${app.endAt}");
+    }
+
+    // Directly use upcomingSessions from viewModel to show all upcoming sessions
+    final upcomingAppointments =
+        viewModel.upcomingSessions.where((appointment) {
+      return appointment.status.toLowerCase() != 'completed' &&
+          appointment.status.toLowerCase() != 'cancelled';
+    }).toList();
+
+    debugPrint("Filtered appointments count: ${upcomingAppointments.length}");
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -953,7 +940,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
         const SizedBox(height: 16),
         viewModel.isLoading
             ? _buildAppointmentShimmer(isDark)
-            : viewModel.upcomingSessions.isEmpty
+            : upcomingAppointments.isEmpty
                 ? _buildEmptyCard(
                     "No Upcoming Appointments",
                     "Book sessions with trainers to see them here.",
@@ -964,11 +951,11 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                 : ListView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
-                    itemCount: viewModel.upcomingSessions.length > 3
+                    itemCount: upcomingAppointments.length > 3
                         ? 3
-                        : viewModel.upcomingSessions.length,
+                        : upcomingAppointments.length,
                     itemBuilder: (context, index) {
-                      final appointment = viewModel.upcomingSessions[index];
+                      final appointment = upcomingAppointments[index];
 
                       // Format date properly using datetime formatter
                       final DateFormat dateFormat = DateFormat('E, MMM d');
@@ -984,10 +971,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                       // Check if appointment is ongoing
                       final now = DateTime.now();
                       final isOngoing = now.isAfter(appointment.startAt) &&
-                          now.isBefore(appointment.endAt) &&
-                          appointment.status.toLowerCase() != 'completed';
-                      final isCompleted =
-                          appointment.status.toLowerCase() == 'completed';
+                          now.isBefore(appointment.endAt);
 
                       // Check if appointment is today
                       final isToday = appointment.startAt.day ==
@@ -1023,37 +1007,22 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: isCompleted
-                                          ? (isDark
-                                              ? const Color(0xFF10B981)
-                                                  .withOpacity(0.15)
-                                              : const Color(0xFF10B981)
-                                                  .withOpacity(0.1))
-                                          : isOngoing
-                                              ? Colors.green.withOpacity(0.15)
-                                              : (isDark
-                                                  ? Colors.blue
-                                                      .withOpacity(0.15)
-                                                  : Colors.blue
-                                                      .withOpacity(0.1)),
+                                      color: isOngoing
+                                          ? Colors.green.withOpacity(0.15)
+                                          : (isDark
+                                              ? Colors.blue.withOpacity(0.15)
+                                              : Colors.blue.withOpacity(0.1)),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
-                                      isCompleted
-                                          ? Icons.check_circle_outline_rounded
-                                          : isOngoing
-                                              ? Icons
-                                                  .video_camera_front_outlined
-                                              : Icons.calendar_today_outlined,
-                                      color: isCompleted
-                                          ? (isDark
-                                              ? Colors.greenAccent[200]
-                                              : const Color(0xFF10B981))
-                                          : isOngoing
-                                              ? Colors.green
-                                              : (isDark
-                                                  ? Colors.white
-                                                  : Colors.blue[700]),
+                                      isOngoing
+                                          ? Icons.video_camera_front_outlined
+                                          : Icons.calendar_today_outlined,
+                                      color: isOngoing
+                                          ? Colors.green
+                                          : (isDark
+                                              ? Colors.white
+                                              : Colors.blue[700]),
                                       size: 22,
                                     ),
                                   ),
@@ -1153,8 +1122,8 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                               ),
                             ),
 
-                            // Add join button for today's sessions
-                            if (isToday) ...[
+                            // Show join button for ongoing or today's sessions
+                            if (isOngoing || isToday) ...[
                               Divider(
                                 height: 1,
                                 thickness: 1,
@@ -1180,7 +1149,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        'Join Now',
+                                        isOngoing ? 'Join Now' : 'View Details',
                                         style: GoogleFonts.figtree(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
