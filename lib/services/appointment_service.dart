@@ -282,13 +282,47 @@ class AppointmentService extends BaseViewModel {
   Future<List<AppointmentModel>> fetchAllAppointments() async {
     try {
       final response = await _apiService.get('/appointments');
-      final data = (response.data['data'] as List)
-          .map(
-              (item) => AppointmentModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-      return data;
+
+      // Check if response data is null or doesn't contain 'data' field
+      if (response.data == null) {
+        print('API response data is null');
+        return [];
+      }
+
+      if (!response.data.containsKey('data') || response.data['data'] == null) {
+        print('API response missing data field: ${response.data}');
+        return [];
+      }
+
+      // Safety check for data type
+      if (response.data['data'] is! List) {
+        print(
+            'API response data is not a list: ${response.data['data'].runtimeType}');
+        return [];
+      }
+
+      final List<AppointmentModel> appointments = [];
+
+      // Safely parse each item
+      for (var item in response.data['data']) {
+        try {
+          if (item is Map<String, dynamic>) {
+            final appointment = AppointmentModel.fromJson(item);
+            appointments.add(appointment);
+          } else {
+            print('Appointment item is not a Map: ${item.runtimeType}');
+          }
+        } catch (e) {
+          print('Error parsing appointment: $e');
+          // Continue to next item instead of failing completely
+        }
+      }
+
+      return appointments;
     } catch (e) {
-      throw Exception('Failed to fetch active appointments: $e');
+      print('Error in fetchAllAppointments: $e');
+      // Return empty list instead of throwing to prevent UI errors
+      return [];
     }
   }
 
@@ -455,45 +489,76 @@ class AppointmentService extends BaseViewModel {
 
   // Helper method to process appointment response data
   List<AppointmentModel> _processAppointmentsResponse(Response response) {
-    if (response.data == null || response.data['data'] == null) {
-      print('No appointment data in response: ${response.data}');
+    try {
+      if (response.data == null) {
+        print('Response data is null');
+        return [];
+      }
+
+      // Check if data field exists
+      if (!response.data.containsKey('data') || response.data['data'] == null) {
+        print('Missing data field in response: ${response.data}');
+        return [];
+      }
+
+      // Validate that data is a list
+      if (response.data['data'] is! List) {
+        print('Data is not a list: ${response.data['data'].runtimeType}');
+        return [];
+      }
+
+      final List<AppointmentModel> appointmentsList = [];
+
+      // Process each item safely
+      for (var item in response.data['data']) {
+        try {
+          if (item is Map<String, dynamic>) {
+            final appointment = AppointmentModel.fromJson(item);
+            appointmentsList.add(appointment);
+          } else {
+            print('Appointment item is not a Map: ${item.runtimeType}');
+          }
+        } catch (e) {
+          print('Error processing appointment: $e');
+          // Continue to next appointment
+        }
+      }
+
+      print('Processed ${appointmentsList.length} appointments from API');
+
+      // Debug each appointment
+      for (var appointment in appointmentsList) {
+        print(
+            'Appointment ID: ${appointment.id}, Status: ${appointment.status}');
+        print('  Start: ${appointment.startAt}, End: ${appointment.endAt}');
+        print('  Trainer: ${appointment.trainer?.fullName ?? "Unknown"}');
+      }
+
+      // Sort appointments by start date (upcoming first)
+      appointmentsList.sort((a, b) => a.startAt.compareTo(b.startAt));
+
+      // Be more inclusive in filtering - include appointments starting today or in the future,
+      // and those that are currently ongoing
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+
+      final filteredAppointments = appointmentsList
+          .where((appointment) =>
+              // Include if starts today or in the future
+              appointment.startAt
+                  .isAfter(todayStart.subtract(const Duration(hours: 1))) ||
+              // Or if currently in progress
+              (appointment.startAt.isBefore(now) &&
+                  appointment.endAt.isAfter(now)))
+          .toList();
+
+      print(
+          'After filtering: ${filteredAppointments.length} valid appointments');
+      return filteredAppointments;
+    } catch (e) {
+      print('Error in _processAppointmentsResponse: $e');
       return [];
     }
-
-    final appointmentsList = (response.data['data'] as List)
-        .map((item) => AppointmentModel.fromJson(item as Map<String, dynamic>))
-        .toList();
-
-    print('Processed ${appointmentsList.length} appointments from API');
-
-    // Debug each appointment
-    for (var appointment in appointmentsList) {
-      print('Appointment ID: ${appointment.id}, Status: ${appointment.status}');
-      print('  Start: ${appointment.startAt}, End: ${appointment.endAt}');
-      print('  Trainer: ${appointment.trainer?.fullName ?? "Unknown"}');
-    }
-
-    // Sort appointments by start date (upcoming first)
-    appointmentsList.sort((a, b) => a.startAt.compareTo(b.startAt));
-
-    // Be more inclusive in filtering - include appointments starting today or in the future,
-    // and those that are currently ongoing
-    final now = DateTime.now();
-    final todayStart = DateTime(now.year, now.month, now.day);
-
-    final filteredAppointments = appointmentsList
-        .where((appointment) =>
-            // Include if starts today or in the future
-            appointment.startAt
-                .isAfter(todayStart.subtract(const Duration(hours: 1))) ||
-            // Or if currently in progress
-            (appointment.startAt.isBefore(now) &&
-                appointment.endAt.isAfter(now)))
-        .toList();
-
-    print('After filtering: ${filteredAppointments.length} valid appointments');
-
-    return filteredAppointments;
   }
 
   Future<void> _showAppointmentReceiptDialog(AppointmentModel appointment,

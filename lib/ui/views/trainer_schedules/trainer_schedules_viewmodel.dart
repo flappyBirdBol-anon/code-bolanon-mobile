@@ -219,7 +219,12 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
 
       notifyListeners();
     } catch (e) {
-      _showErrorMessage('Failed to load appointments: $e');
+      print('Error in loadAppointments: $e');
+      // Ensure lists are initialized to empty on error
+      _availableTimeSlots = [];
+      _scheduledAppointments = [];
+      _errorMessage = 'Failed to load appointments';
+      notifyListeners();
     } finally {
       setIsLoading(false);
     }
@@ -419,11 +424,12 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     setIsLoading(true);
     try {
       await _appointmentService.deleteSchedule(id);
+      await loadAppointments(); // Reload appointments after deletion
       _showSuccessMessage('Schedule cancelled successfully');
-      await loadAppointments();
     } catch (e) {
       String errorMessage = _extractCleanErrorMessage(e.toString());
       _showErrorMessage(errorMessage);
+      await loadAppointments(); // Make sure UI is consistent even on error
     } finally {
       setIsLoading(false);
     }
