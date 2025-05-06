@@ -9,6 +9,7 @@ import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/app_strings.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
 import 'package:code_bolanon/utils/app_initializer.dart';
+import 'package:code_bolanon/utils/timezone_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -125,6 +126,9 @@ Future<String> _determineInitialRoute() async {
 void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize timezone
+  await TimezoneUtils.initialize();
 
   // Set preferred orientations to avoid black flicker during orientation changes
   await SystemChrome.setPreferredOrientations([

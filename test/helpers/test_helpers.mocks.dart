@@ -9,6 +9,7 @@ import 'dart:typed_data' as _i22;
 import 'dart:ui' as _i14;
 
 import 'package:code_bolanon/models/appointment_model.dart' as _i9;
+import 'package:code_bolanon/models/completed_lesson_model.dart' as _i44;
 import 'package:code_bolanon/models/course_model.dart' as _i3;
 import 'package:code_bolanon/models/lessons_model.dart' as _i6;
 import 'package:code_bolanon/models/payment_param.dart' as _i30;
@@ -1716,6 +1717,19 @@ class MockCourseService extends _i1.Mock implements _i20.CourseService {
         returnValue: _i10.Future<bool>.value(false),
         returnValueForMissingStub: _i10.Future<bool>.value(false),
       ) as _i10.Future<bool>);
+
+  @override
+  _i10.Future<List<_i3.CourseModel>> getUserRegisteredCourses() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getUserRegisteredCourses,
+          [],
+        ),
+        returnValue:
+            _i10.Future<List<_i3.CourseModel>>.value(<_i3.CourseModel>[]),
+        returnValueForMissingStub:
+            _i10.Future<List<_i3.CourseModel>>.value(<_i3.CourseModel>[]),
+      ) as _i10.Future<List<_i3.CourseModel>>);
 }
 
 /// A class which mocks [ImageService].
@@ -2639,6 +2653,44 @@ class MockLessonsService extends _i1.Mock implements _i27.LessonsService {
         returnValue: _i10.Future<_i18.PlatformFile?>.value(),
         returnValueForMissingStub: _i10.Future<_i18.PlatformFile?>.value(),
       ) as _i10.Future<_i18.PlatformFile?>);
+
+  @override
+  void updateLessonCompletionStatus(
+    int? lessonId,
+    bool? isCompleted,
+  ) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #updateLessonCompletionStatus,
+          [
+            lessonId,
+            isCompleted,
+          ],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i10.Future<void> refreshLessonCompletionStatuses(String? courseId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #refreshLessonCompletionStatuses,
+          [courseId],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i10.Future<void> fixInvertedCompletionStatus(String? courseId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #fixInvertedCompletionStatus,
+          [courseId],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
 
   @override
   void listenToReactiveValues(List<dynamic>? reactiveValues) =>
@@ -4132,6 +4184,30 @@ class MockAppointmentService extends _i1.Mock
       ) as _i10.Future<_i9.AppointmentModel>);
 
   @override
+  _i10.Future<void> getAppointmentByDate() => (super.noSuchMethod(
+        Invocation.method(
+          #getAppointmentByDate,
+          [],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i10.Future<List<_i9.AppointmentModel>> getUserAppointments() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getUserAppointments,
+          [],
+        ),
+        returnValue: _i10.Future<List<_i9.AppointmentModel>>.value(
+            <_i9.AppointmentModel>[]),
+        returnValueForMissingStub:
+            _i10.Future<List<_i9.AppointmentModel>>.value(
+                <_i9.AppointmentModel>[]),
+      ) as _i10.Future<List<_i9.AppointmentModel>>);
+
+  @override
   void notifyListeners() => super.noSuchMethod(
         Invocation.method(
           #notifyListeners,
@@ -4740,4 +4816,187 @@ class MockTransactionsService extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockCompletedLessonService extends _i1.Mock
-    implements _i43.CompletedLessonService {}
+    implements _i43.CompletedLessonService {
+  @override
+  List<_i44.CompletedLessonModel> get completedLessons => (super.noSuchMethod(
+        Invocation.getter(#completedLessons),
+        returnValue: <_i44.CompletedLessonModel>[],
+        returnValueForMissingStub: <_i44.CompletedLessonModel>[],
+      ) as List<_i44.CompletedLessonModel>);
+
+  @override
+  int get listenersCount => (super.noSuchMethod(
+        Invocation.getter(#listenersCount),
+        returnValue: 0,
+        returnValueForMissingStub: 0,
+      ) as int);
+
+  @override
+  _i10.Future<void> fetchCompletedLessons({
+    String? lessonId,
+    String? registrationId,
+    String? courseId,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #fetchCompletedLessons,
+          [],
+          {
+            #lessonId: lessonId,
+            #registrationId: registrationId,
+            #courseId: courseId,
+          },
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i10.Future<String?> getRegistrationIdForLesson(int? lessonId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getRegistrationIdForLesson,
+          [lessonId],
+        ),
+        returnValue: _i10.Future<String?>.value(),
+        returnValueForMissingStub: _i10.Future<String?>.value(),
+      ) as _i10.Future<String?>);
+
+  @override
+  _i10.Future<bool> isLessonCompleted(int? lessonId) => (super.noSuchMethod(
+        Invocation.method(
+          #isLessonCompleted,
+          [lessonId],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
+  _i10.Future<bool> markLessonAsCompleted(int? lessonId) => (super.noSuchMethod(
+        Invocation.method(
+          #markLessonAsCompleted,
+          [lessonId],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
+  _i10.Future<bool> markLessonAsIncomplete(int? lessonId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #markLessonAsIncomplete,
+          [lessonId],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
+  _i10.Future<bool> toggleLessonCompletion(int? lessonId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #toggleLessonCompletion,
+          [lessonId],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
+  void clearCache() => super.noSuchMethod(
+        Invocation.method(
+          #clearCache,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i10.Future<void> syncLessonCompletionWithCourseProgress(
+    int? lessonId,
+    bool? isCompleted,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #syncLessonCompletionWithCourseProgress,
+          [
+            lessonId,
+            isCompleted,
+          ],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i10.Future<void> refreshAllCompletionData() => (super.noSuchMethod(
+        Invocation.method(
+          #refreshAllCompletionData,
+          [],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i10.Future<void> resetAndRefreshAllCompletionData({String? courseId}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #resetAndRefreshAllCompletionData,
+          [],
+          {#courseId: courseId},
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i10.Future<bool> forceCheckLessonCompletion(int? lessonId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #forceCheckLessonCompletion,
+          [lessonId],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
+  void listenToReactiveValues(List<dynamic>? reactiveValues) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #listenToReactiveValues,
+          [reactiveValues],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void addListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(void Function()? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+}

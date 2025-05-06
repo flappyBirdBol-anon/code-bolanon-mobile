@@ -85,7 +85,11 @@ class CustomLearnerCourseCard extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     Colors.white,
-                    Color(0xFFF1F5F9),
+                    Colors.white12,
+                    Color.fromARGB(146, 164, 217, 255),
+                    Color.fromARGB(53, 13, 72, 161),
+                    Color.fromARGB(44, 13, 72, 161),
+                    Color.fromARGB(12, 255, 255, 255),
                   ],
                 ),
         ),

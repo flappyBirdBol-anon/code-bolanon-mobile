@@ -32,8 +32,8 @@ class AppointmentModel {
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
     return AppointmentModel(
       id: json['id'],
-      startAt: DateTime.parse(json['start_at']),
-      endAt: DateTime.parse(json['end_at']),
+      startAt: DateTime.parse(json['start_at']).toLocal(),
+      endAt: DateTime.parse(json['end_at']).toLocal(),
       price: double.parse(json['price'].toString()), // Convert string to double
       contextDetails: json['context'],
       status: json['status'],
@@ -51,8 +51,8 @@ class AppointmentModel {
 
     return {
       'id': id,
-      'start_at': dateFormat.format(startAt),
-      'end_at': dateFormat.format(endAt),
+      'start_at': dateFormat.format(startAt.toUtc()),
+      'end_at': dateFormat.format(endAt.toUtc()),
       'price': price,
       'context': contextDetails,
       'status': status,

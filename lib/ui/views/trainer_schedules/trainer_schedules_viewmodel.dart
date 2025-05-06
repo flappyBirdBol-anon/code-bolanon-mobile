@@ -265,6 +265,7 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     // Check overlap with available time slots
     for (var slot in _availableTimeSlots) {
       if (excludeId != null && slot.id == excludeId) continue;
+      print('Old: ${slot.startAt}, Oldend: ${slot.endAt}');
       if (_isOverlapping(newStart, newEnd, slot.startAt, slot.endAt)) {
         return true;
       }
@@ -284,6 +285,9 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   // Helper method to check if two time ranges overlap
   bool _isOverlapping(
       DateTime start1, DateTime end1, DateTime start2, DateTime end2) {
+    start1 = start1;
+    end1 = end1;
+    print('New: $start1, New End: $end1, Old: $start2, Oldend: $end2');
     return start1.isBefore(end2) && end1.isAfter(start2);
   }
 

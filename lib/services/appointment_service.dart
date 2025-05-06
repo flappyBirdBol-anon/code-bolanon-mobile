@@ -46,8 +46,8 @@ class AppointmentService extends BaseViewModel {
       Map<String, dynamic> appointmentData) async {
     try {
       final Map<String, dynamic> appointment = {
-        'start_at': dateFormat.format(appointmentData['startAt']),
-        'end_at': dateFormat.format(appointmentData['endAt']),
+        'start_at': dateFormat.format(appointmentData['startAt'].toUtc()),
+        'end_at': dateFormat.format(appointmentData['endAt'].toUtc()),
         'price': (appointmentData['price'] as num).toString(),
       };
 
