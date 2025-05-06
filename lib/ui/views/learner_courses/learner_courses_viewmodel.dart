@@ -141,24 +141,27 @@ class LearnerCoursesViewModel extends CourseBaseViewModel
   }
 
   // Main initialization method - called once from onViewModelReady
-  Future<void> initialise() async {
-    // Guard against multiple initializations
-    if (_initialized || _refreshInProgress) {
+  Future<void> initialise({bool forceRefresh = false}) async {
+    // Skip initialization only if already initialized AND not forcing refresh
+    if (_initialized && !forceRefresh && _refreshInProgress) {
       debugPrint('Skipping initialize - already initialized or in progress');
       return;
     }
 
+    debugPrint(
+        '⭐ LearnerCoursesViewModel: Initializing and loading courses...');
     _refreshInProgress = true;
     setBusy(true);
 
     try {
       debugPrint('Initializing courses view model');
-      await loadCourses();
+      // Always force refresh on first load to ensure data is fresh
+      await loadCourses(forceRefresh: true);
       _initialized = true;
-      debugPrint('Courses initialized successfully');
+      debugPrint('✅ Courses initialized successfully');
     } catch (e) {
       setError(e);
-      debugPrint('Error initializing courses: $e');
+      debugPrint('❌ Error initializing courses: $e');
     } finally {
       _refreshInProgress = false;
       setBusy(false);
@@ -167,18 +170,23 @@ class LearnerCoursesViewModel extends CourseBaseViewModel
 
   @override
   Future<List<CourseModel>> loadCourses(
-      {int page = 1, int pageSize = 10}) async {
-    // Guard against concurrent loads
-    if (_refreshInProgress) {
+      {int page = 1, int pageSize = 10, bool forceRefresh = false}) async {
+    // Skip if refresh already in progress and not forcing
+    if (_refreshInProgress && !forceRefresh) {
       debugPrint('Skipping loadCourses - refresh already in progress');
       return _filteredCourses;
     }
 
+    debugPrint('⭐ Loading courses with forceRefresh=$forceRefresh');
     _refreshInProgress = true;
     setBusy(true);
 
     try {
       debugPrint('Fetching user registrations...');
+      // Clear existing courses before loading new data
+      _allCourses = [];
+      _filteredCourses = [];
+
       final registrations = await registrationService.getUserRegistrations();
 
       if (registrations.isEmpty) {
@@ -189,7 +197,7 @@ class LearnerCoursesViewModel extends CourseBaseViewModel
 
       final loadedCourses =
           await registrationService.getRegisteredCourses(registrations);
-      debugPrint('Loaded ${loadedCourses.length} courses');
+      debugPrint('✅ Loaded ${loadedCourses.length} courses');
 
       // Ensure progress data is properly processed
       for (var course in loadedCourses) {
@@ -209,7 +217,7 @@ class LearnerCoursesViewModel extends CourseBaseViewModel
       updateCourses(loadedCourses);
       return loadedCourses;
     } catch (e) {
-      debugPrint('Error loading courses: $e');
+      debugPrint('❌ Error loading courses: $e');
       setError(e);
       snackbarService.showSnackbar(message: 'Failed to load courses: $e');
       updateCourses([]);
@@ -223,13 +231,8 @@ class LearnerCoursesViewModel extends CourseBaseViewModel
 
   // Simplified fetch method - used for manual refreshes
   Future<void> fetchCourses() async {
-    // Skip if already refreshing or not initialized (unless it's the first load)
-    if (_refreshInProgress) {
-      debugPrint('Skipping fetchCourses - refresh already in progress');
-      return;
-    }
-
-    await loadCourses();
+    // Add forceRefresh parameter to ensure data is refreshed
+    await loadCourses(forceRefresh: true);
   }
 
   // Handle navigation results safely
