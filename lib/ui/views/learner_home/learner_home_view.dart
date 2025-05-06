@@ -381,10 +381,9 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                   )
                 : SizedBox(
                     height: 245,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
+                    child: CarouselSlider.builder(
                       itemCount: viewModel.recommendedCourses.length,
-                      itemBuilder: (context, index) {
+                      itemBuilder: (context, index, realIndex) {
                         final course = viewModel.recommendedCourses[index];
                         final apiCourse = api_model.CourseModel(
                           id: (index + 1).toString(),
@@ -401,7 +400,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                         );
 
                         return Container(
-                          width: 220,
+                          width: 230,
                           margin: const EdgeInsets.only(right: 16),
                           child: CoursesListItem(
                             course: apiCourse,
@@ -413,6 +412,19 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                           ),
                         );
                       },
+                      options: CarouselOptions(
+                        height: 245,
+                        viewportFraction: 0.6,
+                        enableInfiniteScroll:
+                            viewModel.recommendedCourses.length > 1,
+                        autoPlay: true,
+                        autoPlayInterval: const Duration(seconds: 5),
+                        autoPlayAnimationDuration:
+                            const Duration(milliseconds: 800),
+                        pauseAutoPlayOnTouch: true,
+                        enlargeCenterPage: true,
+                        padEnds: true,
+                      ),
                     ),
                   ),
       ],
@@ -451,10 +463,9 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                   )
                 : SizedBox(
                     height: 245,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
+                    child: CarouselSlider.builder(
                       itemCount: viewModel.topRatedCourses.length,
-                      itemBuilder: (context, index) {
+                      itemBuilder: (context, index, realIndex) {
                         final course = viewModel.topRatedCourses[index];
                         final apiCourse = api_model.CourseModel(
                           id: (index + 100).toString(),
@@ -483,6 +494,19 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                           ),
                         );
                       },
+                      options: CarouselOptions(
+                        height: 245,
+                        viewportFraction: 0.6,
+                        enableInfiniteScroll:
+                            viewModel.topRatedCourses.length > 1,
+                        autoPlay: true,
+                        autoPlayInterval: const Duration(seconds: 6),
+                        autoPlayAnimationDuration:
+                            const Duration(milliseconds: 800),
+                        pauseAutoPlayOnTouch: true,
+                        enlargeCenterPage: true,
+                        padEnds: true,
+                      ),
                     ),
                   ),
       ],
@@ -827,11 +851,10 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                     cardColor,
                   )
                 : SizedBox(
-                    height: 280, // Increased height to avoid overflow
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
+                    height: 280, // Keep increased height to avoid overflow
+                    child: CarouselSlider.builder(
                       itemCount: viewModel.registeredCourses.length,
-                      itemBuilder: (context, index) {
+                      itemBuilder: (context, index, realIndex) {
                         final course = viewModel.registeredCourses[index];
                         // Calculate progress from the viewModel
                         final progress = viewModel.computeProgress(course);
@@ -887,6 +910,19 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                           ),
                         );
                       },
+                      options: CarouselOptions(
+                        height: 280,
+                        viewportFraction: 0.6,
+                        enableInfiniteScroll:
+                            viewModel.registeredCourses.length > 1,
+                        autoPlay: true,
+                        autoPlayInterval: const Duration(seconds: 5),
+                        autoPlayAnimationDuration:
+                            const Duration(milliseconds: 800),
+                        pauseAutoPlayOnTouch: true,
+                        enlargeCenterPage: true,
+                        padEnds: true,
+                      ),
                     ),
                   ),
       ],

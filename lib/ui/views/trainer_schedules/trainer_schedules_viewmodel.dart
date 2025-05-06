@@ -242,17 +242,42 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
             _formSelectedDate.day, _endTime.hour, _endTime.minute),
         'price': _price,
       };
-      await _appointmentService.createSchedule(newAppointment);
+
+      // Debug the data being sent
+      print('Attempting to create schedule with: $newAppointment');
+
+      final result = await _appointmentService.createSchedule(newAppointment);
 
       _showSuccessMessage('Schedule added successfully');
       await loadAppointments();
       resetForm();
       _showAddScheduleForm = false;
     } catch (e) {
-      _showErrorMessage('Failed to create schedule: $e');
+      // Debug caught exception
+      print('Exception caught in createAvailableTimeSlot: $e');
+
+      // Extract the clean error message without Exception: prefixes
+      String errorMessage = _extractCleanErrorMessage(e.toString());
+      _showErrorMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // Helper to extract clean error message without Exception: prefixes
+  String _extractCleanErrorMessage(String errorString) {
+    // First, remove all "Exception: " prefixes
+    String cleanError = errorString;
+
+    while (cleanError.contains('Exception: ')) {
+      cleanError = cleanError.replaceAll('Exception: ', '');
+    }
+
+    // Then remove any "Failed to create/update schedule: " prefix
+    cleanError = cleanError.replaceAll('Failed to create schedule: ', '');
+    cleanError = cleanError.replaceAll('Failed to update schedule: ', '');
+
+    return cleanError;
   }
 
   // Add helper method to check for overlapping appointments
@@ -374,14 +399,16 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
           _originalAppointment!.id.toString(), updatedAppointment);
 
       if (result['success']) {
-        _showSuccessMessage(result['message']);
+        _showSuccessMessage(
+            result['message'] ?? 'Schedule updated successfully');
         await loadAppointments();
         hideRescheduleForm();
       } else {
-        _showErrorMessage(result['message']);
+        _showErrorMessage(result['message'] ?? 'Failed to update schedule');
       }
     } catch (e) {
-      _showErrorMessage('Failed to update schedule');
+      String errorMessage = _extractCleanErrorMessage(e.toString());
+      _showErrorMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -395,7 +422,8 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
       _showSuccessMessage('Schedule cancelled successfully');
       await loadAppointments();
     } catch (e) {
-      _showErrorMessage('Failed to cancel schedule: $e');
+      String errorMessage = _extractCleanErrorMessage(e.toString());
+      _showErrorMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -406,7 +434,7 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     if (_startTime.hour >= _endTime.hour &&
         (_startTime.hour != _endTime.hour ||
             _startTime.minute >= _endTime.minute)) {
-      setErrorMessage('End time must be after start time');
+      _showErrorMessage('End time must be after start time');
       return false;
     }
     return true;

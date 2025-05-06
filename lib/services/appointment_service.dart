@@ -51,8 +51,40 @@ class AppointmentService extends BaseViewModel {
         'price': (appointmentData['price'] as num).toString(),
       };
 
+      // Debug print the request
+      print('Creating appointment with data: $appointment');
       final response =
           await _apiService.post('/appointments', data: appointment);
+
+      // Debug print the response
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      // Check for error response
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        // Handle validation errors (422) or other errors
+        if (response.data is Map && response.data.containsKey('errors')) {
+          var errors = response.data['errors'];
+          if (errors is Map) {
+            List<String> errorMessages = [];
+            errors.forEach((field, messages) {
+              if (messages is List && messages.isNotEmpty) {
+                errorMessages.add(messages.first.toString());
+              }
+            });
+            if (errorMessages.isNotEmpty) {
+              throw Exception(errorMessages.join('. '));
+            }
+          }
+        }
+
+        // If no specific errors found, use the general message
+        if (response.data is Map && response.data.containsKey('message')) {
+          throw Exception(response.data['message']);
+        }
+
+        throw Exception('Server error: ${response.statusCode}');
+      }
 
       if (response.data == null) {
         throw Exception('No data received from server');
@@ -64,7 +96,65 @@ class AppointmentService extends BaseViewModel {
       // Update local appointments and notify
       await refreshAppointments();
       return newAppointment;
+    } on DioException catch (e) {
+      // Debug the error response in detail
+      print('DioException on createSchedule: ${e.message}');
+      print('DioException type: ${e.type}');
+      if (e.response != null) {
+        print('Error status: ${e.response!.statusCode}');
+        print(
+            'Error data: ${e.response!.data.runtimeType} - ${e.response!.data}');
+
+        if (e.response!.data is Map) {
+          final responseData = e.response!.data as Map;
+          responseData.forEach((key, value) {
+            print(
+                'Response key: $key, value type: ${value.runtimeType}, value: $value');
+          });
+        }
+      }
+
+      // Extract error message from Dio response if available
+      String errorMessage = 'Failed to create schedule';
+
+      if (e.response != null && e.response!.data != null) {
+        var responseData = e.response!.data;
+
+        if (responseData is Map) {
+          // Check for errors field first
+          if (responseData.containsKey('errors')) {
+            var errors = responseData['errors'];
+
+            if (errors is Map) {
+              // Build a clear error message from validation errors
+              List<String> errorMessages = [];
+
+              errors.forEach((field, messages) {
+                if (messages is List && messages.isNotEmpty) {
+                  String errorMsg = messages.first.toString();
+                  errorMessages.add(errorMsg);
+                }
+              });
+
+              if (errorMessages.isNotEmpty) {
+                errorMessage = errorMessages.join('. ');
+                print('Extracted error messages: $errorMessage');
+              }
+            } else if (errors is String) {
+              errorMessage = errors;
+            }
+          } else if (responseData.containsKey('message')) {
+            errorMessage = responseData['message'];
+          }
+        } else if (responseData is String) {
+          errorMessage = responseData;
+        }
+      }
+
+      throw Exception(errorMessage);
     } catch (e) {
+      // Debug general exceptions
+      print('General exception in createSchedule: $e');
       throw Exception('Failed to create schedule: $e');
     }
   }
@@ -78,19 +168,71 @@ class AppointmentService extends BaseViewModel {
       );
 
       if (response.statusCode != 200 && response.statusCode != 201) {
-        return {
-          'success': false,
-          'message': 'Failed to update schedule: ${response.statusCode}'
-        };
+        String errorMessage = 'Failed to update schedule';
+        if (response.data != null && response.data is Map) {
+          var responseData = response.data;
+          if (responseData.containsKey('errors') &&
+              responseData['errors'] is Map) {
+            // Extract validation errors and join them
+            var errors = responseData['errors'] as Map;
+            List<String> errorMessages = [];
+
+            errors.forEach((field, messages) {
+              if (messages is List && messages.isNotEmpty) {
+                errorMessages.add(messages.first.toString());
+              }
+            });
+
+            if (errorMessages.isNotEmpty) {
+              errorMessage = errorMessages.join('. ');
+            }
+          } else if (responseData.containsKey('message')) {
+            errorMessage = responseData['message'];
+          }
+        }
+
+        return {'success': false, 'message': errorMessage};
       }
 
       // Update local appointments and notify
       await refreshAppointments();
       return {
         'success': true,
-        'message': 'Schedule updated successfully',
+        'message': response.data is Map && response.data.containsKey('message')
+            ? response.data['message']
+            : 'Schedule updated successfully',
         'data': response.data
       };
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to update schedule';
+
+      if (e.response != null && e.response!.data != null) {
+        var responseData = e.response!.data;
+        if (responseData is Map) {
+          if (responseData.containsKey('errors') &&
+              responseData['errors'] is Map) {
+            // Extract validation errors and join them
+            var errors = responseData['errors'] as Map;
+            List<String> errorMessages = [];
+
+            errors.forEach((field, messages) {
+              if (messages is List && messages.isNotEmpty) {
+                errorMessages.add(messages.first.toString());
+              }
+            });
+
+            if (errorMessages.isNotEmpty) {
+              errorMessage = errorMessages.join('. ');
+            }
+          } else if (responseData.containsKey('message')) {
+            errorMessage = responseData['message'];
+          }
+        } else if (responseData is String) {
+          errorMessage = responseData;
+        }
+      }
+
+      return {'success': false, 'message': errorMessage};
     } catch (e) {
       return {'success': false, 'message': 'Failed to update schedule: $e'};
     }
@@ -102,6 +244,36 @@ class AppointmentService extends BaseViewModel {
 
       // Update local appointments and notify
       await refreshAppointments();
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to delete schedule';
+
+      if (e.response != null && e.response!.data != null) {
+        var responseData = e.response!.data;
+        if (responseData is Map) {
+          if (responseData.containsKey('errors') &&
+              responseData['errors'] is Map) {
+            // Extract validation errors and join them
+            var errors = responseData['errors'] as Map;
+            List<String> errorMessages = [];
+
+            errors.forEach((field, messages) {
+              if (messages is List && messages.isNotEmpty) {
+                errorMessages.add(messages.first.toString());
+              }
+            });
+
+            if (errorMessages.isNotEmpty) {
+              errorMessage = errorMessages.join('. ');
+            }
+          } else if (responseData.containsKey('message')) {
+            errorMessage = responseData['message'];
+          }
+        } else if (responseData is String) {
+          errorMessage = responseData;
+        }
+      }
+
+      throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Failed to delete schedule: $e');
     }

@@ -75,20 +75,6 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
               const Center(
                 child: CircularProgressIndicator(),
               ),
-            // Error Message
-            if (viewModel.errorMessage != null)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    viewModel.errorMessage!,
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.red,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
 
             // Reschedule Form Overlay
             if (viewModel.showRescheduleForm &&
