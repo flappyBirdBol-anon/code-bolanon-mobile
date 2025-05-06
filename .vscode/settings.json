@@ -25,5 +25,6 @@
   "peacock.color": "#184632",
   "cmake.sourceDirectory": "D:/June/Classes/OJT/flutter-stacked/Final/code-bolanon-mobile/windows/flutter",
   "github.copilot.chat.followUps": "always",
-  "github.copilot.chat.scopeSelection": true
+  "github.copilot.chat.scopeSelection": true,
+  "cmake.ignoreCMakeListsMissing": true
 }

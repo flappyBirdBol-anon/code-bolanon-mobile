@@ -353,6 +353,12 @@ class _CourseCreationViewState extends State<CourseCreationView>
                             if (value?.isEmpty ?? true) {
                               return 'Please enter a course title';
                             }
+                            if ((value?.trim().length ?? 0) < 5) {
+                              return 'Title must be at least 5 characters long';
+                            }
+                            if ((value?.trim().length ?? 0) > 100) {
+                              return 'Title must not exceed 100 characters';
+                            }
                             return null;
                           },
                         ),
@@ -365,10 +371,16 @@ class _CourseCreationViewState extends State<CourseCreationView>
                           labelText: 'Course Description',
                           hintText: 'What will students learn in this course?',
                           prefixIcon: Icons.description,
-                          maxLines: 6, // Increased for better user experience
+                          maxLines: 6,
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Please enter a description';
+                            }
+                            if ((value?.trim().length ?? 0) < 20) {
+                              return 'Description must be at least 20 characters long';
+                            }
+                            if ((value?.trim().length ?? 0) > 1000) {
+                              return 'Description must not exceed 1000 characters';
                             }
                             return null;
                           },
@@ -396,6 +408,12 @@ class _CourseCreationViewState extends State<CourseCreationView>
                                   if (value?.isEmpty ?? true) {
                                     return 'Please enter duration';
                                   }
+                                  if ((value?.trim().length ?? 0) < 3) {
+                                    return 'Please enter a valid duration';
+                                  }
+                                  if ((value?.trim().length ?? 0) > 50) {
+                                    return 'Duration must not exceed 50 characters';
+                                  }
                                   return null;
                                 },
                               ),
@@ -418,8 +436,15 @@ class _CourseCreationViewState extends State<CourseCreationView>
                             if (value?.isEmpty ?? true) {
                               return 'Please enter a price';
                             }
-                            if (double.tryParse(value!) == null) {
+                            final price = double.tryParse(value!);
+                            if (price == null) {
                               return 'Please enter a valid number';
+                            }
+                            if (price <= 0) {
+                              return 'Price must be greater than 0';
+                            }
+                            if (price > 999999) {
+                              return 'Price must not exceed 999,999';
                             }
                             return null;
                           },
@@ -509,147 +534,98 @@ class _CourseCreationViewState extends State<CourseCreationView>
   Widget _buildTechStackSelection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Tech Stack Dropdown
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[300]!),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 3,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Tech Stack',
-                style: GoogleFonts.figtree(
-                  fontSize: 14,
-                  color: Colors.grey[700],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _isLoadingTechStacks
-                  ? Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        child: const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              Color.fromARGB(217, 13, 72, 161)),
-                          strokeWidth: 3,
-                        ),
+      children: <Widget>[
+        if (_isLoadingTechStacks)
+          const Center(
+            child: CircularProgressIndicator(),
+          )
+        else
+          Column(
+            children: <Widget>[
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _techStacks.map((stack) {
+                  final isSelected = _selectedTechStacks.contains(stack);
+                  return FilterChip(
+                    label: Text(
+                      stack.tags,
+                      style: GoogleFonts.figtree(
+                        color: isSelected ? Colors.white : Colors.black87,
+                        fontWeight:
+                            isSelected ? FontWeight.w500 : FontWeight.normal,
                       ),
-                    )
-                  : Row(
-                      children: [
-                        const Icon(
-                          Icons.code,
-                          color: Color.fromARGB(226, 13, 72, 161),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<TechStackModel>(
-                              hint: Text(
-                                'Select tech stack',
-                                style: GoogleFonts.figtree(
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              dropdownColor: Colors.white,
-                              isDense: true,
-                              isExpanded: true,
-                              icon: const Icon(Icons.arrow_drop_down),
-                              elevation: 16,
-                              onChanged: (TechStackModel? newValue) {
-                                if (newValue != null &&
-                                    !_selectedTechStacks.any((element) =>
-                                        element.id == newValue.id)) {
-                                  setState(() {
-                                    _selectedTechStacks.add(newValue);
-                                  });
-                                }
-                              },
-                              items: _techStacks
-                                  .map<DropdownMenuItem<TechStackModel>>(
-                                      (TechStackModel value) {
-                                return DropdownMenuItem<TechStackModel>(
-                                  value: value,
-                                  child: Text(
-                                    value.tags,
-                                    style: GoogleFonts.figtree(),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
+                    ),
+                    selected: isSelected,
+                    onSelected: (bool selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedTechStacks.add(stack);
+                        } else {
+                          _selectedTechStacks
+                              .removeWhere((item) => item.id == stack.id);
+                        }
+                      });
+                    },
+                    backgroundColor: Colors.grey[100],
+                    selectedColor: AppColors.primary,
+                    checkmarkColor: Colors.white,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  );
+                }).toList(),
+              ),
+              if (_selectedTechStacks.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Please select at least one tech stack',
+                    style: GoogleFonts.figtree(
+                      color: Colors.red[400],
+                      fontSize: 12,
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: _selectedTechStacks.map((stack) {
+                      return Chip(
+                        avatar: const CircleAvatar(
+                          maxRadius: 12,
+                          backgroundColor: AppColors.primary,
+                          child: Icon(
+                            Icons.code,
+                            color: Colors.white,
+                            size: 14,
                           ),
                         ),
-                      ],
-                    ),
-            ],
-          ),
-        ),
-
-        // Selected Tech Stack Chips
-        if (_selectedTechStacks.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: _selectedTechStacks.map((stack) {
-              return Chip(
-                avatar: const CircleAvatar(
-                  maxRadius: 12,
-                  backgroundColor: AppColors.primary,
-                  child: Icon(
-                    Icons.code,
-                    color: Colors.white,
-                    size: 14,
+                        label: Text(stack.tags, style: GoogleFonts.figtree()),
+                        deleteIcon: const Icon(
+                          Icons.cancel,
+                          size: 18,
+                        ),
+                        onDeleted: () {
+                          setState(() {
+                            _selectedTechStacks
+                                .removeWhere((item) => item.id == stack.id);
+                          });
+                        },
+                        backgroundColor: Colors.grey[100],
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        labelStyle: GoogleFonts.figtree(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
-                label: Text(stack.tags, style: GoogleFonts.figtree()),
-                deleteIcon: const Icon(
-                  Icons.cancel,
-                  size: 18,
-                ),
-                onDeleted: () {
-                  setState(() {
-                    _selectedTechStacks
-                        .removeWhere((item) => item.id == stack.id);
-                  });
-                },
-                backgroundColor: Colors.grey[100],
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                labelStyle: GoogleFonts.figtree(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              );
-            }).toList(),
+            ],
           ),
-        ],
-
-        // Validation message if needed
-        if (_selectedTechStacks.isEmpty) ...[
-          const SizedBox(height: 8),
-          Text(
-            'Please select at least one tech stack',
-            style: GoogleFonts.figtree(
-              color: Colors.grey[600],
-              fontSize: 12,
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -767,6 +743,14 @@ class _CourseCreationViewState extends State<CourseCreationView>
                     validator: (value) {
                       if (i == 0 && (value?.isEmpty ?? true)) {
                         return 'Please enter at least one item';
+                      }
+                      if (value?.isNotEmpty ?? false) {
+                        if ((value?.trim().length ?? 0) < 5) {
+                          return 'Must be at least 5 characters long';
+                        }
+                        if ((value?.trim().length ?? 0) > 200) {
+                          return 'Must not exceed 200 characters';
+                        }
                       }
                       return null;
                     },
@@ -956,6 +940,32 @@ class _CourseCreationViewState extends State<CourseCreationView>
 
   void _handleSave() async {
     if (_formKey.currentState?.validate() ?? false) {
+      // Additional validations
+      if (!_validateTechStacks()) {
+        _showErrorMessage('Please select at least one tech stack');
+        return;
+      }
+
+      if (!_validateLearningExpectations()) {
+        _showErrorMessage('Please add at least one learning expectation');
+        return;
+      }
+
+      if (!_validateRequirements()) {
+        _showErrorMessage('Please add at least one requirement');
+        return;
+      }
+
+      if (!_validatePrice()) {
+        _showErrorMessage('Price must be greater than 0');
+        return;
+      }
+
+      if (!_validateImage()) {
+        _showErrorMessage('Please add a course thumbnail');
+        return;
+      }
+
       setState(() {
         _isSubmitting = true;
       });
@@ -971,19 +981,55 @@ class _CourseCreationViewState extends State<CourseCreationView>
           _selectedTechStacks.map((stack) => stack.id).toList();
 
       widget.onSave(
-        titleController.text,
-        descriptionController.text,
+        titleController.text.trim(),
+        descriptionController.text.trim(),
         double.parse(priceController.text),
         selectedImage,
         learningExpectations,
         requirements,
         _selectedLevel,
-        durationController.text,
-        techStackIds, // Pass the tech stack IDs
+        durationController.text.trim(),
+        techStackIds,
       );
 
       Navigator.pop(context, true);
     }
+  }
+
+  bool _validateTechStacks() {
+    return _selectedTechStacks.isNotEmpty;
+  }
+
+  bool _validateLearningExpectations() {
+    return _expectationControllers
+        .any((controller) => controller.text.trim().isNotEmpty);
+  }
+
+  bool _validateRequirements() {
+    return _requirementControllers
+        .any((controller) => controller.text.trim().isNotEmpty);
+  }
+
+  bool _validatePrice() {
+    final price = double.tryParse(priceController.text);
+    return price != null && price > 0;
+  }
+
+  bool _validateImage() {
+    return selectedImage != null ||
+        (widget.isEditing && widget.initialThumbnail != null);
+  }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
   }
 
   @override
