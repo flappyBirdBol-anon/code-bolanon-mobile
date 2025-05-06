@@ -400,7 +400,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                         );
 
                         return Container(
-                          width: 230,
+                          width: 250,
                           margin: const EdgeInsets.only(right: 16),
                           child: CoursesListItem(
                             course: apiCourse,
@@ -413,8 +413,8 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                         );
                       },
                       options: CarouselOptions(
-                        height: 245,
-                        viewportFraction: 0.6,
+                        height: 300,
+                        viewportFraction: 0.58,
                         enableInfiniteScroll:
                             viewModel.recommendedCourses.length > 1,
                         autoPlay: true,
@@ -482,7 +482,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                         );
 
                         return Container(
-                          width: 220,
+                          width: 250,
                           margin: const EdgeInsets.only(right: 16),
                           child: CoursesListItem(
                             course: apiCourse,
@@ -495,8 +495,8 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                         );
                       },
                       options: CarouselOptions(
-                        height: 245,
-                        viewportFraction: 0.6,
+                        height: 300,
+                        viewportFraction: 0.57,
                         enableInfiniteScroll:
                             viewModel.topRatedCourses.length > 1,
                         autoPlay: true,
@@ -911,7 +911,7 @@ class LearnerHomeView extends StackedView<LearnerHomeViewModel> {
                         );
                       },
                       options: CarouselOptions(
-                        height: 280,
+                        height: 450,
                         viewportFraction: 0.6,
                         enableInfiniteScroll:
                             viewModel.registeredCourses.length > 1,
