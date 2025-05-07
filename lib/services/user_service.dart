@@ -174,7 +174,7 @@ class UserService with ListenableServiceMixin {
     }
   }
 
-  Future<bool> updateProfile(
+  Future<Map<String, dynamic>> updateProfile(
     String firstName,
     String lastName,
     String specialization,
@@ -210,12 +210,21 @@ class UserService with ListenableServiceMixin {
       if (response != null && response.statusCode == 200) {
         notifyListeners();
         await fetchUserProfile();
-        return true;
+        return {
+          'success': true,
+          'message': response.data['message'] ?? 'Profile updated successfully'
+        };
       }
-      return false;
+      return {
+        'success': false,
+        'message': response?.data['message'] ?? 'Failed to update profile'
+      };
     } catch (e) {
       print('Update error: $e');
-      return false;
+      return {
+        'success': false,
+        'message': 'An error occurred while updating profile'
+      };
     }
   }
 

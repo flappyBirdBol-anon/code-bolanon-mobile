@@ -74,99 +74,75 @@ class EditProfileView extends StackedView<EditProfileViewModel> {
           Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Stack(
-                      children: [
-                        CustomImageField(
-                          height: 120,
-                          width: 120,
-                          isCircular: true,
-                          imageUrl: viewModel.formattedProfilePictureUrl,
-                          selectedImage: viewModel.selectedProfileImage,
-                          placeholder: 'Add photo',
-                          onImageSelected:
-                              viewModel.handleProfilePictureSelection,
-                          existingImageWidget: viewModel.getProfileImageWidget(
-                            fit: BoxFit.cover,
-                            placeholder: const CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
-                            errorWidget: const Icon(
-                              Icons.person,
-                              size: 40,
-                              color: Colors.grey,
+              child: Form(
+                key: viewModel.formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Stack(
+                        children: [
+                          CustomImageField(
+                            height: 120,
+                            width: 120,
+                            isCircular: true,
+                            imageUrl: viewModel.formattedProfilePictureUrl,
+                            selectedImage: viewModel.selectedProfileImage,
+                            placeholder: 'Add photo',
+                            onImageSelected:
+                                viewModel.handleProfilePictureSelection,
+                            existingImageWidget:
+                                viewModel.getProfileImageWidget(
+                              fit: BoxFit.cover,
+                              placeholder: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                              errorWidget: const Icon(
+                                Icons.person,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: () async {
-                              final ImagePicker picker = ImagePicker();
-                              final XFile? image = await picker.pickImage(
-                                source: ImageSource.gallery,
-                                imageQuality: 80,
-                              );
-                              if (image != null) {
-                                viewModel.handleProfilePictureSelection(image);
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: theme.primaryColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: () async {
+                                final ImagePicker picker = ImagePicker();
+                                final XFile? image = await picker.pickImage(
+                                  source: ImageSource.gallery,
+                                  imageQuality: 80,
+                                );
+                                if (image != null) {
+                                  viewModel
+                                      .handleProfilePictureSelection(image);
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: theme.primaryColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.edit,
                                   color: Colors.white,
-                                  width: 2,
+                                  size: 16,
                                 ),
                               ),
-                              child: const Icon(
-                                Icons.edit,
-                                color: Colors.white,
-                                size: 16,
-                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    'Personal Information',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.grey[800],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextField(
-                    controller: viewModel.firstNameController,
-                    labelText: 'First name',
-                    prefixIcon: Icons.person,
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please enter your first name'
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextField(
-                    controller: viewModel.lastNameController,
-                    labelText: 'Last name',
-                    prefixIcon: Icons.person,
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please enter your last name'
-                        : null,
-                  ),
-                  if (viewModel.isTrainer) ...[
                     const SizedBox(height: 32),
                     Text(
-                      'Professional Details',
+                      'Personal Information',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -175,19 +151,58 @@ class EditProfileView extends StackedView<EditProfileViewModel> {
                     ),
                     const SizedBox(height: 16),
                     CustomTextField(
-                      controller: viewModel.organizationController,
-                      labelText: 'Organization',
-                      prefixIcon: Icons.business,
+                      controller: viewModel.firstNameController,
+                      labelText: 'First name',
+                      prefixIcon: Icons.person,
+                      errorText: viewModel.firstNameError,
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Please enter your first name'
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     CustomTextField(
-                      controller: viewModel.specializationController,
-                      labelText: 'Specialization',
-                      prefixIcon: Icons.work,
+                      controller: viewModel.lastNameController,
+                      labelText: 'Last name',
+                      prefixIcon: Icons.person,
+                      errorText: viewModel.lastNameError,
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Please enter your last name'
+                          : null,
                     ),
+                    if (viewModel.isTrainer) ...[
+                      const SizedBox(height: 32),
+                      Text(
+                        'Professional Details',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: viewModel.organizationController,
+                        labelText: 'Organization',
+                        prefixIcon: Icons.business,
+                        errorText: viewModel.organizationError,
+                        validator: (value) => value?.isEmpty ?? true
+                            ? 'Please enter your organization'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: viewModel.specializationController,
+                        labelText: 'Specialization',
+                        prefixIcon: Icons.work,
+                        errorText: viewModel.specializationError,
+                        validator: (value) => value?.isEmpty ?? true
+                            ? 'Please enter your specialization'
+                            : null,
+                      ),
+                    ],
+                    const SizedBox(height: 16),
                   ],
-                  const SizedBox(height: 16),
-                ],
+                ),
               ),
             ),
           ),
@@ -222,9 +237,12 @@ class EditProfileView extends StackedView<EditProfileViewModel> {
                       onPressed: viewModel.isBusy
                           ? null
                           : () async {
-                              final result = await viewModel.updateProfile();
-                              if (result['success']) {
-                                Navigator.pop(context);
+                              if (viewModel.formKey.currentState!.validate()) {
+                                final result = await viewModel.updateProfile();
+                                if (context.mounted &&
+                                    result['success'] == true) {
+                                  Navigator.of(context).pop(true);
+                                }
                               }
                             },
                       style: ElevatedButton.styleFrom(

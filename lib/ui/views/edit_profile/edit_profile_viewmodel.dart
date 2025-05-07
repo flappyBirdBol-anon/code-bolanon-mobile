@@ -14,10 +14,17 @@ class EditProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
   final _imageService = locator<ImageService>();
   final _snackbarService = locator<SnackbarService>();
 
+  final formKey = GlobalKey<FormState>();
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
   final organizationController = TextEditingController();
   final specializationController = TextEditingController();
+
+  // Error states for each field
+  String? firstNameError;
+  String? lastNameError;
+  String? organizationError;
+  String? specializationError;
 
   XFile? selectedProfileImage;
 
@@ -55,6 +62,33 @@ class EditProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
         selectedProfileImage != null;
   }
 
+  @override
+  void clearErrors() {
+    firstNameError = null;
+    lastNameError = null;
+    organizationError = null;
+    specializationError = null;
+    notifyListeners();
+  }
+
+  void setFieldError(String field, String? error) {
+    switch (field) {
+      case 'firstName':
+        firstNameError = error;
+        break;
+      case 'lastName':
+        lastNameError = error;
+        break;
+      case 'organization':
+        organizationError = error;
+        break;
+      case 'specialization':
+        specializationError = error;
+        break;
+    }
+    notifyListeners();
+  }
+
   Future<Map<String, dynamic>> updateProfile() async {
     if (userId == 0) return {'success': false};
 
@@ -68,16 +102,16 @@ class EditProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
     }
 
     setBusy(true);
+    clearErrors();
 
     try {
       // Keep existing image URL if no new image selected
       String imageUrl = profilePictureUrl;
       if (selectedProfileImage != null) {
-        // Use the direct file path
         imageUrl = selectedProfileImage!.path;
       }
 
-      final success = await _userService.updateProfile(
+      final response = await _userService.updateProfile(
         firstNameController.text,
         lastNameController.text,
         specializationController.text,
@@ -86,27 +120,37 @@ class EditProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
         userId,
       );
 
-      if (success) {
+      if (response['success'] == true) {
+        // Show success message
         _snackbarService.showSnackbar(
-          message: 'Profile updated successfully',
+          message: response['message'] ?? 'Profile updated successfully',
           duration: const Duration(seconds: 2),
         );
+
         selectedProfileImage = null;
         notifyListeners();
+        return response;
       } else {
-        _snackbarService.showSnackbar(
-          message: 'Failed to update profile',
-          duration: const Duration(seconds: 2),
-        );
+        // Handle server-side validation errors
+        if (response['errors'] != null) {
+          final errors = response['errors'] as Map<String, dynamic>;
+          errors.forEach((field, error) {
+            setFieldError(field, error.toString());
+          });
+        } else {
+          _snackbarService.showSnackbar(
+            message: response['message'] ?? 'Failed to update profile',
+            duration: const Duration(seconds: 2),
+          );
+        }
+        return response;
       }
-
-      return {'success': success};
     } catch (e) {
       _snackbarService.showSnackbar(
         message: 'An error occurred while updating profile',
         duration: const Duration(seconds: 2),
       );
-      return {'success': false};
+      return {'success': false, 'message': e.toString()};
     } finally {
       setBusy(false);
     }
@@ -130,7 +174,6 @@ class EditProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
       return errorWidget ??
           const Icon(Icons.person, size: 40, color: Colors.grey);
     }
-    print('Image Path: $profilePictureUrl');
     return _imageService.getProfileImageWidget(
       imageUrl: _imageService.getProfilePictureUrl(profilePictureUrl),
       width: 120,
