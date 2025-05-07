@@ -18,80 +18,93 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
     Widget? child,
   ) {
     return DefaultTabController(
-      length: 4,
+      length: 3,
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.background,
-        body: NestedScrollView(
-          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-            return <Widget>[
-              SliverAppBar(
-                title: Text(
-                  'Analytics & Reports',
-                  style: GoogleFonts.figtree(fontWeight: FontWeight.bold),
+        body: viewModel.isBusy
+            ? const Center(child: CircularProgressIndicator())
+            : NestedScrollView(
+                headerSliverBuilder:
+                    (BuildContext context, bool innerBoxIsScrolled) {
+                  return <Widget>[
+                    SliverAppBar(
+                      title: Text(
+                        'Analytics & Reports',
+                        style: GoogleFonts.figtree(fontWeight: FontWeight.bold),
+                      ),
+                      pinned: true,
+                      floating: true,
+                      forceElevated: innerBoxIsScrolled,
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        child: _buildTrainerProfileCard(viewModel),
+                      ),
+                    ),
+                    SliverPersistentHeader(
+                      delegate: _SliverAppBarDelegate(
+                        TabBar(
+                          tabAlignment: TabAlignment.start,
+                          indicatorColor: AppColors.primary,
+                          isScrollable: true,
+                          labelStyle: GoogleFonts.figtree(),
+                          labelColor: AppColors.primary,
+                          tabs: const [
+                            Tab(text: 'Overview'),
+                            Tab(text: 'Course Performance'),
+                            Tab(text: 'Revenue'),
+                            // Tab(text: 'Demographics'),
+                          ],
+                          onTap: viewModel.changeTab,
+                        ),
+                      ),
+                      pinned: true,
+                    ),
+                  ];
+                },
+                body: TabBarView(
+                  children: [
+                    _buildOverviewTab(viewModel, context),
+                    _buildCoursePerformanceTab(viewModel, context),
+                    _buildRevenueTab(viewModel, context),
+                    // _buildDemographicsTab(viewModel, context),
+                  ],
                 ),
-                pinned: true,
-                floating: true,
-                forceElevated: innerBoxIsScrolled,
               ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: _buildTrainerProfileCard(viewModel),
+        floatingActionButton: viewModel.isBusy || viewModel.isLoadingData
+            ? null // Hide FAB while loading
+            : FloatingActionButton.extended(
+                onPressed: viewModel.generateReport,
+                label: Row(
+                  children: [
+                    const Icon(
+                      Icons.download,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      viewModel.selectedReportFormat,
+                      style: GoogleFonts.figtree(color: Colors.white),
+                    ),
+                  ],
                 ),
+                backgroundColor: AppColors.primary,
               ),
-              SliverPersistentHeader(
-                delegate: _SliverAppBarDelegate(
-                  TabBar(
-                    tabAlignment: TabAlignment.start,
-                    indicatorColor: AppColors.primary,
-                    isScrollable: true,
-                    labelStyle: GoogleFonts.figtree(),
-                    labelColor: AppColors.primary,
-                    tabs: const [
-                      Tab(text: 'Overview'),
-                      Tab(text: 'Course Performance'),
-                      Tab(text: 'Revenue'),
-                      Tab(text: 'Demographics'),
-                    ],
-                    onTap: viewModel.changeTab,
-                  ),
-                ),
-                pinned: true,
-              ),
-            ];
-          },
-          body: TabBarView(
-            children: [
-              _buildOverviewTab(viewModel, context),
-              _buildCoursePerformanceTab(viewModel, context),
-              _buildRevenueTab(viewModel, context),
-              _buildDemographicsTab(viewModel, context),
-            ],
-          ),
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: viewModel.generateReport,
-          label: Row(
-            children: [
-              const Icon(
-                Icons.download,
-                color: Colors.white,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                viewModel.selectedReportFormat,
-                style: GoogleFonts.figtree(color: Colors.white),
-              ),
-            ],
-          ),
-          backgroundColor: AppColors.primary,
-        ),
       ),
     );
   }
 
   Widget _buildOverviewTab(
       TrainerAnalyticsViewModel viewModel, BuildContext context) {
+    if (viewModel.isLoadingData) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (viewModel.enrollmentData.isEmpty) {
+      return _buildNoDataAvailable();
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -103,7 +116,6 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
           const SizedBox(height: 24),
           _buildEnrollmentTrendsChart(viewModel),
           const SizedBox(height: 24),
-          _buildEngagementMetrics(viewModel),
         ],
       ),
     );
@@ -112,7 +124,39 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
   Widget _buildTrainerProfileCard(TrainerAnalyticsViewModel viewModel) {
     final user = viewModel.currentUser;
     if (user == null) {
-      return const SizedBox.shrink();
+      return Card(
+        elevation: 2,
+        margin: const EdgeInsets.only(bottom: 10),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.grey[200],
+                child: Icon(Icons.person,
+                    size: 30, color: Colors.white.withOpacity(0.7)),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Loading profile...',
+                      style: GoogleFonts.figtree(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return Card(
@@ -197,6 +241,14 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
 
   Widget _buildCoursePerformanceTab(
       TrainerAnalyticsViewModel viewModel, BuildContext context) {
+    if (viewModel.isLoadingData) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (viewModel.coursePerformanceData.isEmpty) {
+      return _buildNoDataAvailable();
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: viewModel.coursePerformanceData.length,
@@ -259,6 +311,17 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
 
   Widget _buildRevenueTab(
       TrainerAnalyticsViewModel viewModel, BuildContext context) {
+    if (viewModel.isLoadingData) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Fallback if no revenue data available
+    if (viewModel.revenue == null ||
+        viewModel.monthlyRevenueData.isEmpty ||
+        viewModel.revenueByCoursesData.isEmpty) {
+      return _buildNoDataAvailable();
+    }
+
     final revenue = viewModel.getRevenueSummary();
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -394,7 +457,17 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
 
   Widget _buildDemographicsTab(
       TrainerAnalyticsViewModel viewModel, BuildContext context) {
+    if (viewModel.isLoadingData) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     final demographics = viewModel.learnerDemographics;
+    if (demographics.isEmpty ||
+        demographics['ageGroups'] == null ||
+        demographics['backgrounds'] == null) {
+      return _buildNoDataAvailable();
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -411,6 +484,33 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
             demographics['backgrounds'],
             viewModel.demographicsColors,
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoDataAvailable() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.analytics_outlined, size: 80, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            'No data available',
+            style: GoogleFonts.figtree(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Data is being processed or not yet available',
+            style: GoogleFonts.figtree(
+              color: Colors.grey[500],
+            ),
+          )
         ],
       ),
     );
@@ -509,6 +609,20 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
     List<dynamic> data,
     List<Color> colors,
   ) {
+    if (data.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: Text(
+              'No $title data available',
+              style: GoogleFonts.figtree(color: Colors.grey[600]),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -534,7 +648,9 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          data[index]['group'] ?? data[index]['type'],
+                          data[index]['group'] ??
+                              data[index]['type'] ??
+                              'Unknown',
                           style: GoogleFonts.figtree(),
                         ),
                         Text(
@@ -548,7 +664,9 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
                       value: data[index]['percentage'] / 100,
                       backgroundColor: Colors.grey[200],
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        colors[index % colors.length],
+                        colors.isNotEmpty
+                            ? colors[index % colors.length]
+                            : Colors.blue,
                       ),
                     ),
                   ],
@@ -579,6 +697,36 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
   }
 
   Widget _buildEnrollmentTrendsChart(TrainerAnalyticsViewModel viewModel) {
+    if (viewModel.enrollmentData.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Enrollment Trends',
+                style: GoogleFonts.figtree(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 250,
+                child: Center(
+                  child: Text(
+                    'No enrollment data available',
+                    style: GoogleFonts.figtree(color: Colors.grey[600]),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -670,8 +818,10 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
                         BarChartRodData(
                           toY: (viewModel.enrollmentData[index]['count'] as int)
                               .toDouble(),
-                          color: viewModel.enrollmentChartColors[
-                              index % viewModel.enrollmentChartColors.length],
+                          color: viewModel.enrollmentChartColors.isNotEmpty
+                              ? viewModel.enrollmentChartColors[index %
+                                  viewModel.enrollmentChartColors.length]
+                              : Colors.blue,
                           width: 16,
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -691,45 +841,6 @@ class TrainerAnalyticsView extends StackedView<TrainerAnalyticsViewModel> {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEngagementMetrics(TrainerAnalyticsViewModel viewModel) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Engagement Metrics',
-              style: GoogleFonts.figtree(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...viewModel.courseEngagementData.map((metric) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        metric['metric'],
-                        style: GoogleFonts.figtree(),
-                      ),
-                      Text(
-                        metric['value'],
-                        style: GoogleFonts.figtree(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
           ],
         ),
       ),

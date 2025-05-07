@@ -253,6 +253,7 @@ class TrainerCoursesViewModel extends CourseBaseViewModel {
               requirements, level, duration, techStackIds) async {
             // Use the selected image or keep the cached one if no new image is selected
             _selectedImage = image ?? cachedImageFile;
+            print('Course ID: ${course.id}');
             await _updateCourse(
                 course.id,
                 title,

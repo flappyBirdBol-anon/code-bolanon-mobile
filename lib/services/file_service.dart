@@ -25,7 +25,7 @@ class FileService {
       {}; // Track file paths with extensions
 
   FileService({
-    this.baseUrl = 'http://codebolanon.commesr.io/api',
+    this.baseUrl = 'https://codebolanon.commesr.io/api',
     ApiService? apiService,
     Dio? dioo,
     this.enableCache = true,
@@ -35,7 +35,7 @@ class FileService {
 
   String getFileUrl(String fileName) {
     if (fileName.isEmpty) return '';
-    if (fileName.startsWith('http')) return fileName;
+    if (fileName.startsWith('https')) return fileName;
 
     final cleanName =
         fileName.startsWith('/') ? fileName.substring(1) : fileName;

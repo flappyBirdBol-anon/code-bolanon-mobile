@@ -110,13 +110,18 @@ class AppointmentService extends BaseViewModel {
   Future<List<AppointmentModel>> fetchAllAppointments() async {
     try {
       final response = await _apiService.get('/appointments');
-      final data = (response.data['data'] as List)
-          .map(
-              (item) => AppointmentModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-      return data;
+      // print('response' + response.data);
+      //if response.data is a list, return the list
+      //if "message" -> "No appointments found" return an empty list
+      if (response.data['message'] == 'No appointments found') {
+        return <AppointmentModel>[];
+      }
+      final rawData = response.data as Map<String, dynamic>;
+      final List<dynamic> dataList = rawData['data'] as List<dynamic>;
+      return dataList.map((item) => AppointmentModel.fromJson(item)).toList();
     } catch (e) {
-      throw Exception('Failed to fetch active appointments: $e');
+      print('Failed to fetch active appointmentsasdasdad: $e');
+      throw Exception('Failed to fetch active appointmentsasdasdad: $e');
     }
   }
 

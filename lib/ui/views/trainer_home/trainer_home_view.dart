@@ -17,6 +17,13 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:stacked/stacked.dart';
 
+// String extension for capitalize
+extension StringExtension on String {
+  String capitalize() {
+    return isNotEmpty ? '${this[0].toUpperCase()}${substring(1)}' : '';
+  }
+}
+
 class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
   const TrainerHomeView({Key? key}) : super(key: key);
 
@@ -88,8 +95,6 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                       const SizedBox(height: 32),
                       _buildUpcomingSessions(viewModel),
                       const SizedBox(height: 32),
-                      _buildRecentActivity(
-                          viewModel, theme, headingStyle, bodyStyle),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -193,8 +198,35 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
               ],
             ),
           ),
-          _headerIconButton(Icons.notifications_outlined,
-              () => viewModel.showNotifications()),
+          // Help/Support icon
+          Container(
+            margin: const EdgeInsets.only(left: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(
+                Icons.help_outline_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              onPressed: () => viewModel.openHelpSupport(),
+              padding: const EdgeInsets.all(8),
+              constraints: const BoxConstraints(),
+            ),
+          ),
           // _headerIconButton(Icons.search, () => viewModel.searchContent()),
         ],
       ),
@@ -710,26 +742,46 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
       TextStyle bodyStyle, TrainerHomeViewModel viewModel) {
     final isDark = theme.brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final accentColor = AppColors.primary;
+
+    // Filter out duplicate progress entries
+    final uniqueProgressData = <CourseProgressData>[];
+    for (final pd in viewModel.learnerProgressData) {
+      if (!uniqueProgressData.any((e) => e.courseId == pd.courseId)) {
+        uniqueProgressData.add(pd);
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Learners Progress", style: headingStyle),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                offset: const Offset(0, 4),
-                blurRadius: 12,
-                spreadRadius: 0,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Learners Progress", style: headingStyle),
+            TextButton.icon(
+              onPressed: () => viewModel.viewAllCourses(),
+              icon: const Icon(Icons.visibility_outlined, size: 16),
+              label: Text(
+                "View All",
+                style: GoogleFonts.figtree(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: accentColor,
+                ),
               ),
-            ],
-          ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
           child: viewModel.isLoading
               ? _buildProgressSkeleton()
               : viewModel.hasNoProgress
@@ -742,134 +794,293 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
                       onActionPressed: () => viewModel.createNewCourse(),
                       isDark: isDark,
                     )
-                  : Column(
-                      children: [
-                        _buildProgressItem(
-                          "JavaScript Fundamentals",
-                          0.78,
-                          "78% of learners completed",
-                          AppColors.primary,
-                          theme,
-                          bodyStyle,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildProgressItem(
-                          "React Components",
-                          0.45,
-                          "45% of learners completed",
-                          AppColors.primary,
-                          theme,
-                          bodyStyle,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildProgressItem(
-                          "API Integration",
-                          0.32,
-                          "32% of learners completed",
-                          AppColors.primary,
-                          theme,
-                          bodyStyle,
-                        ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () => viewModel.viewAllCourses(),
-                            child: Text(
-                              "View All Courses",
-                              style: bodyStyle.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            offset: const Offset(0, 4),
+                            blurRadius: 12,
+                            spreadRadius: 0,
                           ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Column(
+                          children: [
+                            ...uniqueProgressData
+                                .take(3) // Show top 3 courses
+                                .map((progressData) {
+                              // Find the actual course for thumbnail
+                              final course = viewModel.courseList.firstWhere(
+                                (course) => course.id == progressData.courseId,
+                                orElse: () => CourseModel(
+                                  id: progressData.courseId,
+                                  title: progressData.courseTitle,
+                                  description: '',
+                                  thumbnail: '',
+                                  price: 0,
+                                  rating: 0,
+                                  lessons: 0,
+                                  studentsEnrolled: 0,
+                                  level: '',
+                                  stacks: [],
+                                ),
+                              );
+                              return _buildEnhancedProgressItem(
+                                progressData,
+                                course,
+                                theme,
+                                bodyStyle,
+                                viewModel,
+                              );
+                            }).toList(),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
         ),
       ],
     );
   }
 
-  Widget _buildProgressSkeleton() {
-    return Shimmer.fromColors(
-      period: const Duration(milliseconds: 2000), // Increased duration
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      direction: ShimmerDirection.ltr, // Added direction
-      enabled: true, // Explicitly enable shimmer
-      child: Column(
-        children: List.generate(
-          3,
-          (index) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 180,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(4),
-                ),
+  Widget _buildEnhancedProgressItem(
+      CourseProgressData progressData,
+      CourseModel course,
+      ThemeData theme,
+      TextStyle bodyStyle,
+      TrainerHomeViewModel viewModel) {
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.grey[800];
+    final accentColor = AppColors.primary;
+
+    // Use only primary color for progress indicators
+    final progressColor = AppColors.primary;
+
+    return InkWell(
+      onTap: () {
+        viewModel.navigateToCourseDetails(course);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Course thumbnail
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 70,
+                height: 70,
+                color: Colors.grey[200],
+                child: course.thumbnail.isNotEmpty
+                    ? _buildCourseImage(viewModel, course)
+                    : Container(
+                        color: progressColor.withOpacity(0.2),
+                        child: Center(
+                          child: Icon(
+                            Icons.school,
+                            color: progressColor,
+                            size: 32,
+                          ),
+                        ),
+                      ),
               ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(3),
-                ),
+            ),
+            const SizedBox(width: 16),
+            // Course details and progress
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          progressData.courseTitle,
+                          style: GoogleFonts.figtree(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: textColor,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: progressColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          "${(progressData.progressPercentage * 100).toStringAsFixed(0)}%",
+                          style: GoogleFonts.figtree(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: progressColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Learners enrolled indicator
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.people_outline,
+                        size: 12,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${course.studentsEnrolled} learners enrolled',
+                        style: GoogleFonts.figtree(
+                          fontSize: 10,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Stack(
+                      children: [
+                        // Background container
+                        Container(
+                          height: 8,
+                          width: double.infinity,
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
+                        ),
+                        // Progress indicator with animated fill
+                        TweenAnimationBuilder<double>(
+                          tween: Tween<double>(
+                              begin: 0, end: progressData.progressPercentage),
+                          duration: const Duration(milliseconds: 1000),
+                          curve: Curves.easeOutQuart,
+                          builder: (context, value, child) {
+                            return Container(
+                              height: 8,
+                              width: MediaQuery.of(context).size.width * value,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    progressColor.withOpacity(0.7),
+                                    progressColor,
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            size: 12,
+                            color: progressColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            "${progressData.completedLessonsCount} of ${progressData.totalLessonsCount} completed",
+                            style: GoogleFonts.figtree(
+                              fontSize: 12,
+                              color:
+                                  isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 6),
-              Container(
-                width: 120,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCourseImage(TrainerHomeViewModel viewModel, CourseModel course) {
+    return viewModel.getCourseImageWidget(
+      course: course,
+      width: 70,
+      height: 70,
+      fit: BoxFit.cover,
+      placeholder: Container(
+        width: 70,
+        height: 70,
+        color: Colors.grey[300],
+        child: const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.primary,
+          ),
+        ),
+      ),
+      errorWidget: Container(
+        width: 70,
+        height: 70,
+        color: Colors.grey[300],
+        child: const Center(
+          child: Icon(
+            Icons.broken_image_rounded,
+            color: Colors.grey,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildProgressItem(String title, double progress, String subtitle,
-      Color color, ThemeData theme, TextStyle bodyStyle) {
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: bodyStyle.copyWith(
-            fontWeight: FontWeight.w500,
-            color: isDark ? Colors.white : Colors.grey[800],
+  Widget _buildProgressSkeleton() {
+    return Shimmer.fromColors(
+      period: const Duration(milliseconds: 2000),
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      direction: ShimmerDirection.ltr,
+      enabled: true,
+      child: Column(
+        children: List.generate(
+          3,
+          (index) => Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
         ),
-        const SizedBox(height: 8),
-        LinearPercentIndicator(
-          lineHeight: 6,
-          percent: progress,
-          backgroundColor: isDark ? Colors.grey[700] : Colors.grey[200],
-          progressColor: color,
-          barRadius: const Radius.circular(10),
-          padding: EdgeInsets.zero,
-        ),
-        const SizedBox(height: 6),
-        Text(
-          subtitle,
-          style: bodyStyle.copyWith(
-            fontSize: 12,
-            color: isDark ? Colors.grey[400] : Colors.grey[600],
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -1026,83 +1237,6 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
     );
   }
 
-  Widget _buildRecentActivity(TrainerHomeViewModel viewModel, ThemeData theme,
-      TextStyle headingStyle, TextStyle bodyStyle) {
-    final isDark = theme.brightness == Brightness.dark;
-    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Recent Activity", style: headingStyle),
-        const SizedBox(height: 16),
-        Container(
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                offset: const Offset(0, 4),
-                blurRadius: 12,
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: viewModel.isLoading
-                ? ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: 3,
-                    separatorBuilder: (context, index) =>
-                        const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      return CustomListItem(
-                        text: '',
-                        onPressed: () {},
-                        isLoading: true,
-                        useTileStyle: true,
-                      );
-                    },
-                  )
-                : viewModel.hasNoActivities
-                    ? Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: EmptyStateWidget(
-                          animationPath: PngImages.recentAnim,
-                          title: 'No Recent Activity',
-                          description:
-                              'Your recent activities will appear here',
-                          animationSize: 150,
-                          isDark: isDark,
-                        ),
-                      )
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: viewModel.recentActivities.length,
-                        separatorBuilder: (context, index) =>
-                            const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final activity = viewModel.recentActivities[index];
-                          return CustomListItem(
-                            text: activity.title,
-                            subtitle: activity.timestamp,
-                            leadingIcon: activity.icon,
-                            onPressed: () =>
-                                viewModel.openActivity(activity.id),
-                            useTileStyle: true,
-                          );
-                        },
-                      ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildActivitySkeleton() {
     return Shimmer.fromColors(
       period: const Duration(milliseconds: 2000),
@@ -1171,140 +1305,386 @@ class TrainerHomeView extends StackedView<TrainerHomeViewModel> {
   }
 
   Widget _buildUpcomingSessions(TrainerHomeViewModel viewModel) {
-    // final isDark = Theme.of(viewModel.navigationService.navigatorKey.currentContext!).brightness == Brightness.dark;
+    // Get context safely and determine if we're in dark mode
+    final navigatorKey = viewModel.navigationService.navigatorKey;
+    final context = navigatorKey?.currentContext;
+    final isDark =
+        context != null && Theme.of(context).brightness == Brightness.dark;
+    final accentColor = AppColors.primary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Upcoming Appointments",
-          style: GoogleFonts.figtree(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Upcoming Appointments",
+              style: GoogleFonts.figtree(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => viewModel.openAppointment(),
+              icon: const Icon(Icons.event, size: 16, color: AppColors.primary),
+              label: Text(
+                "Schedule",
+                style: GoogleFonts.figtree(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
-        viewModel.isLoading
-            ? ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: 2,
-                itemBuilder: (context, index) => CustomAppointmentList(
-                  contextDetails: 'Flutter Debugging',
-                  startAt: 'Today at 3:00 PM',
-                  endAt: '4:00 PM',
-                  learnersEnrolled: 5,
-                  onTap: () {}, // Fixed null callback
-                  isLoading: true,
-                ),
-              )
-            : viewModel.hasNoSessions
-                ? EmptyStateWidget(
-                    animationPath: PngImages.sessionAnim,
-                    title: 'No Upcoming Appointments',
-                    description:
-                        'Schedule your first appointment with learners',
-                    buttonText: 'Schedule appointments',
-                    onActionPressed: () => viewModel.openAppointment(),
-                    animationSize: 180,
-                    isDark: false,
-                  )
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: viewModel.upcomingAppointments.length,
-                    itemBuilder: (context, index) {
-                      final appointment = viewModel.upcomingAppointments[index];
-                      return CustomAppointmentList(
-                        contextDetails: appointment.contextDetails,
-                        startAt: appointment.startAt.toString(),
-                        endAt: appointment.endAt.toString(),
-                        learnersEnrolled: 23, // Get actual data from your model
-                        isTrainerView: true, // Specify trainer view
-                        onTap: () =>
-                            viewModel.openSession(appointment.id.toString()),
-                      );
-                    },
-                  ),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          child: viewModel.isLoading
+              ? _buildAppointmentSkeletons(2)
+              : viewModel.hasNoSessions
+                  ? EmptyStateWidget(
+                      animationPath: PngImages.sessionAnim,
+                      title: 'No Upcoming Appointments',
+                      description:
+                          'Schedule your first appointment with learners',
+                      buttonText: 'Schedule appointments',
+                      onActionPressed: () => viewModel.openAppointment(),
+                      animationSize: 180,
+                      isDark: isDark,
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            offset: const Offset(0, 4),
+                            blurRadius: 12,
+                            spreadRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          ...viewModel.upcomingAppointments.map((appointment) {
+                            // Format the dates for display
+                            final startDate = appointment.startAt;
+                            final endDate = appointment.endAt;
+
+                            // Format for "Today/Tomorrow/Monday at 3:00 PM" style
+                            final now = DateTime.now();
+                            final today =
+                                DateTime(now.year, now.month, now.day);
+                            final tomorrow = today.add(const Duration(days: 1));
+                            final startDay = DateTime(
+                                startDate.year, startDate.month, startDate.day);
+
+                            String dayString;
+                            if (startDay.isAtSameMomentAs(today)) {
+                              dayString = "Today";
+                            } else if (startDay.isAtSameMomentAs(tomorrow)) {
+                              dayString = "Tomorrow";
+                            } else {
+                              dayString = DateFormat('EEEE, MMM d')
+                                  .format(startDate); // e.g. "Monday, Jan 15"
+                            }
+
+                            final startTimeString = DateFormat('h:mm a')
+                                .format(startDate); // e.g. "3:00 PM"
+                            final endTimeString = DateFormat('h:mm a')
+                                .format(endDate); // e.g. "4:00 PM"
+
+                            // Calculate time remaining
+                            final Duration timeUntil =
+                                startDate.difference(now);
+                            final bool isUpcoming = timeUntil.inMinutes > 0;
+                            String timeRemaining = '';
+                            Color statusColor = const Color(
+                                0xFF3ED598); // Default green for upcoming
+                            IconData statusIcon = Icons.access_time;
+
+                            if (isUpcoming) {
+                              if (timeUntil.inDays > 0) {
+                                timeRemaining =
+                                    '${timeUntil.inDays}d remaining';
+                                statusIcon = Icons.calendar_today;
+                              } else if (timeUntil.inHours > 0) {
+                                timeRemaining =
+                                    '${timeUntil.inHours}h remaining';
+                                statusIcon = Icons.hourglass_top;
+                              } else {
+                                timeRemaining =
+                                    '${timeUntil.inMinutes}m remaining';
+                                statusColor =
+                                    const Color(0xFFFE7F4D); // Orange for soon
+                                statusIcon = Icons.timer;
+                              }
+                            } else {
+                              // Check if in progress
+                              if (endDate.isAfter(now)) {
+                                timeRemaining = 'In progress';
+                                statusColor = AppColors
+                                    .primary; // App primary for in progress
+                                statusIcon = Icons.play_circle_outline;
+                              } else {
+                                timeRemaining = 'Completed';
+                                statusColor = Colors.grey;
+                                statusIcon = Icons.check_circle_outline;
+                              }
+                            }
+
+                            return _buildEnhancedAppointmentItem(
+                              context:
+                                  appointment.contextDetails ?? 'Appointment',
+                              dayAndStart: '$dayString at $startTimeString',
+                              endTime: endTimeString,
+                              timeRemaining: timeRemaining,
+                              statusColor: statusColor,
+                              statusIcon: statusIcon,
+                              theme: Theme.of(context!),
+                              onTap: () => viewModel
+                                  .openSession(appointment.id.toString()),
+                              appointmentType: _getAppointmentType(
+                                  appointment.contextDetails ?? ''),
+                            );
+                          }).toList(),
+                        ],
+                      ),
+                    ),
+        ),
       ],
     );
   }
 
-  Widget _buildAttendeeIndicator() {
-    return SizedBox(
-      width: 70,
-      height: 28, // Fixed height to avoid layout issues
-      child: Stack(
-        children: [
-          for (int i = 0; i < 3; i++)
-            Positioned(
-              left: i * 18.0,
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white, width: 2),
-                  borderRadius: BorderRadius.circular(14),
-                  image: DecorationImage(
-                    image: AssetImage([
-                      PngImages.image1,
-                      PngImages.image2,
-                      PngImages.image3
-                    ][i]),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
-          Positioned(
-            left: 3 * 18.0,
-            child: Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: Colors.indigo[400],
-                border: Border.all(color: Colors.white, width: 2),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Center(
-                child: Text(
-                  '+21',
-                  style: GoogleFonts.figtree(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+  String _getAppointmentType(String contextDetails) {
+    final normalizedContext = contextDetails.toLowerCase();
+    if (normalizedContext.contains('debug') ||
+        normalizedContext.contains('fixing')) {
+      return 'debugging';
+    } else if (normalizedContext.contains('review') ||
+        normalizedContext.contains('feedback')) {
+      return 'review';
+    } else if (normalizedContext.contains('guidance') ||
+        normalizedContext.contains('help')) {
+      return 'guidance';
+    } else if (normalizedContext.contains('interview') ||
+        normalizedContext.contains('career')) {
+      return 'interview';
+    } else {
+      return 'general';
+    }
+  }
+
+  Widget _buildEnhancedAppointmentItem({
+    required String context,
+    required String dayAndStart,
+    required String endTime,
+    required String timeRemaining,
+    required Color statusColor,
+    required IconData statusIcon,
+    required ThemeData theme,
+    required VoidCallback onTap,
+    required String appointmentType,
+  }) {
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.grey[800];
+
+    // Define appointment type icons
+    final Map<String, IconData> typeIcons = {
+      'debugging': Icons.bug_report,
+      'review': Icons.rate_review,
+      'guidance': Icons.help_outline,
+      'interview': Icons.work_outline,
+      'general': Icons.event_note,
+    };
+
+    // Define appointment type colors
+    final Map<String, Color> typeColors = {
+      'debugging': const Color(0xFFE74C3C), // Red for debugging
+      'review': const Color(0xFFF39C12), // Yellow for review
+      'guidance': AppColors.primary, // App primary for guidance
+      'interview': const Color(0xFF9B59B6), // Purple for interview
+      'general': const Color(0xFF3498DB), // Blue for general
+    };
+
+    final typeIcon = typeIcons[appointmentType] ?? Icons.event_note;
+    final typeColor = typeColors[appointmentType] ?? AppColors.primary;
+
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+              width: 1,
             ),
           ),
-        ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Time indicator with appointment type
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    typeColor.withOpacity(0.7),
+                    typeColor,
+                  ],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: typeColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                typeIcon,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Appointment details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context,
+                    style: GoogleFonts.figtree(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        dayAndStart,
+                        style: GoogleFonts.figtree(
+                          fontSize: 13,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        " - $endTime",
+                        style: GoogleFonts.figtree(
+                          fontSize: 13,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Appointment type indicator
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: typeColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: typeColor.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      appointmentType.capitalize(),
+                      style: GoogleFonts.figtree(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: typeColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Status indicator
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    statusIcon,
+                    size: 12,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    timeRemaining,
+                    style: GoogleFonts.figtree(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildCourseImage(TrainerHomeViewModel viewModel, CourseModel course) {
-    return viewModel.getCourseImageWidget(
-      course: course,
-      fit: BoxFit.cover,
-      placeholder: Container(
-        color: Colors.grey[200],
-        child: const Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
+  Widget _buildAppointmentSkeletons(int count) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: count,
+      itemBuilder: (context, index) {
+        return Shimmer.fromColors(
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            height: 90,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
-        ),
-      ),
-      errorWidget: Container(
-        color: Colors.grey[300],
-        child: const Center(
-          child: Icon(
-            Icons.image_not_supported,
-            size: 40,
-            color: Colors.grey,
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 

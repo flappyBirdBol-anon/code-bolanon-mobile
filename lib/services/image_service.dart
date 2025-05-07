@@ -81,7 +81,7 @@ class ImageService {
   /// Constructs the full image URL from a relative path
   String getImageUrl(String imagePath) {
     if (imagePath.isEmpty) return '';
-    if (imagePath.startsWith('http')) return imagePath;
+    if (imagePath.startsWith('https')) return imagePath;
 
     // Ensure path has no leading slash
     final cleanPath =
@@ -92,7 +92,8 @@ class ImageService {
   /// Gets the course thumbnail URL from a path
   String getCourseThumbnailFromPath(String thumbnailPath) {
     if (thumbnailPath.isEmpty) return '';
-    if (thumbnailPath.startsWith('http') || thumbnailPath.startsWith('https')) {
+    if (thumbnailPath.startsWith('https') ||
+        thumbnailPath.startsWith('https')) {
       return thumbnailPath;
     }
     if (thumbnailPath.startsWith('assets/')) {
@@ -308,7 +309,7 @@ class ImageService {
   // Optimized image provider to use with CachedNetworkImage
   ImageProvider getOptimizedImageProvider(String imageUrl, {String? courseId}) {
     final fullUrl =
-        imageUrl.startsWith('http') ? imageUrl : getImageUrl(imageUrl);
+        imageUrl.startsWith('https') ? imageUrl : getImageUrl(imageUrl);
 
     return CachedNetworkImageProvider(
       fullUrl,
@@ -666,7 +667,7 @@ class ImageService {
   /// Gets the profile picture URL from a path
   String getProfilePictureUrl(String imagePath) {
     if (imagePath.isEmpty) return '';
-    if (imagePath.startsWith('http')) return imagePath;
+    if (imagePath.startsWith('https')) return imagePath;
     if (imagePath.startsWith('assets/')) return imagePath;
     if (imagePath.startsWith('/data/') || imagePath.startsWith('file://')) {
       return imagePath.replaceAll('file://', '');

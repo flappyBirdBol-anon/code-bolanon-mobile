@@ -6,9 +6,9 @@ class Transactions {
   final String status;
   final String? paymentMethod;
   final String? mode;
-  String? availabilityId;
+  int? availabilityId;
   final int? userId;
-  final int? courseId;
+  final String? courseId;
   final DateTime? updatedAt;
   final DateTime? createdAt;
 
@@ -69,9 +69,9 @@ class Transactions {
     String? status,
     String? paymentMethod,
     String? mode,
-    String? availabilityId,
+    int? availabilityId,
     int? userId,
-    int? courseId,
+    String? courseId,
     DateTime? updatedAt,
     DateTime? createdAt,
   }) {

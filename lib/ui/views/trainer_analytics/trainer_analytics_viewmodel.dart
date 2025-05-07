@@ -27,15 +27,11 @@ class TrainerAnalyticsViewModel extends BaseViewModel {
     'enrollment',
     'performance',
     'revenue',
-    'demographics',
-    'engagement'
   ];
   final Map<String, String> metricLabels = {
     'enrollment': 'Enrollment Data',
     'performance': 'Course Performance',
     'revenue': 'Revenue Metrics',
-    'demographics': 'Demographics',
-    'engagement': 'Engagement Metrics'
   };
   Set<String> selectedMetrics = {};
 
@@ -74,26 +70,66 @@ class TrainerAnalyticsViewModel extends BaseViewModel {
   DateTime? startDate;
   DateTime? endDate;
 
+  bool isLoadingData = true;
+
   TrainerAnalyticsViewModel() {
     initialize();
   }
 
   Future<void> initialize() async {
     setBusy(true);
+    isLoadingData = true;
 
-    // Fetch user data if not already available
+    await _loadUserData();
+    await _loadAnalyticsData();
+
+    isLoadingData = false;
+    setBusy(false);
+  }
+
+  Future<void> _loadUserData() async {
+    // Fetch user data
     if (currentUser == null) {
       await _userService.fetchUserProfile();
     }
 
-    _generateRevenueChartData();
-    // Get tech stacks for the current trainer (in a real app, would be from the backend)
-    _loadTrainerTechStacks();
+    // Default date range (last 12 months)
+    endDate = DateTime.now();
+    startDate = DateTime(endDate!.year - 1, endDate!.month, endDate!.day);
 
-    // Fetch all analytics data
-    enrollmentData = _analyticsService.getEnrollmentData();
-    coursePerformanceData = _analyticsService.getCoursePerformanceData();
-    revenueMetrics = _analyticsService.getRevenueMetrics();
+    _loadTrainerTechStacks();
+  }
+
+  Future<void> _loadAnalyticsData() async {
+    // Fetch analytics within date range
+    enrollmentData = await _analyticsService.getEnrollmentData(
+      startDate: startDate,
+      endDate: endDate,
+    );
+
+    coursePerformanceData = await _analyticsService.getCoursePerformanceData(
+      startDate: startDate,
+      endDate: endDate,
+    );
+
+    revenueMetrics = await _analyticsService.getRevenueMetrics(
+      startDate: startDate,
+      endDate: endDate,
+    );
+
+    monthlyRevenueData = (revenueMetrics['monthlyData'] as List)
+        .map((e) => {
+              'month': e['month'],
+              'revenue': e['revenue'],
+              'trend': e['revenue'],
+            })
+        .toList();
+
+    revenueByCoursesData = await _analyticsService.getRevenueByCourse(
+      startDate: startDate,
+      endDate: endDate,
+    );
+
     learnerDemographics = _analyticsService.getLearnerDemographics();
     courseEngagementData = _analyticsService.getCourseEngagementData();
 
@@ -103,60 +139,25 @@ class TrainerAnalyticsViewModel extends BaseViewModel {
     coursePerformanceColors =
         _analyticsService.generateChartColors(coursePerformanceData.length);
     demographicsColors = _analyticsService
-        .generateChartColors(learnerDemographics['ageGroups'].length);
-
-    // Set default date range (last 12 months)
-    endDate = DateTime.now();
-    startDate = DateTime(endDate!.year - 1, endDate!.month, endDate!.day);
+        .generateChartColors(learnerDemographics['ageGroups']?.length ?? 0);
 
     revenue = await _analyticsService.totalRevenue();
-    setBusy(false);
+    notifyListeners();
   }
 
   // Load tech stacks for the current trainer
   void _loadTrainerTechStacks() {
-    // In a real app, these would come from the user profile or a separate endpoint
-    // For now, we're hardcoding some example tech stacks
-    if (currentUser != null) {
-      switch (currentUser!.specialization) {
-        case 'Mobile Development':
-          trainerStacks = ['Flutter', 'React Native', 'iOS', 'Android'];
-          break;
-        case 'Web Development':
-          trainerStacks = ['React', 'Angular', 'Vue.js', 'Node.js'];
-          break;
-        case 'Backend Development':
-          trainerStacks = ['PHP', 'Node.js', 'Python', 'Java'];
-          break;
-        case 'Data Science':
-          trainerStacks = ['Python', 'R', 'Tableau', 'SQL'];
-          break;
-        default:
-          trainerStacks = ['Flutter', 'Dart', 'Firebase', 'Git'];
-      }
+    // Load tech stacks assigned to the trainer from their profile
+    if (currentUser != null &&
+        currentUser!.stacks != null &&
+        currentUser!.stacks!.isNotEmpty) {
+      trainerStacks = currentUser!.stacks!
+          .where((s) => s.stack != null)
+          .map((s) => s.stack!.tags)
+          .toList();
+    } else {
+      trainerStacks = [];
     }
-  }
-
-  // Generate data for revenue charts
-  void _generateRevenueChartData() {
-    // Monthly revenue data for the line chart
-    monthlyRevenueData = [
-      {'month': 'Jan', 'revenue': 2500, 'trend': 2500},
-      {'month': 'Feb', 'revenue': 3200, 'trend': 3000},
-      {'month': 'Mar', 'revenue': 3100, 'trend': 3300},
-      {'month': 'Apr', 'revenue': 4100, 'trend': 3600},
-      {'month': 'May', 'revenue': 3800, 'trend': 3900},
-      {'month': 'Jun', 'revenue': 5200, 'trend': 4200},
-    ];
-
-    // Revenue by course for pie chart
-    revenueByCoursesData = [
-      {'courseName': 'Flutter Masterclass', 'revenue': 5200},
-      {'courseName': 'React Native Basics', 'revenue': 3100},
-      {'courseName': 'Advanced Dart', 'revenue': 2400},
-      {'courseName': 'Firebase Integration', 'revenue': 1800},
-      {'courseName': 'UI/UX Design', 'revenue': 1500},
-    ];
   }
 
   Future<void> generateReport() async {
@@ -226,10 +227,19 @@ class TrainerAnalyticsViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  void setDateRange(DateTime? start, DateTime? end) {
+  Future<void> setDateRange(DateTime? start, DateTime? end) async {
     if (start != null && end != null) {
       startDate = start;
       endDate = end;
+
+      isLoadingData = true;
+      setBusy(true);
+
+      // Re-fetch analytics within new date range
+      await _loadAnalyticsData();
+
+      isLoadingData = false;
+      setBusy(false);
       notifyListeners();
     }
   }

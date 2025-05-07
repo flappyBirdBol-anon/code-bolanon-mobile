@@ -3,10 +3,14 @@ import 'package:code_bolanon/app/app.router.dart';
 import 'package:code_bolanon/app/app_base_view_model.dart';
 import 'package:code_bolanon/models/appointment_model.dart';
 import 'package:code_bolanon/models/course_model.dart';
+import 'package:code_bolanon/models/lessons_model.dart';
 import 'package:code_bolanon/models/tech_stack_model.dart';
 import 'package:code_bolanon/models/transactions_model.dart';
+import 'package:code_bolanon/services/appointment_service.dart';
+import 'package:code_bolanon/services/completed_lesson_service.dart';
 import 'package:code_bolanon/services/course_service.dart';
 import 'package:code_bolanon/services/image_service.dart';
+import 'package:code_bolanon/services/lesson_service.dart';
 import 'package:code_bolanon/services/transactions_service.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -34,9 +38,15 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   final _imageService = locator<ImageService>();
   final _navigationService = locator<NavigationService>();
   final _transactionService = locator<TransactionsService>();
+  final _appointmentService = locator<AppointmentService>();
+  final _completedLessonService = locator<CompletedLessonService>();
 
   final List<AppointmentModel> _upcomingAppointments = [];
   List<AppointmentModel> get upcomingAppointments => _upcomingAppointments;
+
+  // Store learner progress data
+  final List<CourseProgressData> _learnerProgressData = [];
+  List<CourseProgressData> get learnerProgressData => _learnerProgressData;
 
   List<String> getCourseTags(CourseModel course) =>
       course.stacks.map((e) => e).toList();
@@ -98,12 +108,89 @@ class TrainerHomeViewModel extends AppBaseViewModel {
               previousValue + double.parse(transaction.amount));
       totalRevenue = double.parse(totalRevenue.toStringAsFixed(3));
 
+      // Fetch upcoming appointments
+      await _fetchUpcomingAppointments();
+
+      // Fetch learner progress data
+      await _fetchLearnerProgressData();
+
       notifyListeners();
     } catch (e) {
       _showErrorMessage('Failed to load courses: ${e.toString()}');
     } finally {
       setBusy(false);
       notifyListeners();
+    }
+  }
+
+  Future<void> _fetchUpcomingAppointments() async {
+    try {
+      final appointments = await _appointmentService.fetchAllAppointments();
+      // Filter for upcoming appointments only (those in the future)
+      final now = DateTime.now();
+      _upcomingAppointments.clear();
+      _upcomingAppointments.addAll(appointments
+          .where((appointment) => appointment.startAt.isAfter(now))
+          .toList());
+      // Sort by start time
+      _upcomingAppointments.sort((a, b) => a.startAt.compareTo(b.startAt));
+      // Limit to the next 5 appointments
+      if (_upcomingAppointments.length > 5) {
+        _upcomingAppointments.removeRange(5, _upcomingAppointments.length);
+      }
+    } catch (e) {
+      debugPrint('Error fetching appointments: $e');
+    }
+  }
+
+  Future<void> _fetchLearnerProgressData() async {
+    try {
+      _learnerProgressData.clear();
+
+      // For each course, calculate learner completion rate based on enrollments
+      for (final course in _courses) {
+        final lessonService = locator<LessonsService>();
+        final courseLessons =
+            await lessonService.getLessons(courseId: course.id);
+        if (courseLessons.isEmpty) continue;
+
+        // Fetch all completed lessons for this course
+        await _completedLessonService.fetchCompletedLessons(
+            courseId: course.id);
+        final allCompleted = _completedLessonService.completedLessons;
+
+        // Total learners enrolled in the course
+        final totalLearners = course.studentsEnrolled;
+        if (totalLearners == 0) continue;
+
+        // Group completed lessons by registrationId
+        final Map<String, List<dynamic>> byRegistration = {};
+        for (var cl in allCompleted) {
+          byRegistration.putIfAbsent(cl.registrationId, () => []).add(cl);
+        }
+
+        // Count learners who have completed all lessons
+        final learnersCompleted = byRegistration.values
+            .where((list) => list.length >= courseLessons.length)
+            .length;
+
+        final progressPercentage = learnersCompleted / totalLearners;
+
+        // Add progress data: number of learners completed vs total enrolled
+        _learnerProgressData.add(CourseProgressData(
+          courseId: course.id,
+          courseTitle: course.title,
+          progressPercentage: progressPercentage,
+          completedLessonsCount: learnersCompleted,
+          totalLessonsCount: totalLearners,
+        ));
+      }
+
+      // Sort by progress percentage (descending)
+      _learnerProgressData
+          .sort((a, b) => b.progressPercentage.compareTo(a.progressPercentage));
+    } catch (e) {
+      debugPrint('Error fetching learner progress: $e');
     }
   }
 
@@ -175,6 +262,12 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   void showNotifications() {
     debugPrint('Showing notifications');
     // Implement notification logic or navigation
+  }
+
+  void openHelpSupport() {
+    debugPrint('Opening help and support');
+    // Navigate to settings view since there's no dedicated help/support view
+    _navigationService.navigateTo(Routes.settingsView);
   }
 
   void searchContent() {
@@ -273,11 +366,12 @@ class TrainerHomeViewModel extends AppBaseViewModel {
     isLoading = true; // Changed from setLoading(true)
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 2));
-
     try {
-      //_upcomingAppointments = AppointmentModel.getMockAppointments();
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Fetch appointments
+      await _fetchUpcomingAppointments();
+
+      // Fetch learner progress data
+      await _fetchLearnerProgressData();
     } catch (e) {
       debugPrint('Error refreshing data: $e');
     } finally {
@@ -346,7 +440,7 @@ class TrainerHomeViewModel extends AppBaseViewModel {
   bool get hasNoCourses => courseList.isEmpty && !isLoading;
   bool get hasNoSessions => upcomingAppointments.isEmpty && !isLoading;
   bool get hasNoActivities => recentActivities.isEmpty && !isLoading;
-  bool get hasNoProgress => activeLearners == 0 && !isLoading;
+  bool get hasNoProgress => learnerProgressData.isEmpty && !isLoading;
 }
 
 class RecentActivity {
@@ -361,4 +455,26 @@ class RecentActivity {
     required this.timestamp,
     required this.icon,
   });
+}
+
+class CourseProgressData {
+  final String courseId;
+  final String courseTitle;
+  final double progressPercentage;
+  final int completedLessonsCount;
+  final int totalLessonsCount;
+
+  CourseProgressData({
+    required this.courseId,
+    required this.courseTitle,
+    required this.progressPercentage,
+    required this.completedLessonsCount,
+    required this.totalLessonsCount,
+  });
+
+  String get progressText =>
+      '$completedLessonsCount of $totalLessonsCount lessons completed';
+
+  String get percentageText =>
+      '${(progressPercentage * 100).toStringAsFixed(0)}% of learners completed';
 }

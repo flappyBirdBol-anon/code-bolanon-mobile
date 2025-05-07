@@ -15,8 +15,7 @@ class TransactionsService with ListenableServiceMixin {
   }
   Future<List<Transactions>> getTransactions() async {
     try {
-      final Response response = await _apiService.get('/transactions');
-
+      final response = await _apiService.get('/transactions');
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         return data.map((json) => Transactions.fromJson(json)).toList();
@@ -25,7 +24,7 @@ class TransactionsService with ListenableServiceMixin {
             'Failed to load transactions: Status Code ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Failed to load transactions: $e');
+      throw Exception('Failed to load transactionshgghdssg: $e');
     }
   }
 

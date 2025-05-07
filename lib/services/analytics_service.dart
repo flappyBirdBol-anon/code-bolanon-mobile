@@ -8,9 +8,18 @@ import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 import 'package:syncfusion_officechart/officechart.dart'; // Add this package to open the file
 import 'package:code_bolanon/services/transactions_service.dart';
+import 'package:code_bolanon/services/registration_service.dart';
+import 'package:code_bolanon/services/completed_lesson_service.dart';
+import 'package:code_bolanon/services/lesson_service.dart';
+import 'package:code_bolanon/services/course_service.dart';
+import 'package:code_bolanon/models/registration_model.dart';
 
 class AnalyticsService {
   final _transactionService = locator<TransactionsService>();
+  final _registrationService = locator<RegistrationService>();
+  final _completedLessonService = locator<CompletedLessonService>();
+  final _lessonsService = locator<LessonsService>();
+  final _courseService = locator<CourseService>();
 
   Transactions? transactions;
   // Get total revenue from transactions with 2 decimal places
@@ -27,81 +36,148 @@ class AnalyticsService {
     return double.parse(total.toStringAsFixed(2));
   }
 
-  // Mock data for learner enrollments
-  List<Map<String, dynamic>> getEnrollmentData() {
-    return [
-      {'month': 'Jan', 'count': 12},
-      {'month': 'Feb', 'count': 17},
-      {'month': 'Mar', 'count': 25},
-      {'month': 'Apr', 'count': 19},
-      {'month': 'May', 'count': 28},
-      {'month': 'Jun', 'count': 32},
-      {'month': 'Jul', 'count': 40},
-      {'month': 'Aug', 'count': 37},
-      {'month': 'Sep', 'count': 45},
-      {'month': 'Oct', 'count': 51},
-      {'month': 'Nov', 'count': 48},
-      {'month': 'Dec', 'count': 59},
-    ];
+  // Real data for learner enrollments
+  Future<List<Map<String, dynamic>>> getEnrollmentData(
+      {DateTime? startDate, DateTime? endDate}) async {
+    final allRegs = await _registrationService.getUserRegistrations();
+    final regs = allRegs.where((reg) {
+      if (startDate != null && reg.createdAt.isBefore(startDate)) return false;
+      if (endDate != null && reg.createdAt.isAfter(endDate)) return false;
+      return true;
+    }).toList();
+    final now = DateTime.now();
+    List<Map<String, dynamic>> result = [];
+    for (int i = 11; i >= 0; i--) {
+      final dt = DateTime(now.year, now.month - i, 1);
+      final key = DateFormat('MMM').format(dt);
+      final count = regs
+          .where((reg) =>
+              reg.createdAt.year == dt.year && reg.createdAt.month == dt.month)
+          .length;
+      result.add({'month': key, 'count': count});
+    }
+    return result;
   }
 
-  // Mock data for course performance
-  List<Map<String, dynamic>> getCoursePerformanceData() {
-    return [
-      {
-        'courseName': 'Flutter Fundamentals',
-        'rating': 4.8,
-        'completionRate': 82.0,
-        'learners': 120
-      },
-      {
-        'courseName': 'Advanced Dart Programming',
-        'rating': 4.5,
-        'completionRate': 75,
-        'learners': 85
-      },
-      {
-        'courseName': 'Mobile App Architecture',
-        'rating': 4.7,
-        'completionRate': 80.0,
-        'learners': 95
-      },
-      {
-        'courseName': 'UI/UX for Developers',
-        'rating': 4.9,
-        'completionRate': 88.0,
-        'learners': 110
-      },
-      {
-        'courseName': 'Firebase Integration',
-        'rating': 4.6,
-        'completionRate': 78.0,
-        'learners': 75
-      },
-    ];
+  // Real data for course performance
+  Future<List<Map<String, dynamic>>> getCoursePerformanceData(
+      {DateTime? startDate, DateTime? endDate}) async {
+    final allRegs = await _registrationService.getUserRegistrations();
+    final regs = allRegs.where((reg) {
+      if (startDate != null && reg.createdAt.isBefore(startDate)) return false;
+      if (endDate != null && reg.createdAt.isAfter(endDate)) return false;
+      return true;
+    }).toList();
+    final Map<String, List<RegistrationModel>> byCourse = {};
+    for (var reg in regs) {
+      final name = reg.course?.title ?? 'Unknown';
+      byCourse.putIfAbsent(name, () => []).add(reg);
+    }
+    List<Map<String, dynamic>> data = [];
+    for (var entry in byCourse.entries) {
+      final courseName = entry.key;
+      final regsList = entry.value;
+      final totalRegs = regsList.length;
+      final ratingSum = regsList.fold<double>(
+          0.0, (sum, r) => sum + (r.rating?.toDouble() ?? 0.0));
+      final avgRating = totalRegs > 0 ? ratingSum / totalRegs : 0.0;
+      final courseId = regsList.first.course?.id ?? '';
+      final lessons = await _lessonsService.getLessons(courseId: courseId);
+      final totalLessons = lessons.length;
+      double completionSum = 0.0;
+      for (var reg in regsList) {
+        await _completedLessonService.fetchCompletedLessons(
+            registrationId: reg.id);
+        final completedCount = _completedLessonService.completedLessons.length;
+        completionSum +=
+            totalLessons > 0 ? (completedCount / totalLessons * 100) : 0.0;
+      }
+      final avgCompletion = totalRegs > 0 ? completionSum / totalRegs : 0.0;
+      data.add({
+        'courseName': courseName,
+        'rating': double.parse(avgRating.toStringAsFixed(1)),
+        'completionRate': double.parse(avgCompletion.toStringAsFixed(1)),
+        'learners': totalRegs
+      });
+    }
+    return data;
   }
 
-  // Mock data for revenue metrics
-  Map<String, dynamic> getRevenueMetrics() {
+  // Real data for revenue metrics
+  Future<Map<String, dynamic>> getRevenueMetrics(
+      {DateTime? startDate, DateTime? endDate}) async {
+    final allTxns = await _transactionService.getTransactions();
+    final txns = allTxns.where((t) {
+      final dt = t.createdAt ?? DateTime.now();
+      if (startDate != null && dt.isBefore(startDate)) return false;
+      if (endDate != null && dt.isAfter(endDate)) return false;
+      return true;
+    }).toList();
+    final completed = txns.where((t) => t.status == 'completed').toList();
+    final totalRevenue =
+        completed.fold<double>(0.0, (sum, t) => sum + double.parse(t.amount));
+    final Map<String, double> monthlySums = {};
+    for (var t in completed) {
+      final dt = t.createdAt ?? DateTime.now();
+      final key = DateFormat('MMM yyyy').format(dt);
+      monthlySums[key] = (monthlySums[key] ?? 0) + double.parse(t.amount);
+    }
+    final entries = monthlySums.entries.toList()
+      ..sort((a, b) => DateFormat('MMM yyyy')
+          .parse(a.key)
+          .compareTo(DateFormat('MMM yyyy').parse(b.key)));
+    final monthlyData = entries
+        .map((e) => {
+              'month': e.key,
+              'revenue': double.parse(e.value.toStringAsFixed(2))
+            })
+        .toList();
+    double monthlyGrowth = 0.0;
+    if (monthlyData.length >= 2) {
+      final last = monthlyData.last['revenue'] as double;
+      final prev = monthlyData[monthlyData.length - 2]['revenue'] as double;
+      if (prev != 0) monthlyGrowth = (last - prev) / prev * 100;
+    }
+    final avgValue =
+        completed.isNotEmpty ? totalRevenue / completed.length : 0.0;
     return {
-      'totalRevenue': 0.0,
-      'monthlyGrowth': 15.7,
-      'averageCourseValue': 499.99,
-      'monthlyData': [
-        {'month': 'Jan', 'revenue': 2500.0},
-        {'month': 'Feb', 'revenue': 2800.0},
-        {'month': 'Mar', 'revenue': 3200.0},
-        {'month': 'Apr', 'revenue': 3100.0},
-        {'month': 'May', 'revenue': 3500.0},
-        {'month': 'Jun', 'revenue': 3800.0},
-        {'month': 'Jul', 'revenue': 4200.0},
-        {'month': 'Aug', 'revenue': 4500.0},
-        {'month': 'Sep', 'revenue': 4800.0},
-        {'month': 'Oct', 'revenue': 5200.0},
-        {'month': 'Nov', 'revenue': 5600.0},
-        {'month': 'Dec', 'revenue': 6100.0},
-      ]
+      'totalRevenue': double.parse(totalRevenue.toStringAsFixed(2)),
+      'monthlyGrowth': double.parse(monthlyGrowth.toStringAsFixed(2)),
+      'averageCourseValue': double.parse(avgValue.toStringAsFixed(2)),
+      'monthlyData': monthlyData
     };
+  }
+
+  // Fetch revenue aggregated by course
+  Future<List<Map<String, dynamic>>> getRevenueByCourse(
+      {DateTime? startDate, DateTime? endDate}) async {
+    final allTxns = await _transactionService.getTransactions();
+    final txns = allTxns.where((t) {
+      final dt = t.createdAt ?? DateTime.now();
+      if (startDate != null && dt.isBefore(startDate)) return false;
+      if (endDate != null && dt.isAfter(endDate)) return false;
+      return true;
+    }).toList();
+    final completed = txns.where((t) => t.status == 'completed');
+    final Map<String, double> courseRevenue = {};
+    for (final txn in completed) {
+      final courseId = txn.courseId;
+      if (courseId != null) {
+        final course = await _courseService.getCourseById(courseId);
+        final amount = double.parse(txn.amount);
+        courseRevenue.update(
+          course.title,
+          (value) => value + amount,
+          ifAbsent: () => amount,
+        );
+      }
+    }
+    return courseRevenue.entries
+        .map((e) => {
+              'courseName': e.key,
+              'revenue': double.parse(e.value.toStringAsFixed(2)),
+            })
+        .toList();
   }
 
   // Mock data for learner demographics
@@ -163,15 +239,15 @@ class AnalyticsService {
 
     // Create all sheets first
     if (metrics.contains('enrollment')) {
-      _addEnrollmentSheet(workbook);
+      await _addEnrollmentSheet(workbook);
     }
 
     if (metrics.contains('performance')) {
-      _addPerformanceSheet(workbook);
+      await _addPerformanceSheet(workbook);
     }
 
     if (metrics.contains('revenue')) {
-      _addRevenueSheet(workbook);
+      await _addRevenueSheet(workbook);
     }
 
     if (metrics.contains('demographics')) {
@@ -199,7 +275,7 @@ class AnalyticsService {
     return filePath;
   }
 
-  void _addEnrollmentSheet(Workbook workbook) {
+  Future<void> _addEnrollmentSheet(Workbook workbook) async {
     final Worksheet sheet = workbook.worksheets[0];
     sheet.name = 'Enrollment';
 
@@ -216,7 +292,7 @@ class AnalyticsService {
     sheet.getRangeByName('B1').setText('Enrollments');
 
     // Data
-    final data = getEnrollmentData();
+    final data = await getEnrollmentData();
     for (var i = 0; i < data.length; i++) {
       sheet.getRangeByName('A${i + 2}').setText(data[i]['month']);
       sheet.getRangeByName('B${i + 2}').setNumber(data[i]['count'].toDouble());
@@ -267,7 +343,7 @@ class AnalyticsService {
     sheet.charts = charts;
   }
 
-  void _addPerformanceSheet(Workbook workbook) {
+  Future<void> _addPerformanceSheet(Workbook workbook) async {
     final Worksheet sheet = workbook.worksheets.add();
     sheet.name = 'Performance';
 
@@ -286,7 +362,7 @@ class AnalyticsService {
     }
 
     // Data with formatting
-    final data = getCoursePerformanceData();
+    final data = await getCoursePerformanceData();
     for (var i = 0; i < data.length; i++) {
       final row = i + 2;
       sheet.getRangeByIndex(row, 1).setText(data[i]['courseName']);
@@ -363,10 +439,10 @@ class AnalyticsService {
     sheet.charts = charts;
   }
 
-  void _addRevenueSheet(Workbook workbook) {
+  Future<void> _addRevenueSheet(Workbook workbook) async {
     final Worksheet sheet = workbook.worksheets.add();
     sheet.name = 'Revenue';
-    final metrics = getRevenueMetrics();
+    final metrics = await getRevenueMetrics();
 
     // Headers and summary data
     sheet.getRangeByName('A1').setText('Month');

@@ -280,22 +280,22 @@ class PaymentView extends StackedView<PaymentViewModel> {
           ],
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildPaymentMethodCard(
-                title: 'In-App Purchase',
-                subtitle: 'Via App Store/Play Store',
-                icon: Icons.shopping_bag,
-                isSelected: viewModel.selectedPaymentMethod ==
-                    PaymentMethod.inAppPurchase,
-                onTap: () =>
-                    viewModel.setPaymentMethod(PaymentMethod.inAppPurchase),
-              ),
-            ),
-            const Expanded(child: SizedBox()), // Empty space for alignment
-          ],
-        ),
+        // Row(
+        //   children: [
+        //     Expanded(
+        //       child: _buildPaymentMethodCard(
+        //         title: 'In-App Purchase',
+        //         subtitle: 'Via App Store/Play Store',
+        //         icon: Icons.shopping_bag,
+        //         isSelected: viewModel.selectedPaymentMethod ==
+        //             PaymentMethod.inAppPurchase,
+        //         onTap: () =>
+        //             viewModel.setPaymentMethod(PaymentMethod.inAppPurchase),
+        //       ),
+        //     ),
+        //     const Expanded(child: SizedBox()), // Empty space for alignment
+        //   ],
+        // ),
       ],
     );
   }

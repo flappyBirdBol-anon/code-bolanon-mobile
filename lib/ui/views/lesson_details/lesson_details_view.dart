@@ -126,54 +126,12 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
           tooltip: 'More options',
           onSelected: (value) {
             switch (value) {
-              case 'share':
-                viewModel.shareLesson();
-                break;
-              case 'download': // Add download option here
-                viewModel.downloadFile();
-                break;
-              case 'edit':
-                viewModel.editLesson();
-                break;
               case 'delete':
                 viewModel.deleteLesson();
                 break;
             }
           },
           itemBuilder: (context) => [
-            // Share
-            const PopupMenuItem(
-              value: 'share',
-              child: Row(children: [
-                Icon(Icons.share_outlined,
-                    size: 20, color: AppColors.textPrimary),
-                horizontalSpaceSmall,
-                Text('Share')
-              ]),
-            ),
-            // Download (Show if file is cached)
-            if (viewModel.cachedFile != null)
-              const PopupMenuItem(
-                value: 'download',
-                child: Row(children: [
-                  Icon(Icons.download_outlined,
-                      size: 20, color: AppColors.textPrimary),
-                  horizontalSpaceSmall,
-                  Text('Download')
-                ]),
-              ),
-            // Edit (Conditionally show based on role if needed)
-            if (!viewModel.isLearner)
-              const PopupMenuItem(
-                value: 'edit',
-                child: Row(children: [
-                  Icon(Icons.edit_outlined,
-                      size: 20, color: AppColors.textPrimary),
-                  horizontalSpaceSmall,
-                  Text('Edit')
-                ]),
-              ),
-            // Delete (Conditionally show based on role if needed)
             if (!viewModel.isLearner)
               const PopupMenuItem(
                 value: 'delete',
