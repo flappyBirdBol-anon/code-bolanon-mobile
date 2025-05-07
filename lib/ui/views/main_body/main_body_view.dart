@@ -24,6 +24,76 @@ class MainBodyView extends StackedView<MainBodyViewModel> {
     MainBodyViewModel viewModel,
     Widget? child,
   ) {
+    // Show loading indicator with a timeout using a stateful builder
+    if (viewModel.isBusy) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF448EE4),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(
+                color: Colors.white,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Wait a minute...',
+                style: GoogleFonts.figtree(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // If there's an error loading data, show error with retry button
+    if (viewModel.hasError) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF448EE4),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: Colors.white,
+                size: 48,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Something went wrong',
+                style: GoogleFonts.figtree(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => viewModel.futureToRun(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF448EE4),
+                ),
+                child: Text(
+                  'Retry',
+                  style: GoogleFonts.figtree(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Even if not initialized fully, proceed after loading completes
+    // to prevent getting stuck on the loading screen
     return Theme(
       data: ThemeData(
         canvasColor:

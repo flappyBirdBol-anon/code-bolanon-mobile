@@ -369,48 +369,62 @@ class CourseDetailsViewModel extends ReactiveViewModel {
       setBusy(true);
       _log('Toggling completion for lesson $lessonId');
 
+      // Get the lesson index before making the API call
+      final lessonIndex =
+          _lessons.indexWhere((lesson) => lesson.id == lessonId);
+      if (lessonIndex == -1) {
+        _log('Could not find lesson $lessonId in the lessons list');
+        return;
+      }
+
+      // Get current completion status
+      final currentStatus = _lessons[lessonIndex].isCompleted;
+
+      // Make the API call first
       final success =
           await _completedLessonService.toggleLessonCompletion(lessonId);
 
       if (success) {
-        // Get the lesson index
-        final lessonIndex =
-            _lessons.indexWhere((lesson) => lesson.id == lessonId);
-        if (lessonIndex != -1) {
-          // Get current status and toggle it
-          final currentStatus = _lessons[lessonIndex].isCompleted;
-          _log(
-              'Lesson $lessonId current status: $currentStatus, toggling to ${!currentStatus}');
+        // Update the UI only after successful API call
+        _lessons[lessonIndex] =
+            _lessons[lessonIndex].copyWith(isCompleted: !currentStatus);
+        _shouldRefreshOnBack = true;
 
-          // Update the lesson in our list
-          _lessons[lessonIndex] =
-              _lessons[lessonIndex].copyWith(isCompleted: !currentStatus);
+        // Log completed count for verification
+        final completedCount = _lessons.where((l) => l.isCompleted).length;
+        _log(
+            'After toggle: $completedCount out of ${_lessons.length} lessons marked as completed');
 
-          // Set flag to refresh parent view when navigating back
-          _shouldRefreshOnBack = true;
-
-          // Log completed count for verification
-          final completedCount = _lessons.where((l) => l.isCompleted).length;
-          _log(
-              'After toggle: $completedCount out of ${_lessons.length} lessons marked as completed');
-
-          // Update UI
-          notifyListeners();
-        } else {
-          _log('Could not find lesson $lessonId in the lessons list');
-        }
+        // Use SchedulerBinding to schedule the UI update for the next frame
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          snackbarService.showCustomSnackBar(
+            message: 'Lesson status updated successfully',
+            variant: SnackbarType.success,
+            duration: const Duration(seconds: 2),
+          );
+        });
       } else {
         _log('CompletedLessonService.toggleLessonCompletion failed');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          snackbarService.showCustomSnackBar(
+            message: 'Failed to update lesson status',
+            variant: SnackbarType.error,
+            duration: const Duration(seconds: 2),
+          );
+        });
       }
     } catch (e) {
       _log('Error toggling lesson completion: $e');
-      snackbarService.showCustomSnackBar(
-        message: 'Failed to update lesson status',
-        variant: SnackbarType.error,
-        duration: const Duration(seconds: 2),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        snackbarService.showCustomSnackBar(
+          message: 'Failed to update lesson status: ${e.toString()}',
+          variant: SnackbarType.error,
+          duration: const Duration(seconds: 2),
+        );
+      });
     } finally {
       setBusy(false);
+      notifyListeners(); // Single notification at the end
     }
   }
 

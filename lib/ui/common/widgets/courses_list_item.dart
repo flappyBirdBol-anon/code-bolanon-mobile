@@ -197,7 +197,7 @@ class CoursesListItem extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 course.description,
-                                maxLines: 2,
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.figtree(
                                   fontSize: 10,

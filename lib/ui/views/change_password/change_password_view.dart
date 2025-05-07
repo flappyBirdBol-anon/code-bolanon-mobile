@@ -108,6 +108,7 @@ class ChangePasswordView extends StackedView<ChangePasswordViewModel> {
                     obscureText: !viewModel.isOldPasswordVisible,
                     onChanged: (p0) => viewModel.notifyPasswordInput(),
                     onToggleVisibility: viewModel.toggleOldPasswordVisibility,
+                    errorText: viewModel.oldPasswordError,
                   ),
                   const SizedBox(height: 16),
                   Focus(
@@ -122,6 +123,7 @@ class ChangePasswordView extends StackedView<ChangePasswordViewModel> {
                       obscureText: !viewModel.isNewPasswordVisible,
                       onChanged: (p0) => viewModel.notifyPasswordInput(),
                       onToggleVisibility: viewModel.toggleNewPasswordVisibility,
+                      errorText: viewModel.newPasswordError,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -138,6 +140,7 @@ class ChangePasswordView extends StackedView<ChangePasswordViewModel> {
                       onChanged: (p0) => viewModel.notifyPasswordInput(),
                       onToggleVisibility:
                           viewModel.toggleConfirmNewPasswordVisibility,
+                      errorText: viewModel.confirmNewPasswordError,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -181,8 +184,9 @@ class ChangePasswordView extends StackedView<ChangePasswordViewModel> {
                       onPressed: viewModel.isBusy
                           ? null
                           : () async {
-                              await viewModel.changePassword();
-                              if (!viewModel.isBusy) {
+                              final result = await viewModel.changePassword();
+                              if (context.mounted &&
+                                  result['success'] == true) {
                                 Navigator.pop(context);
                               }
                             },

@@ -75,20 +75,6 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
               const Center(
                 child: CircularProgressIndicator(),
               ),
-            // Error Message
-            if (viewModel.errorMessage != null)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    viewModel.errorMessage!,
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.red,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
 
             // Reschedule Form Overlay
             if (viewModel.showRescheduleForm &&
@@ -243,7 +229,10 @@ class TrainerSchedulesView extends StackedView<TrainerSchedulesViewModel> {
                 final bool isCompleted =
                     appointment.status.toLowerCase() == 'completed';
                 return CustomAppointmentItem(
-                  learnerName: appointment.learnerName ?? "Learner",
+                  learnerName: appointment.learnerName ??
+                      (appointment.contextDetails != null
+                          ? "Learner"
+                          : "No learner"),
                   date: DateFormat('MMM d').format(appointment.startAt),
                   startTime: DateFormat('hh:mm a').format(appointment.startAt),
                   endTime: DateFormat('hh:mm a').format(appointment.endAt),

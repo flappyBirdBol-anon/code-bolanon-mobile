@@ -8,7 +8,9 @@ import 'package:code_bolanon/services/auth_service.dart';
 import 'package:code_bolanon/ui/common/app_colors.dart';
 import 'package:code_bolanon/ui/common/app_strings.dart';
 import 'package:code_bolanon/ui/common/widgets/images/png_images.dart';
+import 'package:code_bolanon/ui/views/learner_courses/learner_courses_view.dart';
 import 'package:code_bolanon/utils/app_initializer.dart';
+import 'package:code_bolanon/utils/timezone_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -126,6 +128,9 @@ void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize timezone
+  await TimezoneUtils.initialize();
+
   // Set preferred orientations to avoid black flicker during orientation changes
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -204,7 +209,10 @@ class _AppRootState extends State<AppRoot> {
               initialRoute: _initialRoute,
               onGenerateRoute: StackedRouter().onGenerateRoute,
               navigatorKey: StackedService.navigatorKey,
-              navigatorObservers: [StackedService.routeObserver],
+              navigatorObservers: [
+                StackedService.routeObserver,
+                learnerCoursesRouteObserver, // LearnerCoursesView route observer
+              ],
               restorationScopeId: 'app',
             ),
     );

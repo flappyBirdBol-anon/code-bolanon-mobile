@@ -12,6 +12,10 @@ import 'package:stacked/stacked.dart';
 
 import 'learner_courses_viewmodel.dart';
 
+// Create a RouteObserver for LearnerCoursesView
+final RouteObserver<PageRoute> learnerCoursesRouteObserver =
+    RouteObserver<PageRoute>();
+
 class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
   const LearnerCoursesView({Key? key}) : super(key: key);
 
@@ -29,6 +33,14 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args != null) {
         viewModel.handleNavigationResult(args);
+      }
+
+      // Subscribe to route observer for navigation tracking
+      final route = ModalRoute.of(context);
+      if (route != null && route is PageRoute) {
+        // This will catch when returning to this page
+        learnerCoursesRouteObserver.subscribe(
+            _RouteObserverHandler(() => viewModel.fetchCourses()), route);
       }
     });
 
@@ -353,17 +365,31 @@ class LearnerCoursesView extends StackedView<LearnerCoursesViewModel> {
   }
 
   @override
-  LearnerCoursesViewModel viewModelBuilder(context) => LearnerCoursesViewModel(
-        registrationService: locator<RegistrationService>(),
-        courseService: locator<CourseService>(),
-        imageService: locator<ImageService>(),
-      );
+  LearnerCoursesViewModel viewModelBuilder(BuildContext context) {
+    return LearnerCoursesViewModel(
+      registrationService: locator<RegistrationService>(),
+      courseService: locator<CourseService>(),
+      imageService: locator<ImageService>(),
+    );
+  }
 
   @override
   void onViewModelReady(LearnerCoursesViewModel viewModel) {
-    super.onViewModelReady(viewModel);
-    // Always refresh the courses when this view becomes active
-    // This ensures we have the latest progress and ratings
-    viewModel.fetchCourses();
+    debugPrint('LearnerCoursesView: onViewModelReady - forcing initialisation');
+    // Force initialization with refresh to ensure data is always loaded on first navigation
+    viewModel.initialise(forceRefresh: true);
+  }
+}
+
+// Helper class to handle route events without needing to modify StackedView
+class _RouteObserverHandler extends RouteAware {
+  final Function refreshCallback;
+
+  _RouteObserverHandler(this.refreshCallback);
+
+  @override
+  void didPopNext() {
+    debugPrint('LearnerCoursesView: Page is visible again - refreshing data');
+    refreshCallback();
   }
 }

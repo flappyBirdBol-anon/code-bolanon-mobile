@@ -219,7 +219,12 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
 
       notifyListeners();
     } catch (e) {
-      _showErrorMessage('Failed to load appointments: $e');
+      print('Error in loadAppointments: $e');
+      // Ensure lists are initialized to empty on error
+      _availableTimeSlots = [];
+      _scheduledAppointments = [];
+      _errorMessage = 'Failed to load appointments';
+      notifyListeners();
     } finally {
       setIsLoading(false);
     }
@@ -242,17 +247,42 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
             _formSelectedDate.day, _endTime.hour, _endTime.minute),
         'price': _price,
       };
-      await _appointmentService.createSchedule(newAppointment);
+
+      // Debug the data being sent
+      print('Attempting to create schedule with: $newAppointment');
+
+      final result = await _appointmentService.createSchedule(newAppointment);
 
       _showSuccessMessage('Schedule added successfully');
       await loadAppointments();
       resetForm();
       _showAddScheduleForm = false;
     } catch (e) {
-      _showErrorMessage('Failed to create schedule: $e');
+      // Debug caught exception
+      print('Exception caught in createAvailableTimeSlot: $e');
+
+      // Extract the clean error message without Exception: prefixes
+      String errorMessage = _extractCleanErrorMessage(e.toString());
+      _showErrorMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // Helper to extract clean error message without Exception: prefixes
+  String _extractCleanErrorMessage(String errorString) {
+    // First, remove all "Exception: " prefixes
+    String cleanError = errorString;
+
+    while (cleanError.contains('Exception: ')) {
+      cleanError = cleanError.replaceAll('Exception: ', '');
+    }
+
+    // Then remove any "Failed to create/update schedule: " prefix
+    cleanError = cleanError.replaceAll('Failed to create schedule: ', '');
+    cleanError = cleanError.replaceAll('Failed to update schedule: ', '');
+
+    return cleanError;
   }
 
   // Add helper method to check for overlapping appointments
@@ -265,6 +295,7 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     // Check overlap with available time slots
     for (var slot in _availableTimeSlots) {
       if (excludeId != null && slot.id == excludeId) continue;
+      print('Old: ${slot.startAt}, Oldend: ${slot.endAt}');
       if (_isOverlapping(newStart, newEnd, slot.startAt, slot.endAt)) {
         return true;
       }
@@ -284,6 +315,9 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
   // Helper method to check if two time ranges overlap
   bool _isOverlapping(
       DateTime start1, DateTime end1, DateTime start2, DateTime end2) {
+    start1 = start1;
+    end1 = end1;
+    print('New: $start1, New End: $end1, Old: $start2, Oldend: $end2');
     return start1.isBefore(end2) && end1.isAfter(start2);
   }
 
@@ -370,14 +404,16 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
           _originalAppointment!.id.toString(), updatedAppointment);
 
       if (result['success']) {
-        _showSuccessMessage(result['message']);
+        _showSuccessMessage(
+            result['message'] ?? 'Schedule updated successfully');
         await loadAppointments();
         hideRescheduleForm();
       } else {
-        _showErrorMessage(result['message']);
+        _showErrorMessage(result['message'] ?? 'Failed to update schedule');
       }
     } catch (e) {
-      _showErrorMessage('Failed to update schedule');
+      String errorMessage = _extractCleanErrorMessage(e.toString());
+      _showErrorMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -388,10 +424,12 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     setIsLoading(true);
     try {
       await _appointmentService.deleteSchedule(id);
+      await loadAppointments(); // Reload appointments after deletion
       _showSuccessMessage('Schedule cancelled successfully');
-      await loadAppointments();
     } catch (e) {
-      _showErrorMessage('Failed to cancel schedule: $e');
+      String errorMessage = _extractCleanErrorMessage(e.toString());
+      _showErrorMessage(errorMessage);
+      await loadAppointments(); // Make sure UI is consistent even on error
     } finally {
       setIsLoading(false);
     }
@@ -402,7 +440,7 @@ class TrainerSchedulesViewModel extends AppBaseViewModel {
     if (_startTime.hour >= _endTime.hour &&
         (_startTime.hour != _endTime.hour ||
             _startTime.minute >= _endTime.minute)) {
-      setErrorMessage('End time must be after start time');
+      _showErrorMessage('End time must be after start time');
       return false;
     }
     return true;

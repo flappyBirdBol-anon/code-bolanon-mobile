@@ -79,30 +79,44 @@ class CustomTextField extends StatelessWidget {
         keyboardType: keyboardType,
         maxLines: maxLines,
         enabled: enabled,
-        style: style ??
-            theme.textTheme.bodyMedium
-                ?.copyWith(fontSize: 16), // Increased font size
+        style: style ?? theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
         decoration: InputDecoration(
           labelText: labelText,
           hintText: hintText,
           errorText: errorText,
-          floatingLabelStyle: GoogleFonts.figtree(color: AppColors.primary),
+          errorStyle: GoogleFonts.figtree(
+            color: theme.colorScheme.error,
+            fontSize: 12,
+            height: 1.4,
+            wordSpacing: 0.5,
+          ),
+          errorMaxLines: 5,
+          helperMaxLines: 5,
+          floatingLabelStyle: GoogleFonts.figtree(
+            color:
+                errorText != null ? theme.colorScheme.error : AppColors.primary,
+          ),
           isDense: isDense,
           filled: filled,
-          fillColor: fillColor ?? (isDark ? Colors.grey[900] : Colors.white),
+          fillColor: fillColor ??
+              (isDark ? const Color.fromARGB(255, 100, 82, 82) : Colors.white),
           prefixIcon: prefixIcon != null
               ? Icon(
                   prefixIcon,
-                  color: AppColors.primary.withOpacity(0.7),
-                  size: 24, // Larger icon size
+                  color: errorText != null
+                      ? theme.colorScheme.error
+                      : AppColors.primary.withOpacity(0.7),
+                  size: 24,
                 )
               : prefix,
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
                     obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: AppColors.primary.withOpacity(0.7),
-                    size: 24, // Larger icon size
+                    color: errorText != null
+                        ? theme.colorScheme.error
+                        : AppColors.primary.withOpacity(0.7),
+                    size: 24,
                   ),
                   onPressed: onToggleVisibility,
                 )
@@ -110,23 +124,30 @@ class CustomTextField extends StatelessWidget {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius),
             borderSide: BorderSide(
-              color: borderColor ??
-                  (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+              color: errorText != null
+                  ? theme.colorScheme.error
+                  : (borderColor ??
+                      (isDark ? Colors.grey[700]! : Colors.grey[300]!)),
+              width: 1.5,
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius),
             borderSide: BorderSide(
-              color: borderColor ??
-                  (isDark ? Colors.grey[700]! : Colors.grey[300]!),
-              width: 1.5, // Slightly thicker border
+              color: errorText != null
+                  ? theme.colorScheme.error
+                  : (borderColor ??
+                      (isDark ? Colors.grey[700]! : Colors.grey[300]!)),
+              width: 1.5,
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius),
             borderSide: BorderSide(
-              color: focusedBorderColor ?? AppColors.primary,
-              width: 2.5, // Thicker focused border
+              color: errorText != null
+                  ? theme.colorScheme.error
+                  : (focusedBorderColor ?? AppColors.primary),
+              width: 2.5,
             ),
           ),
           errorBorder: OutlineInputBorder(
@@ -143,18 +164,24 @@ class CustomTextField extends StatelessWidget {
               width: 2.5,
             ),
           ),
-          // Increased vertical padding for larger field height
           contentPadding: contentPadding ??
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+              const EdgeInsets.only(
+                left: 18,
+                right: 18,
+                top: 18,
+                bottom: 18,
+              ),
           labelStyle: labelStyle ??
               GoogleFonts.figtree(
-                color: isDark ? Colors.grey[300] : Colors.grey[700],
-                fontSize: 16, // Larger label font
+                color: errorText != null
+                    ? theme.colorScheme.error
+                    : (isDark ? Colors.grey[300] : Colors.grey[700]),
+                fontSize: 16,
               ),
           hintStyle: hintStyle ??
               GoogleFonts.figtree(
                 color: isDark ? Colors.grey[500] : Colors.grey[400],
-                fontSize: 15, // Larger hint font
+                fontSize: 15,
               ),
         ),
         validator: validator,

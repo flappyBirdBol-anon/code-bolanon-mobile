@@ -71,7 +71,7 @@ class ProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
 
   // Navigation methods
   Future<void> showEditProfileModal(BuildContext context) async {
-    showDialog(
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => const Dialog(
         shape: RoundedRectangleBorder(
@@ -80,6 +80,12 @@ class ProfileViewModel extends AppBaseViewModel with ReactiveServiceMixin {
         child: EditProfileView(),
       ),
     );
+
+    // If the dialog was closed with a success result, refresh the profile data
+    if (result == true) {
+      await userService.fetchUserProfile();
+      notifyListeners();
+    }
   }
 
   void navigateToChangePassword(BuildContext context) {
