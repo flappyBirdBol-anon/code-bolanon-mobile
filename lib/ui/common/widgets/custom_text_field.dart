@@ -87,14 +87,19 @@ class CustomTextField extends StatelessWidget {
           errorStyle: GoogleFonts.figtree(
             color: theme.colorScheme.error,
             fontSize: 12,
+            height: 1.4,
+            wordSpacing: 0.5,
           ),
+          errorMaxLines: 5,
+          helperMaxLines: 5,
           floatingLabelStyle: GoogleFonts.figtree(
             color:
                 errorText != null ? theme.colorScheme.error : AppColors.primary,
           ),
           isDense: isDense,
           filled: filled,
-          fillColor: fillColor ?? (isDark ? Colors.grey[900] : Colors.white),
+          fillColor: fillColor ??
+              (isDark ? const Color.fromARGB(255, 100, 82, 82) : Colors.white),
           prefixIcon: prefixIcon != null
               ? Icon(
                   prefixIcon,
@@ -160,7 +165,12 @@ class CustomTextField extends StatelessWidget {
             ),
           ),
           contentPadding: contentPadding ??
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+              const EdgeInsets.only(
+                left: 18,
+                right: 18,
+                top: 18,
+                bottom: 18,
+              ),
           labelStyle: labelStyle ??
               GoogleFonts.figtree(
                 color: errorText != null
