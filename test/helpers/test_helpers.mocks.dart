@@ -2351,7 +2351,7 @@ class MockUserService extends _i1.Mock implements _i24.UserService {
       ) as _i10.Future<Map<String, dynamic>>);
 
   @override
-  _i10.Future<bool> updateProfile(
+  _i10.Future<Map<String, dynamic>> updateProfile(
     String? firstName,
     String? lastName,
     String? specialization,
@@ -2371,9 +2371,11 @@ class MockUserService extends _i1.Mock implements _i24.UserService {
             userId,
           ],
         ),
-        returnValue: _i10.Future<bool>.value(false),
-        returnValueForMissingStub: _i10.Future<bool>.value(false),
-      ) as _i10.Future<bool>);
+        returnValue:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+        returnValueForMissingStub:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i10.Future<Map<String, dynamic>>);
 
   @override
   void setUser(_i26.UserModel? user) => super.noSuchMethod(
@@ -3614,34 +3616,87 @@ class MockAnalyticsService extends _i1.Mock implements _i34.AnalyticsService {
       ) as _i10.Future<double>);
 
   @override
-  List<Map<String, dynamic>> getEnrollmentData() => (super.noSuchMethod(
+  _i10.Future<List<Map<String, dynamic>>> getEnrollmentData({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) =>
+      (super.noSuchMethod(
         Invocation.method(
           #getEnrollmentData,
           [],
+          {
+            #startDate: startDate,
+            #endDate: endDate,
+          },
         ),
-        returnValue: <Map<String, dynamic>>[],
-        returnValueForMissingStub: <Map<String, dynamic>>[],
-      ) as List<Map<String, dynamic>>);
+        returnValue: _i10.Future<List<Map<String, dynamic>>>.value(
+            <Map<String, dynamic>>[]),
+        returnValueForMissingStub:
+            _i10.Future<List<Map<String, dynamic>>>.value(
+                <Map<String, dynamic>>[]),
+      ) as _i10.Future<List<Map<String, dynamic>>>);
 
   @override
-  List<Map<String, dynamic>> getCoursePerformanceData() => (super.noSuchMethod(
+  _i10.Future<List<Map<String, dynamic>>> getCoursePerformanceData({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) =>
+      (super.noSuchMethod(
         Invocation.method(
           #getCoursePerformanceData,
           [],
+          {
+            #startDate: startDate,
+            #endDate: endDate,
+          },
         ),
-        returnValue: <Map<String, dynamic>>[],
-        returnValueForMissingStub: <Map<String, dynamic>>[],
-      ) as List<Map<String, dynamic>>);
+        returnValue: _i10.Future<List<Map<String, dynamic>>>.value(
+            <Map<String, dynamic>>[]),
+        returnValueForMissingStub:
+            _i10.Future<List<Map<String, dynamic>>>.value(
+                <Map<String, dynamic>>[]),
+      ) as _i10.Future<List<Map<String, dynamic>>>);
 
   @override
-  Map<String, dynamic> getRevenueMetrics() => (super.noSuchMethod(
+  _i10.Future<Map<String, dynamic>> getRevenueMetrics({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) =>
+      (super.noSuchMethod(
         Invocation.method(
           #getRevenueMetrics,
           [],
+          {
+            #startDate: startDate,
+            #endDate: endDate,
+          },
         ),
-        returnValue: <String, dynamic>{},
-        returnValueForMissingStub: <String, dynamic>{},
-      ) as Map<String, dynamic>);
+        returnValue:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+        returnValueForMissingStub:
+            _i10.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i10.Future<Map<String, dynamic>>);
+
+  @override
+  _i10.Future<List<Map<String, dynamic>>> getRevenueByCourse({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getRevenueByCourse,
+          [],
+          {
+            #startDate: startDate,
+            #endDate: endDate,
+          },
+        ),
+        returnValue: _i10.Future<List<Map<String, dynamic>>>.value(
+            <Map<String, dynamic>>[]),
+        returnValueForMissingStub:
+            _i10.Future<List<Map<String, dynamic>>>.value(
+                <Map<String, dynamic>>[]),
+      ) as _i10.Future<List<Map<String, dynamic>>>);
 
   @override
   Map<String, dynamic> getLearnerDemographics() => (super.noSuchMethod(

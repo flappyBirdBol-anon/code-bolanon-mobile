@@ -180,14 +180,16 @@ class MenuView extends StackedView<MenuViewModel> {
                     onTap: () => viewModel.navigateToSettings(),
                   ),
                   _buildDivider(isDark),
-                  _buildSettingsTile(
-                    icon: Icons.analytics,
-                    iconColor: const Color(0xFFFACC15),
-                    title: 'Analytics',
-                    isDark: isDark,
-                    onTap: () => viewModel.navigateToAnalytics(),
-                  ),
-                  _buildDivider(isDark),
+                  if (viewModel.userRole.toLowerCase() == 'trainer') ...[
+                    _buildSettingsTile(
+                      icon: Icons.analytics,
+                      iconColor: const Color(0xFFFACC15),
+                      title: 'Analytics',
+                      isDark: isDark,
+                      onTap: () => viewModel.navigateToAnalytics(),
+                    ),
+                    _buildDivider(isDark),
+                  ],
                   _buildSettingsTile(
                     icon: Icons.description,
                     iconColor: const Color(0xFFA855F7),
