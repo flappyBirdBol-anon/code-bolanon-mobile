@@ -39,18 +39,24 @@ class RegistrationService with ReactiveServiceMixin {
 
       final courseData = courseResponse.data['data'];
       final courseModel = CourseModel.fromJson(courseData);
-
-      // Navigate to payment view first with PaymentParam
-      final paymentResult = await _navigationService.navigateToPaymentView(
-        payment: PaymentParam(
-          id: courseModel.id,
-          title: courseModel.title,
-          description: courseModel.description,
-          price: courseModel.price,
-          taxRate: 0.00,
-          discountPercentage: 0.00,
-        ),
-      );
+      dynamic paymentResult;
+      if (courseModel.price == 0) {
+        //set
+        paymentResult = {'success': true};
+        print('Payment result for free course: $paymentResult');
+      } else {
+        // Navigate to payment view first with PaymentParam
+        paymentResult = await _navigationService.navigateToPaymentView(
+          payment: PaymentParam(
+            id: courseModel.id,
+            title: courseModel.title,
+            description: courseModel.description,
+            price: courseModel.price,
+            taxRate: 0.00,
+            discountPercentage: 0.00,
+          ),
+        );
+      }
       print('Payment result: $paymentResult');
       // If payment was successful, create the registration
       if (paymentResult != null && paymentResult['success'] == true) {

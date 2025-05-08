@@ -402,7 +402,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                                     size: 16, color: Colors.grey[600]),
                                 const SizedBox(width: 4),
                                 Text(
-                                  course?.duration?.isNotEmpty == true
+                                  course?.duration.isNotEmpty == true
                                       ? course!.duration.capitalize()
                                       : 'N/A',
                                   style: GoogleFonts.figtree(

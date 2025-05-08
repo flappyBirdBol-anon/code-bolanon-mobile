@@ -723,12 +723,20 @@ class CourseDetailsViewModel extends ReactiveViewModel {
   Future<void> showRegistrationDialog() async {
     if (course == null) return;
 
+    String title = '';
+
+    if (course!.price == 0) {
+      title = 'Register for free';
+    } else {
+      title = 'Continue to Payment';
+    }
+
     // Show confirmation dialog first
     final response = await _dialogService.showConfirmationDialog(
       title: 'Register for Course',
       description:
           'Are you sure you want to register for "${course!.title}"?\n\nYou will be directed to the payment page to complete your enrollment.',
-      confirmationTitle: 'Continue to Payment',
+      confirmationTitle: title,
       cancelTitle: 'Cancel',
     );
 
