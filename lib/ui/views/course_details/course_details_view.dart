@@ -109,7 +109,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                     opacity: isScrolled ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 300),
                     child: Text(
-                      course!.title,
+                      course?.title ?? '',
                       style: GoogleFonts.figtree(
                         color: Colors.black,
                         fontSize: 16,
@@ -123,7 +123,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                     fit: StackFit.expand,
                     children: [
                       Hero(
-                        tag: 'course-${course!.id}',
+                        tag: 'course-${course?.id ?? ''}',
                         child: Container(
                           margin: const EdgeInsets.fromLTRB(0, 0, 0, 0),
                           child: viewModel.getCourseImageWidget(
@@ -167,7 +167,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              course!.title,
+                              course?.title ?? '',
                               style: GoogleFonts.figtree(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -402,7 +402,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                                     size: 16, color: Colors.grey[600]),
                                 const SizedBox(width: 4),
                                 Text(
-                                  course!.duration.isNotEmpty
+                                  course?.duration?.isNotEmpty == true
                                       ? course!.duration.capitalize()
                                       : 'N/A',
                                   style: GoogleFonts.figtree(
@@ -507,7 +507,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    course!.description,
+                    course?.description ?? '',
                     style: GoogleFonts.figtree(
                       fontSize: 16,
                       height: 1.5,
@@ -520,11 +520,12 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
+                      _buildKeyMetric(Icons.access_time, course?.duration ?? '',
+                          'Duration'),
                       _buildKeyMetric(
-                          Icons.access_time, course!.duration, 'Duration'),
-                      _buildKeyMetric(Icons.bar_chart, course!.level, 'Level'),
+                          Icons.bar_chart, course?.level ?? '', 'Level'),
                       _buildKeyMetric(Icons.people_outline,
-                          '${course!.studentsEnrolled}+', 'Learners'),
+                          '${course?.studentsEnrolled ?? 0}+', 'Learners'),
                     ],
                   ),
                 ],
@@ -550,9 +551,10 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              children: course!.learningExpectations
-                  .map((expectation) => _buildLearningPoint(expectation))
-                  .toList(),
+              children: course?.learningExpectations
+                      .map((expectation) => _buildLearningPoint(expectation))
+                      .toList() ??
+                  [],
             ),
           const SizedBox(height: 24),
 
@@ -662,7 +664,7 @@ class CourseDetailsView extends StackedView<CourseDetailsViewModel> {
                   course?.requirements.first == ''))
             _buildEmptyRequirements()
           else
-            ...course!.requirements
+            ...(course?.requirements ?? [])
                 .map((requirement) => _buildRequirementItem(requirement))
                 .toList(),
         ],

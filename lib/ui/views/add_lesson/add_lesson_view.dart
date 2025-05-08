@@ -213,6 +213,15 @@ class AddLessonView extends StackedView<AddLessonViewModel> {
                               fontSize: 14,
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Maximum file size: 10MB',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                           const SizedBox(height: 16),
 
                           // Show loading indicator when fetching cached file

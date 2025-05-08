@@ -25,6 +25,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart'
     as xlsio; // Import Syncfusion Excel library
+import 'package:flutter/material.dart'; // Add import for material widgets (AlertDialog, showDialog)
 
 import '../../common/widgets/excel_data_source.dart'; // Import the new DataSource
 
@@ -696,28 +697,42 @@ class LessonDetailsViewModel extends AppBaseViewModel {
     _navigationService.navigateTo(Routes.addLessonView, arguments: lesson);
   }
 
-  Future<void> deleteLesson() async {
-    if (!_hasValidLesson || _lesson!.id < 0) return; // Don't delete placeholder
+  Future<void> deleteLesson(BuildContext context) async {
+    if (!_hasValidLesson || _lesson!.id < 0) return;
 
-    final dialogResponse = await _dialogService.showConfirmationDialog(
-      title: 'Delete Lesson',
-      description:
-          'Are you sure you want to delete "${lesson.label}"? This action cannot be undone.',
-      confirmationTitle: 'Delete',
-      cancelTitle: 'Cancel',
-      barrierDismissible: true,
-    );
+    final confirmed = await showDialog<bool>(
+          context: context,
+          barrierDismissible: true,
+          builder: (ctx) => AlertDialog(
+            title: Text('Delete Lesson'),
+            content: Text(
+                'Are you sure you want to delete "${lesson.label}"? This action cannot be undone.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child:
+                    const Text('Delete', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        ) ??
+        false;
 
-    if (dialogResponse?.confirmed ?? false) {
+    if (confirmed) {
       setBusy(true);
       try {
         final success = await _lessonsService.deleteLesson(lesson.id);
+        // Check both success flag and response message
         if (success) {
           _snackbarService.showSnackbar(
               message: 'Lesson "${lesson.label}" deleted.');
-          _navigationService.back(); // Go back after successful deletion
+          // Force navigation back to course details
+          Navigator.of(context).pop({'refreshCourses': true});
         } else {
-          // If service returns false without throwing
           throw Exception('Failed to delete lesson. Please try again.');
         }
       } catch (e) {

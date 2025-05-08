@@ -70,6 +70,9 @@ class AddLessonViewModel extends BaseViewModel {
       descriptionController.text.isNotEmpty &&
       hasFile;
 
+  // Constants
+  static const int maxFileSizeBytes = 10 * 1024 * 1024; // 10MB in bytes
+
   Future<void> initialize(CourseModel? courses, [Lesson? initialLesson]) async {
     // Clear any previous state
     _isEditingLesson = false;
@@ -204,6 +207,10 @@ class AddLessonViewModel extends BaseViewModel {
 
   // File handling methods
   void setSelectedFile(PlatformFile file) {
+    if (file.size > maxFileSizeBytes) {
+      _showErrorSnackbar('File size exceeds 10MB limit');
+      return;
+    }
     _selectedFile = file;
     notifyListeners();
   }
@@ -239,6 +246,12 @@ class AddLessonViewModel extends BaseViewModel {
         _isEditingLesson || _navigationService.currentArguments is Lesson;
     if (_selectedFile == null && !isEditMode) {
       _showErrorSnackbar('Please select a valid file');
+      return;
+    }
+
+    // Validate file size
+    if (_selectedFile != null && _selectedFile!.size > maxFileSizeBytes) {
+      _showErrorSnackbar('File size exceeds 10MB limit');
       return;
     }
 

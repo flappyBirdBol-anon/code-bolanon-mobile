@@ -124,10 +124,10 @@ class LessonDetailsView extends StackedView<LessonDetailsViewModel> {
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
           tooltip: 'More options',
-          onSelected: (value) {
+          onSelected: (value) async {
             switch (value) {
               case 'delete':
-                viewModel.deleteLesson();
+                await viewModel.deleteLesson(context);
                 break;
             }
           },
