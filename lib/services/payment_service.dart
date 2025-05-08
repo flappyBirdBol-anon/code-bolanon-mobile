@@ -177,6 +177,16 @@ class PaymentService with ListenableServiceMixin {
         'message': 'Payment successful',
       };
     } catch (e) {
+      if (e is StripeException) {
+        print('${e.error.code} ksdjskf');
+        if (e.error.code == FailureCode.Canceled) {
+          return {
+            'success': false,
+            'cancelled': true,
+            'message': 'Payment was cancelled by user',
+          };
+        }
+      }
       return {
         'success': false,
         'message': 'Payment error: $e',
@@ -284,7 +294,7 @@ class PaymentService with ListenableServiceMixin {
     } catch (e) {
       return {
         'success': false,
-        'message': 'Payment error: $e',
+        'message': 'Payment errormanual: $e',
       };
     }
   }

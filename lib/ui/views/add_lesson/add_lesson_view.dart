@@ -101,37 +101,37 @@ class AddLessonView extends StackedView<AddLessonViewModel> {
                   const SizedBox(height: 20),
 
                   // Duration Field
-                  TextField(
-                    controller: viewModel.durationController,
-                    enabled: !viewModel.isUploading,
-                    decoration: InputDecoration(
-                      labelText: 'Duration',
-                      hintText: 'e.g., 45 minutes, 1 hour',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).primaryColor,
-                          width: 2,
-                        ),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      prefixIcon: const Icon(Icons.access_time),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+                  // TextField(
+                  //   controller: viewModel.durationController,
+                  //   enabled: !viewModel.isUploading,
+                  //   decoration: InputDecoration(
+                  //     labelText: 'Duration',
+                  //     hintText: 'e.g., 45 minutes, 1 hour',
+                  //     border: OutlineInputBorder(
+                  //       borderRadius: BorderRadius.circular(12),
+                  //       borderSide: BorderSide(color: Colors.grey[300]!),
+                  //     ),
+                  //     enabledBorder: OutlineInputBorder(
+                  //       borderRadius: BorderRadius.circular(12),
+                  //       borderSide: BorderSide(color: Colors.grey[300]!),
+                  //     ),
+                  //     focusedBorder: OutlineInputBorder(
+                  //       borderRadius: BorderRadius.circular(12),
+                  //       borderSide: BorderSide(
+                  //         color: Theme.of(context).primaryColor,
+                  //         width: 2,
+                  //       ),
+                  //     ),
+                  //     filled: true,
+                  //     fillColor: Colors.white,
+                  //     contentPadding: const EdgeInsets.symmetric(
+                  //       horizontal: 16,
+                  //       vertical: 16,
+                  //     ),
+                  //     prefixIcon: const Icon(Icons.access_time),
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 20),
 
                   // Description Field
                   TextField(

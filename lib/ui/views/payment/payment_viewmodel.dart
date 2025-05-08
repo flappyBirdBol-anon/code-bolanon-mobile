@@ -175,7 +175,7 @@ class PaymentViewModel extends BaseViewModel {
       await _dialogService.showCustomDialog(
         variant: DialogType.error,
         title: 'Error',
-        description: 'An unexpected error occurred: $e',
+        description: 'An unexpected error occurreded: $e',
       );
       return errorResult;
     } finally {

@@ -263,6 +263,7 @@ class AddLessonViewModel extends BaseViewModel {
           label: titleController.text,
           description: descriptionController.text,
           duration: durationController.text,
+          courseId: existingLesson.courseId.toString(),
           filePath: _selectedFile?.path,
           fileName: _selectedFile?.name ?? existingLesson.fileName,
           fileType: _selectedFile != null
@@ -311,10 +312,10 @@ class AddLessonViewModel extends BaseViewModel {
       return false;
     }
 
-    if (durationController.text.isEmpty) {
-      _showErrorSnackbar('Please enter a lesson duration');
-      return false;
-    }
+    // if (durationController.text.isEmpty) {
+    //   _showErrorSnackbar('Please enter a lesson duration');
+    //   return false;
+    // }
 
     if (descriptionController.text.isEmpty) {
       _showErrorSnackbar('Please enter a lesson description');
